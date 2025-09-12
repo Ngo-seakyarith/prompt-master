@@ -122,92 +122,13 @@ export class MemStorage implements IStorage {
       {
         id: "prompt-refinement",
         title: "Prompt Refinement",
-        description: "Learn iterative improvement techniques and testing strategies for optimal results.",
+        description: "Master key prompt patterns: persona, question refinement, cognitive verifier, and audience persona.",
         icon: "fas fa-tools",
         order: 4,
         isActive: true,
         content: {
-          sections: [
-            {
-              title: "The Refinement Mindset",
-              content: "Prompt refinement is an iterative process of testing, analyzing, and improving prompts based on actual results. Like any craft, prompt engineering improves with practice and systematic refinement. The best prompts are rarely perfect on the first try - they evolve through careful observation and adjustment.",
-              examples: [
-                "Initial attempt: 'Write a marketing email' → Generic, unfocused output",
-                "First refinement: 'Write a marketing email for our new product launch' → Better, but still generic",
-                "Second refinement: 'Write a compelling marketing email announcing our new project management software to existing customers, focusing on 3 key new features and including a special upgrade offer' → Specific and actionable",
-                "Final refinement: 'You are a customer success manager. Write a warm, personalized email to our existing customers announcing TaskFlow 2.0, our enhanced project management software. Highlight these 3 key improvements: AI-powered task prioritization, real-time team collaboration, and advanced reporting. Include a 30% upgrade discount valid for 2 weeks. Keep the tone friendly but professional, under 200 words.'"
-              ]
-            },
-            {
-              title: "Systematic Testing Approach",
-              content: "Effective prompt refinement requires systematic testing and measurement. Rather than making random changes, use a structured approach to identify what works and why. Test one variable at a time, measure results consistently, and build on successful patterns.",
-              examples: [
-                "Variable testing: Test different role definitions with the same task to see impact",
-                "A/B comparison: 'Compare outputs from these two prompt versions and identify which produces better results'",
-                "Metric tracking: Measure specific outcomes like accuracy, relevance, creativity, or completion rate",
-                "Pattern identification: 'What specific elements in the higher-performing prompt made the difference?'"
-              ]
-            },
-            {
-              title: "Common Refinement Strategies",
-              content: "Several proven strategies can systematically improve prompt performance. These include adding specificity, adjusting tone, providing better context, refining output format, and setting clearer constraints. Each strategy addresses common prompt weaknesses.",
-              examples: [
-                "Add specificity: 'Write a report' → 'Write a 500-word executive summary report'",
-                "Adjust tone: 'Explain this concept' → 'Explain this concept in simple terms for beginners'",
-                "Better context: 'Create a budget' → 'Create a budget for a 5-person startup with $100k runway and 18-month timeline'",
-                "Refine format: 'List benefits' → 'List 5 key benefits in bullet points with 1-sentence explanations'",
-                "Clear constraints: 'Write creatively' → 'Write creatively but maintain professional tone and factual accuracy'"
-              ]
-            },
-            {
-              title: "Debugging Poor Results",
-              content: "When prompts produce unsatisfactory results, systematic debugging can identify the root cause. Common issues include unclear instructions, missing context, inappropriate role definition, or conflicting requirements. Addressing these systematically improves outcomes.",
-              examples: [
-                "Too vague: 'The output is generic' → Add specific requirements and examples",
-                "Wrong tone: 'The response is too formal' → Adjust role definition and add tone guidance",
-                "Missing context: 'The advice isn't relevant' → Provide more background information and constraints",
-                "Conflicting instructions: 'The output is inconsistent' → Review for contradictory requirements and clarify priorities",
-                "Poor format: 'The structure is confusing' → Provide clear template or output format specifications"
-              ]
-            },
-            {
-              title: "Version Control and Documentation",
-              content: "Track your prompt iterations like code versions. Document what changes were made, why, and what results they produced. This creates a knowledge base for future prompt development and helps identify patterns that consistently work for your use cases.",
-              examples: [
-                "Version tracking: 'v1.0: Basic prompt → v1.1: Added role definition → v1.2: Specified output format → v2.0: Complete restructure'",
-                "Change documentation: 'Changed from generic role to domain expert - increased technical accuracy by 40%'",
-                "Result comparison: 'Original prompt scored 60/100 avg, refined version scores 85/100 avg - key change was adding specific constraints'",
-                "Pattern library: 'For technical explanations: Expert role + step-by-step format + beginner-friendly language = consistently high performance'"
-              ]
-            },
-            {
-              title: "Advanced Refinement Techniques",
-              content: "Advanced practitioners use sophisticated techniques like prompt ablation studies, performance benchmarking, user testing, and automated optimization. These methods provide deeper insights into prompt effectiveness and enable continuous improvement.",
-              examples: [
-                "Ablation study: 'Remove each prompt component individually to identify which elements contribute most to performance'",
-                "Benchmarking: 'Test this prompt against 10 similar tasks and measure consistency of results'",
-                "User feedback: 'Have 5 team members use this prompt and rate the usefulness of outputs on a 1-10 scale'",
-                "Automated testing: 'Run this prompt with 20 different input scenarios and analyze patterns in the outputs'"
-              ]
-            }
-          ],
-          exercises: [
-            {
-              title: "Systematic Prompt Improvement",
-              description: "Take a low-performing prompt and improve it through systematic refinement",
-              template: "Starting prompt: 'Help me with my presentation'\n\nRefine this prompt through these steps:\n1. Add specific context and requirements\n2. Define a clear expert role\n3. Specify desired output format\n4. Set appropriate constraints\n5. Test and compare results\n\nDocument each change and explain why you made it."
-            },
-            {
-              title: "Debugging Prompt Problems",
-              description: "Analyze a problematic prompt and identify improvement opportunities",
-              template: "Problematic prompt: 'You are a consultant. Write a strategy for my business that will increase revenue and reduce costs while improving customer satisfaction and employee engagement.'\n\nIdentify and fix these issues:\n• What's too vague or broad?\n• What context is missing?\n• What constraints are needed?\n• How can the output be better structured?\n\nCreate an improved version that addresses each problem."
-            },
-            {
-              title: "A/B Testing for Prompts",
-              description: "Create two versions of a prompt and design a test to compare their effectiveness",
-              template: "Task: Get AI to write compelling social media captions\n\nCreate two prompt versions that differ in:\n• Approach A: Focus on emotional storytelling\n• Approach B: Focus on data and benefits\n\nDesign your test:\n• What metrics will you measure?\n• How will you ensure fair comparison?\n• What criteria determine the winner?\n• How will you document results?"
-            }
-          ]
+          sections: MODULE_CONTENT["prompt-refinement"].sections,
+          exercises: MODULE_CONTENT["prompt-refinement"].exercises
         }
       },
       {
