@@ -115,80 +115,8 @@ export class MemStorage implements IStorage {
         order: 3,
         isActive: true,
         content: {
-          sections: [
-            {
-              title: "Chain-of-Thought Prompting",
-              content: "Chain-of-thought prompting guides AI through step-by-step reasoning to improve accuracy and transparency. By explicitly requesting the thinking process, you get more reliable outputs and can verify the logic. This technique is especially powerful for complex problem-solving, analysis, and decision-making tasks.",
-              examples: [
-                "Basic: 'Solve this math problem: 47 + 89' → Just the answer",
-                "Chain-of-thought: 'Solve this step by step: 47 + 89. Show your work.' → Shows the calculation process",
-                "Advanced: 'You are a financial analyst. A startup spent $50k on marketing and gained 1,000 customers. Calculate the customer acquisition cost and evaluate if this is sustainable. Walk me through your reasoning step by step, including what additional information you'd need for a complete analysis.'"
-              ]
-            },
-            {
-              title: "Few-Shot Learning",
-              content: "Few-shot learning provides examples to teach AI the desired format, style, and approach. Instead of just describing what you want, you show the AI exactly how to do it. This technique dramatically improves output consistency and quality by demonstrating patterns.",
-              examples: [
-                "Zero-shot: 'Write product descriptions' → Inconsistent format",
-                "One-shot: 'Write product descriptions like this example: [example]' → Some consistency",
-                "Few-shot: 'Write product descriptions following these 3 examples: [example 1], [example 2], [example 3]. Notice the format: Feature-Benefit-Proof structure, conversational tone, 100 words max.' → Highly consistent output"
-              ]
-            },
-            {
-              title: "Prompt Chaining",
-              content: "Prompt chaining breaks complex tasks into a series of simpler, connected prompts. Each prompt builds on the previous output, allowing for sophisticated multi-step processes. This technique is ideal for complex projects requiring multiple perspectives or iterative refinement.",
-              examples: [
-                "Single complex prompt: 'Create a comprehensive business plan' → Overwhelming, generic",
-                "Chained approach: '1) Identify target market → 2) Analyze competition → 3) Define value proposition → 4) Create marketing strategy → 5) Financial projections' → Focused, thorough",
-                "Example chain: 'First, analyze this market data and identify 3 key trends. Then, based on those trends, suggest 5 business opportunities. Finally, for the most promising opportunity, outline a go-to-market strategy.'"
-              ]
-            },
-            {
-              title: "Role-Based Perspective Switching",
-              content: "This advanced technique involves asking the AI to approach problems from multiple expert perspectives within a single prompt or across related prompts. This creates more comprehensive, nuanced solutions by leveraging different domain expertise.",
-              examples: [
-                "Single perspective: 'As a marketer, evaluate this product launch strategy' → Limited viewpoint",
-                "Multiple perspectives: 'Evaluate this product launch strategy from three perspectives: 1) As a marketing director focused on ROI, 2) As a customer success manager concerned about user experience, 3) As a product manager thinking about long-term strategy'",
-                "Perspective debate: 'Have a discussion between a risk-averse CFO and a growth-focused CMO about whether to increase the marketing budget by 50%. Present both arguments with supporting data.'"
-              ]
-            },
-            {
-              title: "Iterative Refinement Prompting",
-              content: "This technique involves starting with a broad prompt and then progressively refining the output through follow-up prompts. Each iteration focuses on improving specific aspects, allowing for fine-tuned control over the final result.",
-              examples: [
-                "Initial prompt: 'Write a blog post about remote work benefits' → Generic content",
-                "Refinement 1: 'Make it more specific to software developers' → More targeted",
-                "Refinement 2: 'Add 3 specific statistics and 2 real company examples' → More credible",
-                "Refinement 3: 'Adjust the tone to be more conversational and add actionable tips' → More engaging and practical"
-              ]
-            },
-            {
-              title: "Meta-Prompting",
-              content: "Meta-prompting involves asking the AI to help you improve your prompts or to think about the prompting process itself. This advanced technique leverages the AI's understanding of effective communication to optimize your prompt engineering approach.",
-              examples: [
-                "Basic request: 'Help me write better emails'",
-                "Meta-prompt: 'I want to write more effective emails. First, ask me 5 questions about my email challenges, audience, and goals. Then, based on my responses, create a custom email template and provide 3 specific improvement strategies.'",
-                "Prompt optimization: 'I'm trying to get better product descriptions from AI. Here's my current prompt: [prompt]. Analyze this prompt and suggest 5 specific improvements that would make the outputs more engaging and conversion-focused.'"
-              ]
-            }
-          ],
-          exercises: [
-            {
-              title: "Chain-of-Thought Problem Solving",
-              description: "Create a prompt that guides the AI through logical reasoning steps for a complex business decision",
-              template: "Business Challenge: A company must decide whether to expand internationally\n\nCreate a chain-of-thought prompt that walks through:\n1. Market analysis steps\n2. Risk assessment process\n3. Financial evaluation method\n4. Decision framework\n\nYour prompt should explicitly request step-by-step reasoning."
-            },
-            {
-              title: "Few-Shot Pattern Teaching",
-              description: "Use few-shot learning to teach a specific output format and style",
-              template: "Goal: Train AI to write compelling social media posts\n\nCreate a few-shot prompt with:\n• 3 example posts showing the desired pattern\n• Clear explanation of the format\n• Instructions for applying the pattern to new content\n\nFormat each example with: Hook-Value-CTA structure"
-            },
-            {
-              title: "Multi-Perspective Analysis",
-              description: "Create a prompt that analyzes a business scenario from multiple expert viewpoints",
-              template: "Scenario: A startup is considering raising Series A funding vs. bootstrapping growth\n\nDesign a prompt that gets analysis from:\n• CEO perspective (growth and vision)\n• CFO perspective (financial risk and control)\n• Investor perspective (return potential and market timing)\n\nEach perspective should include specific concerns and recommendations."
-            }
-          ]
+          sections: MODULE_CONTENT["advanced-techniques"].sections,
+          exercises: MODULE_CONTENT["advanced-techniques"].exercises
         }
       },
       {

@@ -531,6 +531,301 @@ Review your prompt and verify:
 - Are constraints realistic and helpful?`
       }
     ]
+  },
+  "advanced-techniques": {
+    sections: [
+      {
+        title: "Zero-shot & Few-shot Prompting",
+        content: `Zero-shot and few-shot prompting are fundamental advanced techniques that leverage the AI's training to perform tasks with minimal or no examples. These techniques unlock the AI's ability to generalize and adapt to new tasks without extensive training data.
+
+**Zero-shot Prompting:**
+Zero-shot prompting asks the AI to perform a task without providing any examples. It relies entirely on the AI's training and your prompt's clarity to understand and execute the request. This technique is powerful for well-understood tasks where the AI can draw from its extensive training.
+
+**Key Principles of Zero-shot Prompting:**
+- **Clear Task Definition**: Be explicit about what you want accomplished
+- **Context Setting**: Provide enough background for the AI to understand the situation  
+- **Output Specification**: Define exactly what format and type of response you need
+- **Role Assignment**: Give the AI a specific expertise role to draw upon
+
+**Few-shot Prompting:**
+Few-shot prompting provides 2-5 examples to teach the AI the desired pattern, format, or approach. This technique is incredibly effective for establishing consistency and showing rather than just telling the AI what you want.
+
+**When to Use Each Technique:**
+- **Zero-shot**: Well-understood tasks, general knowledge questions, standard business processes
+- **Few-shot**: Custom formats, specific styles, complex patterns, maintaining consistency
+
+**Zero-shot vs Few-shot Impact:**
+The difference in output quality can be dramatic. Few-shot prompting often produces significantly more consistent and targeted results because it demonstrates the exact pattern you want replicated.`,
+        examples: [
+          "Zero-shot: 'Write a product description for a wireless mouse' → Generic description with standard features",
+          "Few-shot with 3 examples: 'Write product descriptions following these patterns: [Example 1: Feature-Benefit-Social Proof], [Example 2: Problem-Solution-Results], [Example 3: Story-Feature-CTA]' → Highly consistent, formatted descriptions",
+          "Zero-shot business analysis: 'Analyze the competitive landscape for food delivery apps' → Broad, general analysis",
+          "Few-shot business analysis: 'Analyze competitive landscapes like these examples: [3 detailed competitor analyses with specific frameworks]' → Structured, consistent analysis following proven patterns"
+        ]
+      },
+      {
+        title: "Chain-of-thought Prompting",
+        content: `Chain-of-thought prompting explicitly guides the AI through step-by-step reasoning processes. This advanced technique dramatically improves accuracy for complex problems by making the AI's thinking process visible and systematic.
+
+**The Power of Explicit Reasoning:**
+By asking the AI to "show its work" and think through problems step-by-step, you get more reliable, traceable, and often more creative solutions. This technique is especially powerful for analysis, problem-solving, and decision-making tasks.
+
+**Core Components of Chain-of-thought:**
+- **Step-by-step Instructions**: Break complex tasks into logical sequences
+- **Reasoning Requests**: Ask the AI to explain its thinking process  
+- **Verification Steps**: Include checkpoints to validate logic
+- **Multiple Perspectives**: Consider different angles and approaches
+
+**Advanced Chain-of-thought Techniques:**
+1. **Sequential Reasoning**: "First analyze X, then consider Y, finally evaluate Z"
+2. **Conditional Logic**: "If condition A, then approach B, otherwise approach C"
+3. **Iterative Refinement**: "Start with initial analysis, then refine based on these criteria"
+4. **Multi-perspective Analysis**: "Examine this from technical, business, and user perspectives"
+
+**Chain-of-thought for Complex Business Problems:**
+This technique excels at strategic planning, risk assessment, market analysis, and any situation requiring systematic thinking. By making the reasoning explicit, you can verify the logic and identify potential flaws or oversights.
+
+**Quality Improvement:**
+Studies show chain-of-thought prompting can improve accuracy by 20-50% on complex reasoning tasks compared to direct instruction prompts. The key is structuring the reasoning process appropriately for your specific problem type.`,
+        examples: [
+          "Basic request: 'Should we launch in Europe?' → Simple yes/no with basic reasoning",
+          "Chain-of-thought: 'Analyze European expansion step-by-step: 1) Assess market size and demand, 2) Evaluate regulatory requirements, 3) Calculate resource needs, 4) Identify risks and mitigation strategies, 5) Compare ROI to other opportunities, 6) Make recommendation with supporting logic' → Comprehensive, traceable analysis",
+          "Problem-solving: 'Customer retention dropped 15%. Walk through a systematic diagnosis: 1) Analyze when the drop started, 2) Identify potential causes, 3) Prioritize by likelihood and impact, 4) Design tests to validate hypotheses, 5) Recommend action plan'",
+          "Strategic decision: 'We're choosing between Product A and Product B. Think through this systematically: First, define success criteria. Then evaluate each option against these criteria. Consider resource requirements, market timing, and competitive dynamics. Finally, weigh risks and recommend with clear reasoning.'"
+        ]
+      },
+      {
+        title: "Creative Prompting",
+        content: `Creative prompting unlocks the AI's innovative potential while maintaining practical applicability. This advanced technique balances creative freedom with strategic direction to generate novel solutions, breakthrough ideas, and original content that drives real business value.
+
+**The Art of Structured Creativity:**
+Effective creative prompting doesn't just ask for "creative ideas." It provides frameworks that channel creativity toward productive outcomes. The best creative prompts combine imaginative freedom with strategic constraints that ensure usefulness.
+
+**Key Creative Prompting Strategies:**
+- **Constraint-based Creativity**: Use limitations to spark innovation
+- **Perspective Shifting**: Ask for ideas from unusual viewpoints  
+- **Combination Techniques**: Merge unrelated concepts for novel solutions
+- **Scenario Building**: Create hypothetical situations to explore possibilities
+- **Analogical Thinking**: Draw insights from different industries or domains
+
+**Advanced Creative Frameworks:**
+1. **SCAMPER Method**: Substitute, Combine, Adapt, Modify, Put to another use, Eliminate, Reverse
+2. **Six Thinking Hats**: Explore ideas from emotional, logical, creative, cautious, optimistic, and process perspectives
+3. **"What if" Scenarios**: Push boundaries with hypothetical constraints or opportunities
+4. **Cross-industry Innovation**: Apply solutions from one field to another
+
+**Balancing Creativity and Practicality:**
+The most valuable creative prompts generate ideas that are both innovative and implementable. Include constraints like budget, timeline, resources, and target audience to ensure creative outputs remain grounded in reality.
+
+**Creative Prompting for Business Innovation:**
+This technique excels at product development, marketing campaigns, problem-solving, process improvement, and strategic planning. By systematically exploring creative possibilities, you can discover breakthrough solutions that competitors miss.`,
+        examples: [
+          "Basic creative request: 'Give me marketing ideas for our app' → Generic marketing tactics",
+          "Structured creative prompt: 'Generate 10 unconventional marketing ideas for our meditation app by applying successful strategies from these 3 different industries: gaming, fitness, and food delivery. For each idea, explain the cross-industry inspiration and how to adapt it for our audience' → Innovative, actionable ideas",
+          "Creative problem-solving: 'Our remote team feels disconnected. Think like a theme park designer: How would Disney create magical connection experiences for distributed teams? Generate 5 ideas that bring that same engagement and wonder to remote work'",
+          "Product innovation: 'What if our project management tool worked like a cooking show? Brainstorm features that make project planning as engaging and collaborative as following a recipe with friends. Consider the storytelling, timing, and social elements.'",
+          "Creative strategy: 'Imagine our B2B software company operates like a Netflix series. How would we structure our customer journey, product releases, and marketing to create the same anticipation and binge-worthy engagement? Think in terms of seasons, episodes, and cliffhangers.'"
+        ]
+      }
+    ],
+    exercises: [
+      {
+        title: "Exercise 1: Zero-shot Prompting Mastery",
+        description: "Master the art of zero-shot prompting by creating clear, comprehensive prompts that achieve specific outcomes without examples.",
+        template: `Choose one of these business scenarios for zero-shot prompting:
+
+1. Create a customer onboarding email sequence for a SaaS product
+2. Develop a crisis communication plan for a product recall
+3. Design a performance review framework for remote employees
+
+**Your Task:**
+Create a zero-shot prompt that produces high-quality results without any examples. Your prompt should include:
+
+**Role Definition:**
+- Specific expertise the AI should draw upon
+- Years of experience and specialization areas
+- Industry context and background
+
+**Clear Context:**
+- Detailed situation and background
+- Stakeholders and constraints
+- Success criteria and objectives
+
+**Specific Task Instructions:**
+- Exact deliverables needed
+- Format and structure requirements
+- Quality standards and criteria
+
+**Chosen Scenario:** [Select 1, 2, or 3]
+
+**Your Zero-shot Prompt:**
+[Write your complete prompt here - aim for 150-250 words]
+
+**Expected Outcome:**
+Briefly describe what type of response you expect and why your prompt structure should produce quality results.`
+      },
+      {
+        title: "Exercise 2: Few-shot Learning Examples",
+        description: "Design few-shot prompts that teach specific patterns and ensure consistent, high-quality outputs through strategic examples.",
+        template: `Create a few-shot prompting system for generating customer case studies that convert prospects into buyers.
+
+**Your Task:**
+Design 3 example case studies that demonstrate the pattern you want the AI to follow, then create a prompt that uses these examples to generate new case studies.
+
+**Pattern Elements to Include:**
+- Hook that grabs attention
+- Customer challenge description
+- Solution implementation details
+- Specific results with metrics
+- Customer quote or testimonial
+- Call-to-action
+
+**Example 1: [Industry/Company Type]**
+[Write a 100-150 word case study following your chosen pattern]
+
+**Example 2: [Different Industry/Company Type]**
+[Write a 100-150 word case study following the same pattern]
+
+**Example 3: [Third Industry/Company Type]**
+[Write a 100-150 word case study following the same pattern]
+
+**Your Few-shot Prompt:**
+Now create the complete prompt that uses these examples to generate new case studies. Include:
+- Instructions to follow the demonstrated pattern
+- Explanation of what makes the pattern effective
+- Specific requirements for new case studies
+
+**Test Case:**
+Describe a hypothetical customer scenario you'd use to test your few-shot prompt and explain why this approach would be more effective than zero-shot prompting.`
+      },
+      {
+        title: "Exercise 3: Chain-of-thought Reasoning",
+        description: "Build sophisticated reasoning prompts that guide AI through complex analysis and decision-making processes.",
+        template: `Business Challenge: A mid-sized company (200 employees) is considering whether to build an internal app or hire an external development team.
+
+**Your Task:**
+Create a chain-of-thought prompt that systematically analyzes this decision through logical steps.
+
+**Design Your Reasoning Chain:**
+
+**Step 1 - Initial Assessment:**
+What should the AI analyze first and why?
+
+**Step 2 - Cost Analysis:**
+What cost factors should be considered and how?
+
+**Step 3 - Capability Evaluation:**
+How should internal capabilities be assessed?
+
+**Step 4 - Risk Assessment:**
+What risks should be identified and evaluated?
+
+**Step 5 - Timeline Considerations:**
+How should time-to-market factors be weighed?
+
+**Step 6 - Quality and Maintenance:**
+What long-term factors need consideration?
+
+**Step 7 - Final Decision Framework:**
+How should all factors be synthesized into a recommendation?
+
+**Your Complete Chain-of-thought Prompt:**
+Write the full prompt (200-300 words) that guides the AI through this reasoning process. Include:
+- Clear step-by-step instructions
+- What to consider at each step
+- How steps build on each other
+- Request for explicit reasoning at each stage
+
+**Validation Questions:**
+List 3 follow-up questions you could ask to verify the quality of the AI's reasoning process.`
+      },
+      {
+        title: "Exercise 4: Creative Prompt Development",
+        description: "Develop creative prompts that generate innovative solutions while maintaining practical applicability and business value.",
+        template: `Challenge: Your company's employee engagement scores have plateaued. Traditional solutions (team building, surveys, benefits) aren't creating breakthrough improvements.
+
+**Your Task:**
+Create a creative prompt that generates innovative engagement solutions by thinking outside conventional approaches.
+
+**Choose Your Creative Framework:**
+Select one approach for your creative prompt:
+
+A) **Cross-Industry Inspiration**: Apply engagement strategies from entertainment, sports, or hospitality
+B) **"What If" Scenarios**: Reimagine work through hypothetical constraints or possibilities  
+C) **Analogical Thinking**: Treat your workplace like something completely different (ecosystem, game, community, etc.)
+D) **Constraint-Based Innovation**: Use specific limitations to spark creative solutions
+
+**Your Creative Prompt Structure:**
+
+**Creative Framework:** [Choose A, B, C, or D above]
+
+**Setup and Context:**
+- Current engagement challenge details
+- What hasn't worked and why
+- Creative direction and inspiration source
+
+**Creative Challenge:**
+- Specific creative task with imaginative elements
+- Practical constraints to keep ideas implementable
+- Success criteria that balance innovation with feasibility
+
+**Output Requirements:**
+- Number and type of ideas needed
+- Format for presenting solutions
+- Implementation considerations
+
+**Your Complete Creative Prompt:**
+[Write your full creative prompt - 150-250 words]
+
+**Innovation Catalyst:**
+Explain what specific element of your prompt is designed to spark breakthrough thinking and why this approach could generate solutions that traditional brainstorming might miss.`
+      },
+      {
+        title: "Exercise 5: Advanced Technique Combination",
+        description: "Master the integration of multiple advanced techniques to create sophisticated, multi-layered prompts for complex business challenges.",
+        template: `Complex Business Scenario: A B2B software company needs to pivot their product strategy due to changing market conditions. They need comprehensive analysis and creative solutions that consider multiple stakeholder perspectives.
+
+**Your Task:**
+Create a sophisticated prompt that combines multiple advanced techniques to address this complex challenge.
+
+**Required Integration:**
+Your prompt must incorporate at least 3 of these advanced techniques:
+- Zero-shot or few-shot prompting
+- Chain-of-thought reasoning  
+- Creative problem-solving
+- Multi-perspective analysis
+- Iterative refinement
+
+**Design Your Multi-layered Prompt:**
+
+**Phase 1 - Initial Analysis:**
+What technique will you use for foundational assessment?
+- Chosen technique: _______________
+- Why this technique for this phase: _______________
+
+**Phase 2 - Creative Exploration:**
+How will you generate innovative solutions?
+- Chosen technique: _______________  
+- Why this technique for this phase: _______________
+
+**Phase 3 - Systematic Evaluation:**
+How will you analyze and refine solutions?
+- Chosen technique: _______________
+- Why this technique for this phase: _______________
+
+**Integration Strategy:**
+How will these techniques work together and build upon each other?
+
+**Your Complete Advanced Prompt:**
+Write your sophisticated, multi-technique prompt (300-400 words) that seamlessly integrates your chosen approaches.
+
+**Expected Outcome:**
+Describe the type and quality of response you expect from this advanced prompt and explain how combining techniques creates superior results compared to using any single technique alone.
+
+**Technique Synergy Analysis:**
+Explain how your chosen techniques complement each other and what unique insights this combination should produce.`
+      }
+    ]
   }
 };
 
