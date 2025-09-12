@@ -23,7 +23,7 @@ export const MODULES = [
   {
     id: "prompt-refinement",
     title: "Prompt Refinement",
-    description: "Learn iterative improvement techniques and testing strategies for optimal results.",
+    description: "Master key prompt patterns: persona, question refinement, cognitive verifier, and audience persona.",
     icon: "fas fa-tools", 
     order: 4
   },
