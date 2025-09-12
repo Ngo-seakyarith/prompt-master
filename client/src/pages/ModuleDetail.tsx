@@ -23,7 +23,6 @@ export default function ModuleDetail({ moduleId }: ModuleDetailProps) {
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [exercisePrompts, setExercisePrompts] = useState<{ [key: number]: string }>({});
   const [exerciseFeedback, setExerciseFeedback] = useState<{ [key: number]: AssessmentFeedback }>({});
-  const [completedExercises, setCompletedExercises] = useState<Set<number>>(new Set());
   
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -37,12 +36,22 @@ export default function ModuleDetail({ moduleId }: ModuleDetailProps) {
     queryKey: ["/api/progress"]
   });
 
+  // Fetch exercise-specific data from backend
+  const { data: completedExercisesArray = [] } = useQuery<number[]>({
+    queryKey: [`/api/exercises/${moduleId}/completed`]
+  });
+
+  const { data: exerciseScores = {} } = useQuery<{ [key: string]: number }>({
+    queryKey: [`/api/exercises/${moduleId}/scores`]
+  });
+
   const currentProgress = userProgress.find(p => p.moduleId === moduleId);
+  const completedExercises = new Set(completedExercisesArray);
 
   // Assessment mutation
   const assessMutation = useMutation({
-    mutationFn: async ({ prompt, moduleId }: { prompt: string; moduleId: string }) => {
-      const response = await apiRequest("POST", "/api/assess", { prompt, moduleId });
+    mutationFn: async ({ prompt, moduleId, exerciseIndex }: { prompt: string; moduleId: string; exerciseIndex: number }) => {
+      const response = await apiRequest("POST", "/api/assess", { prompt, moduleId, exerciseIndex });
       return response.json();
     },
     onSuccess: (feedback: AssessmentFeedback, variables) => {
@@ -51,17 +60,18 @@ export default function ModuleDetail({ moduleId }: ModuleDetailProps) {
         [currentExerciseIndex]: feedback
       }));
       
-      // Mark exercise as completed if score is good
-      if (feedback.overall_score >= 70) {
-        setCompletedExercises(prev => new Set([...Array.from(prev), currentExerciseIndex]));
+      // Show success message if score is good
+      if (feedback.overall_score >= 80) {
         toast({
           title: "Exercise Completed!",
           description: `Great work! You scored ${feedback.overall_score}/100`,
         });
       }
 
-      // Invalidate progress to refresh UI
+      // Invalidate all relevant queries to refresh UI
       queryClient.invalidateQueries({ queryKey: ["/api/progress"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/exercises/${moduleId}/completed`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/exercises/${moduleId}/scores`] });
     },
     onError: (error) => {
       console.error("Assessment error:", error);
@@ -84,7 +94,7 @@ export default function ModuleDetail({ moduleId }: ModuleDetailProps) {
       return;
     }
     
-    assessMutation.mutate({ prompt, moduleId });
+    assessMutation.mutate({ prompt, moduleId, exerciseIndex: currentExerciseIndex });
   };
 
   const handlePromptChange = (value: string) => {

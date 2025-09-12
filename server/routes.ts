@@ -13,8 +13,9 @@ declare module "express-serve-static-core" {
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { assessPrompt, generatePromptSuggestions } from "./services/openai";
-import { insertPromptAttemptSchema } from "@shared/schema";
+import { insertPromptAttemptSchema, assessPromptSchema } from "@shared/schema";
 import { z } from "zod";
+import { MODULE_CONTENT } from "../client/src/lib/constants";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Configure session middleware for user session management
@@ -83,17 +84,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Assess a prompt
   app.post("/api/assess", async (req, res) => {
     try {
-      const { prompt, moduleId } = req.body;
-      
-      if (!prompt || !moduleId) {
-        return res.status(400).json({ message: "Prompt and moduleId are required" });
+      // Validate request body using Zod schema
+      const validationResult = assessPromptSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid request data", 
+          errors: validationResult.error.errors 
+        });
+      }
+
+      const { prompt, moduleId, exerciseIndex } = validationResult.data;
+
+      // Validate exerciseIndex is within valid range for the module
+      const moduleContent = MODULE_CONTENT[moduleId as keyof typeof MODULE_CONTENT];
+      if (!moduleContent) {
+        return res.status(400).json({ message: "Invalid moduleId" });
+      }
+      const exerciseCount = moduleContent.exercises.length;
+      if (exerciseIndex < 0 || exerciseIndex >= exerciseCount) {
+        return res.status(400).json({ message: `Invalid exerciseIndex. Must be between 0 and ${exerciseCount - 1}` });
       }
 
       // Assess the prompt using OpenAI
       const feedback = await assessPrompt(prompt, moduleId);
       
-      // Save the attempt
       const userId = req.session?.userId || "anonymous";
+      const isExerciseCompleted = feedback.overall_score >= 80;
+      
+      // Save the exercise attempt
+      await storage.saveExerciseAttempt({
+        userId,
+        moduleId,
+        exerciseIndex,
+        prompt,
+        score: feedback.overall_score,
+        feedback,
+        isCompleted: isExerciseCompleted
+      });
+
+      // Also save legacy prompt attempt for backward compatibility
       await storage.savePromptAttempt({
         userId,
         moduleId,
@@ -102,15 +131,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         feedback
       });
 
-      // Update user progress
+      // Update module progress based on all exercise completions
+      const completedExercises = await storage.getCompletedExercises(userId, moduleId);
+      const allExercisesCompleted = completedExercises.size >= exerciseCount;
+      const bestScores = await storage.getBestExerciseScores(userId, moduleId);
+      const averageScore = bestScores.size > 0 ? 
+        Array.from(bestScores.values()).reduce((sum, score) => sum + score, 0) / bestScores.size : 0;
+
       const currentProgress = await storage.getUserModuleProgress(userId, moduleId);
       const newAttempts = (currentProgress?.attempts || 0) + 1;
-      const bestScore = Math.max(currentProgress?.score || 0, feedback.overall_score);
-      const isCompleted = bestScore >= 80;
 
       await storage.updateUserProgress(userId, moduleId, {
-        score: bestScore,
-        isCompleted,
+        score: Math.round(averageScore),
+        isCompleted: allExercisesCompleted,
         attempts: newAttempts
       });
 
@@ -146,6 +179,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(attempts);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch attempts" });
+    }
+  });
+
+  // Get exercise attempts for a module
+  app.get("/api/exercises/:moduleId/attempts", async (req, res) => {
+    try {
+      const userId = req.session?.userId || "anonymous";
+      const attempts = await storage.getUserExerciseAttempts(userId, req.params.moduleId);
+      res.json(attempts);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch exercise attempts" });
+    }
+  });
+
+  // Get best exercise scores for a module
+  app.get("/api/exercises/:moduleId/scores", async (req, res) => {
+    try {
+      const userId = req.session?.userId || "anonymous";
+      const bestScores = await storage.getBestExerciseScores(userId, req.params.moduleId);
+      // Convert Map to object for JSON serialization
+      const scoresObject = Object.fromEntries(bestScores);
+      res.json(scoresObject);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch exercise scores" });
+    }
+  });
+
+  // Get completed exercises for a module
+  app.get("/api/exercises/:moduleId/completed", async (req, res) => {
+    try {
+      const userId = req.session?.userId || "anonymous";
+      const completedExercises = await storage.getCompletedExercises(userId, req.params.moduleId);
+      // Convert Set to array for JSON serialization
+      const completedArray = Array.from(completedExercises);
+      res.json(completedArray);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch completed exercises" });
     }
   });
 

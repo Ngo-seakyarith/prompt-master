@@ -40,6 +40,18 @@ export const promptAttempts = pgTable("prompt_attempts", {
   createdAt: timestamp("created_at").default(sql`now()`),
 });
 
+export const exerciseAttempts = pgTable("exercise_attempts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  moduleId: varchar("module_id").notNull(),
+  exerciseIndex: integer("exercise_index").notNull(),
+  prompt: text("prompt").notNull(),
+  score: integer("score").notNull(),
+  feedback: json("feedback").notNull(),
+  isCompleted: boolean("is_completed").default(false),
+  createdAt: timestamp("created_at").default(sql`now()`),
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
@@ -59,6 +71,11 @@ export const insertPromptAttemptSchema = createInsertSchema(promptAttempts).omit
   createdAt: true,
 });
 
+export const insertExerciseAttemptSchema = createInsertSchema(exerciseAttempts).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type Module = typeof modules.$inferSelect;
@@ -67,6 +84,8 @@ export type UserProgress = typeof userProgress.$inferSelect;
 export type InsertUserProgress = z.infer<typeof insertUserProgressSchema>;
 export type PromptAttempt = typeof promptAttempts.$inferSelect;
 export type InsertPromptAttempt = z.infer<typeof insertPromptAttemptSchema>;
+export type ExerciseAttempt = typeof exerciseAttempts.$inferSelect;
+export type InsertExerciseAttempt = z.infer<typeof insertExerciseAttemptSchema>;
 
 export interface AssessmentFeedback {
   overall_score: number;
@@ -91,3 +110,12 @@ export interface ModuleContent {
     template?: string;
   }[];
 }
+
+// Validation schemas for API endpoints
+export const assessPromptSchema = z.object({
+  prompt: z.string().min(1, "Prompt is required and cannot be empty"),
+  moduleId: z.string().min(1, "Module ID is required"),
+  exerciseIndex: z.number().int().min(0, "Exercise index must be a non-negative integer")
+});
+
+export type AssessPromptRequest = z.infer<typeof assessPromptSchema>;

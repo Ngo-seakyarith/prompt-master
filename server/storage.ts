@@ -1,5 +1,6 @@
-import { type User, type InsertUser, type Module, type UserProgress, type InsertUserProgress, type PromptAttempt, type InsertPromptAttempt, type ModuleContent } from "@shared/schema";
+import { type User, type InsertUser, type Module, type UserProgress, type InsertUserProgress, type PromptAttempt, type InsertPromptAttempt, type ExerciseAttempt, type InsertExerciseAttempt, type ModuleContent } from "@shared/schema";
 import { randomUUID } from "crypto";
+import { MODULE_CONTENT } from "../client/src/lib/constants";
 
 export interface IStorage {
   // User methods
@@ -19,6 +20,12 @@ export interface IStorage {
   // Prompt attempts
   savePromptAttempt(attempt: InsertPromptAttempt): Promise<PromptAttempt>;
   getUserAttempts(userId: string, moduleId?: string): Promise<PromptAttempt[]>;
+  
+  // Exercise attempts
+  saveExerciseAttempt(attempt: InsertExerciseAttempt): Promise<ExerciseAttempt>;
+  getUserExerciseAttempts(userId: string, moduleId: string): Promise<ExerciseAttempt[]>;
+  getBestExerciseScores(userId: string, moduleId: string): Promise<Map<number, number>>;
+  getCompletedExercises(userId: string, moduleId: string): Promise<Set<number>>;
 }
 
 export class MemStorage implements IStorage {
@@ -26,12 +33,14 @@ export class MemStorage implements IStorage {
   private modules: Map<string, Module>;
   private userProgress: Map<string, UserProgress>;
   private promptAttempts: Map<string, PromptAttempt>;
+  private exerciseAttempts: Map<string, ExerciseAttempt>;
 
   constructor() {
     this.users = new Map();
     this.modules = new Map();
     this.userProgress = new Map();
     this.promptAttempts = new Map();
+    this.exerciseAttempts = new Map();
     this.initializeModules();
   }
 
@@ -83,18 +92,7 @@ export class MemStorage implements IStorage {
               ]
             }
           ],
-          exercises: [
-            {
-              title: "Context Enhancement Challenge",
-              description: "Take a basic prompt and add relevant context to improve its effectiveness. Focus on audience, purpose, and constraints.",
-              template: "Basic prompt: 'Write a product description'\n\nYour enhanced prompt with context:\n- Who is the audience?\n- What product specifically?\n- What tone and length?\n- What key benefits to highlight?"
-            },
-            {
-              title: "Specificity Practice",
-              description: "Transform vague requests into specific, actionable prompts",
-              template: "Vague prompt: 'Help me plan my day'\n\nTransform this into a specific prompt that includes:\n- Your role/situation\n- Specific goals\n- Time constraints\n- Preferences"
-            }
-          ]
+          exercises: MODULE_CONTENT["basic-prompting"].exercises
         }
       },
       {
@@ -520,6 +518,51 @@ export class MemStorage implements IStorage {
   async getUserAttempts(userId: string, moduleId?: string): Promise<PromptAttempt[]> {
     const attempts = Array.from(this.promptAttempts.values()).filter(attempt => attempt.userId === userId);
     return moduleId ? attempts.filter(attempt => attempt.moduleId === moduleId) : attempts;
+  }
+
+  async saveExerciseAttempt(attemptData: InsertExerciseAttempt): Promise<ExerciseAttempt> {
+    const id = randomUUID();
+    const attempt: ExerciseAttempt = {
+      ...attemptData,
+      id,
+      isCompleted: attemptData.isCompleted ?? false,
+      createdAt: new Date()
+    };
+    this.exerciseAttempts.set(id, attempt);
+    return attempt;
+  }
+
+  async getUserExerciseAttempts(userId: string, moduleId: string): Promise<ExerciseAttempt[]> {
+    return Array.from(this.exerciseAttempts.values())
+      .filter(attempt => attempt.userId === userId && attempt.moduleId === moduleId)
+      .sort((a, b) => (a.createdAt?.getTime() || 0) - (b.createdAt?.getTime() || 0));
+  }
+
+  async getBestExerciseScores(userId: string, moduleId: string): Promise<Map<number, number>> {
+    const attempts = await this.getUserExerciseAttempts(userId, moduleId);
+    const bestScores = new Map<number, number>();
+    
+    for (const attempt of attempts) {
+      const currentBest = bestScores.get(attempt.exerciseIndex) || 0;
+      if (attempt.score > currentBest) {
+        bestScores.set(attempt.exerciseIndex, attempt.score);
+      }
+    }
+    
+    return bestScores;
+  }
+
+  async getCompletedExercises(userId: string, moduleId: string): Promise<Set<number>> {
+    const bestScores = await this.getBestExerciseScores(userId, moduleId);
+    const completed = new Set<number>();
+    
+    Array.from(bestScores.entries()).forEach(([exerciseIndex, score]) => {
+      if (score >= 80) {
+        completed.add(exerciseIndex);
+      }
+    });
+    
+    return completed;
   }
 }
 
