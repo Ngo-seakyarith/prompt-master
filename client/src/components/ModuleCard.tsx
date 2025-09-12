@@ -86,7 +86,7 @@ export default function ModuleCard({ module, progress, isLocked }: ModuleCardPro
         
         <div className="flex justify-between items-center">
           <span className="text-sm text-muted-foreground" data-testid={`module-score-${module.id}`}>
-            {progress?.score ? `Score: ${progress.score}/100` : isLocked ? "Requires 80+ score" : "Not started"}
+            {progress?.score ? `Score: ${progress.score}/100` : "Not started"}
           </span>
           {isLocked ? (
             <Button

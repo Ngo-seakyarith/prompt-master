@@ -66,11 +66,9 @@ export default function Dashboard() {
   };
 
   const isModuleLocked = (module: Module) => {
-    if (module.order === 1) return false;
-    const previousModule = modules.find(m => m.order === module.order - 1);
-    if (!previousModule) return false;
-    const previousProgress = getModuleProgress(previousModule.id);
-    return !previousProgress?.isCompleted;
+    // All modules are accessible regardless of completion status
+    // Users can access any module based on their skill level
+    return false;
   };
 
   const completedModules = userProgress.filter(p => p.isCompleted).length;
