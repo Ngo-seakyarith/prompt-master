@@ -17,10 +17,10 @@ export default function ProgressTracker({ modules, userProgress }: ProgressTrack
   const totalModules = modules.length;
   const overallProgress = (completedModules / totalModules) * 100;
   const averageScore = userProgress.length > 0 
-    ? userProgress.reduce((sum, p) => sum + p.score, 0) / userProgress.length 
+    ? userProgress.reduce((sum, p) => sum + (p.score || 0), 0) / userProgress.length 
     : 0;
 
-  const totalAttempts = userProgress.reduce((sum, p) => sum + p.attempts, 0);
+  const totalAttempts = userProgress.reduce((sum, p) => sum + (p.attempts || 0), 0);
   const currentStreak = 7; // Mock streak data
 
   return (
@@ -48,7 +48,7 @@ export default function ProgressTracker({ modules, userProgress }: ProgressTrack
                         ? "bg-muted"
                         : isCompleted
                           ? "bg-secondary/10"
-                          : progress && progress.attempts > 0
+                          : progress && (progress.attempts || 0) > 0
                             ? "bg-primary/10"
                             : "bg-accent/10"
                     }`}>
@@ -57,7 +57,7 @@ export default function ProgressTracker({ modules, userProgress }: ProgressTrack
                           ? "fas fa-lock text-muted-foreground"
                           : isCompleted
                             ? "fas fa-check text-secondary"
-                            : progress && progress.attempts > 0
+                            : progress && (progress.attempts || 0) > 0
                               ? "fas fa-clock text-primary"
                               : "fas fa-play text-accent"
                       }`}></i>
@@ -72,7 +72,7 @@ export default function ProgressTracker({ modules, userProgress }: ProgressTrack
                             ? "text-muted-foreground"
                             : isCompleted
                               ? "text-secondary"
-                              : progress && progress.attempts > 0
+                              : progress && (progress.attempts || 0) > 0
                                 ? "text-primary"
                                 : "text-muted-foreground"
                         }`} data-testid={`progress-score-${module.id}`}>

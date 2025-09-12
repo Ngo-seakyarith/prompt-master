@@ -39,6 +39,9 @@ export default function Dashboard() {
       // Invalidate progress to refresh UI
       queryClient.invalidateQueries({ queryKey: ["/api/progress"] });
     },
+    onError: (error) => {
+      console.error("Assessment error:", error);
+    },
   });
 
   const handleAnalyzePrompt = (prompt: string) => {

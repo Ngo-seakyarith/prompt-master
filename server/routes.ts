@@ -1,4 +1,14 @@
-import type { Express } from "express";
+import type { Express, Request } from "express";
+import session from "express-session";
+
+// Extend Express Request type to include session
+declare module "express-serve-static-core" {
+  interface Request {
+    session?: session.Session & Partial<session.SessionData> & {
+      userId?: string;
+    };
+  }
+}
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { assessPrompt, generatePromptSuggestions } from "./services/openai";

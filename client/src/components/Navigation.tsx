@@ -27,8 +27,8 @@ export default function Navigation() {
               <div className="flex items-baseline space-x-4">
                 {navItems.map((item) => (
                   <Link key={item.id} href={item.href}>
-                    <a
-                      className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    <span
+                      className={`px-3 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer ${
                         location === item.href || (item.href === "/" && location === "")
                           ? "text-primary bg-primary/10"
                           : "text-muted-foreground hover:text-foreground"
@@ -36,7 +36,7 @@ export default function Navigation() {
                       data-testid={`nav-${item.id}`}
                     >
                       {item.label}
-                    </a>
+                    </span>
                   </Link>
                 ))}
               </div>

@@ -18,7 +18,7 @@ export default function ModuleCard({ module, progress, isLocked, onStart }: Modu
     if (progress?.isCompleted) {
       return <span className="bg-secondary text-secondary-foreground px-3 py-1 rounded-full text-sm font-medium">Completed</span>;
     }
-    if (progress && progress.attempts > 0) {
+    if (progress && (progress.attempts || 0) > 0) {
       return <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-medium">In Progress</span>;
     }
     return <span className="bg-accent text-accent-foreground px-3 py-1 rounded-full text-sm font-medium">Available</span>;
@@ -27,7 +27,7 @@ export default function ModuleCard({ module, progress, isLocked, onStart }: Modu
   const getButtonText = () => {
     if (isLocked) return "Locked";
     if (progress?.isCompleted) return "Review";
-    if (progress && progress.attempts > 0) return "Continue";
+    if (progress && (progress.attempts || 0) > 0) return "Continue";
     return "Start";
   };
 
@@ -38,7 +38,7 @@ export default function ModuleCard({ module, progress, isLocked, onStart }: Modu
       className={`hover:shadow-md transition-shadow ${
         isLocked ? "opacity-60" : ""
       } ${
-        progress && !progress.isCompleted && progress.attempts > 0 
+        progress && !progress.isCompleted && (progress.attempts || 0) > 0 
           ? "border-primary/20 bg-primary/5" 
           : ""
       }`}
@@ -51,7 +51,7 @@ export default function ModuleCard({ module, progress, isLocked, onStart }: Modu
               ? "bg-muted" 
               : progress?.isCompleted 
                 ? "bg-secondary/10" 
-                : progress && progress.attempts > 0
+                : progress && (progress.attempts || 0) > 0
                   ? "bg-primary/10"
                   : "bg-accent/10"
           }`}>
@@ -60,7 +60,7 @@ export default function ModuleCard({ module, progress, isLocked, onStart }: Modu
                 ? "text-muted-foreground"
                 : progress?.isCompleted
                   ? "text-secondary"
-                  : progress && progress.attempts > 0
+                  : progress && (progress.attempts || 0) > 0
                     ? "text-primary"
                     : "text-accent"
             }`}></i>

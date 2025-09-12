@@ -31,13 +31,12 @@ Respond with JSON in this exact format:
 }`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-4o",
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: `Module: ${moduleId}\n\nPrompt to assess:\n${prompt}` }
       ],
-      response_format: { type: "json_object" },
-      temperature: 0.3
+      response_format: { type: "json_object" }
     });
 
     const result = JSON.parse(response.choices[0].message.content || "{}");
@@ -62,7 +61,7 @@ Respond with JSON in this exact format:
 export async function generatePromptSuggestions(prompt: string, feedback: AssessmentFeedback): Promise<string> {
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-4o",
       messages: [
         {
           role: "system",
@@ -72,8 +71,7 @@ export async function generatePromptSuggestions(prompt: string, feedback: Assess
           role: "user",
           content: `Original prompt:\n${prompt}\n\nFeedback:\nOverall Score: ${feedback.overall_score}/100\nImprovements needed: ${feedback.improvements.join(", ")}\nSuggestions: ${feedback.suggestions.join(", ")}\n\nPlease provide an improved version of this prompt:`
         }
-      ],
-      temperature: 0.7
+      ]
     });
 
     return response.choices[0].message.content || "";

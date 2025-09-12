@@ -231,7 +231,6 @@ export class MemStorage implements IStorage {
       score: 0,
       isCompleted: false,
       attempts: 0,
-      lastAttempt: new Date(),
       ...existing?.[1],
       ...progressData,
       lastAttempt: new Date()
