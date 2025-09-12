@@ -1,5 +1,6 @@
 import type { Express, Request } from "express";
 import session from "express-session";
+import { randomUUID } from "crypto";
 
 // Extend Express Request type to include session
 declare module "express-serve-static-core" {
@@ -16,6 +17,24 @@ import { insertPromptAttemptSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Configure session middleware for user session management
+  app.use(session({
+    secret: process.env.SESSION_SECRET || 'your-secret-key',
+    resave: false,
+    saveUninitialized: true,
+    cookie: { 
+      secure: false, // Set to true in production with HTTPS
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }
+  }));
+
+  // Middleware to ensure each session has a unique userId
+  app.use((req, res, next) => {
+    if (!req.session?.userId) {
+      req.session!.userId = randomUUID();
+    }
+    next();
+  });
   // Get all modules
   app.get("/api/modules", async (req, res) => {
     try {
