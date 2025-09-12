@@ -103,80 +103,8 @@ export class MemStorage implements IStorage {
         order: 2,
         isActive: true,
         content: {
-          sections: [
-            {
-              title: "The RTCTC Framework",
-              content: "Role, Task, Context, Template, Constraints - the five key components that form the backbone of well-structured prompts. This framework ensures comprehensive communication with AI models by addressing who (role), what (task), why (context), how (template), and limitations (constraints).",
-              examples: [
-                "R: 'You are a financial advisor with 15 years of experience'",
-                "T: 'Create a retirement savings plan'", 
-                "C: 'For a 35-year-old teacher earning $55k annually'",
-                "T: 'Present as a step-by-step action plan'",
-                "C: 'Focus on low-risk, long-term investments only'"
-              ]
-            },
-            {
-              title: "Role Definition - Setting the Expert Persona",
-              content: "The role establishes the AI's expertise, perspective, and communication style. A well-defined role provides domain knowledge, sets the appropriate tone, and helps the AI understand the level of expertise expected in the response.",
-              examples: [
-                "Generic: 'Help me with marketing' → Unclear expertise level",
-                "Better: 'You are a marketing strategist' → Clear expertise area", 
-                "Best: 'You are a senior digital marketing strategist with 10+ years of experience in SaaS companies, specializing in B2B growth strategies'",
-                "Expert roles: 'As a certified financial planner...', 'Acting as a senior UX designer...', 'You are a pediatric nutritionist...'"
-              ]
-            },
-            {
-              title: "Task Clarity - Defining the Specific Action",
-              content: "The task specifies exactly what you want the AI to accomplish. Clear task definition prevents ambiguous outputs and ensures the AI focuses on the right deliverable. Use action verbs and be specific about the desired outcome.",
-              examples: [
-                "Vague: 'Help with my resume' → Unclear what kind of help",
-                "Better: 'Review my resume' → Still ambiguous about the review type",
-                "Best: 'Analyze my resume for a senior software engineer position and provide 5 specific improvement suggestions with rationale'",
-                "Action verbs: Analyze, Create, Compare, Optimize, Evaluate, Design, Summarize, Recommend"
-              ]
-            },
-            {
-              title: "Context - Providing Essential Background",
-              content: "Context gives the AI the situational awareness needed to provide relevant, personalized responses. Include relevant background information, current situation, goals, and any constraints or preferences that might influence the outcome.",
-              examples: [
-                "Minimal context: 'Create a workout plan' → Generic fitness advice",
-                "Good context: 'Create a workout plan for weight loss' → Targeted but still general",
-                "Rich context: 'Create a 12-week workout plan for a 30-year-old office worker with lower back issues, aiming to lose 20 pounds, with access to a home gym (dumbbells, resistance bands, yoga mat) and 45 minutes available 4 days per week'"
-              ]
-            },
-            {
-              title: "Template - Structuring the Output Format",
-              content: "The template defines how you want the AI to structure and present the information. This ensures consistency, readability, and makes the output immediately actionable for your needs.",
-              examples: [
-                "No format: 'Give me social media tips' → Unstructured advice",
-                "Basic format: 'List social media tips' → Simple bullet points",
-                "Detailed template: 'Present 7 social media tips using this format: 1) Tip Name, 2) Brief Description (1 sentence), 3) Implementation Steps (3-5 bullets), 4) Expected Results'",
-                "Common templates: Tables, bullet points, step-by-step guides, executive summaries, pros/cons lists"
-              ]
-            },
-            {
-              title: "Constraints - Setting Boundaries and Requirements",
-              content: "Constraints define the limitations, requirements, or specific parameters the AI must follow. These include length limits, style requirements, what to include or exclude, compliance needs, or resource limitations.",
-              examples: [
-                "No constraints: 'Write about healthy eating' → Could be any length, style, or focus",
-                "Basic constraints: 'Write a short article about healthy eating' → Length guideline only",
-                "Comprehensive constraints: 'Write a 500-word article about healthy eating for busy professionals, using a conversational tone, including 3 practical meal prep tips, avoiding technical nutrition jargon, and focusing on time-efficient solutions'",
-                "Constraint types: Length (word/character limits), Style (formal/casual), Content (must include/exclude), Audience (technical level), Resources (budget/time)"
-              ]
-            }
-          ],
-          exercises: [
-            {
-              title: "RTCTC Framework Practice",
-              description: "Create a comprehensive prompt using all five RTCTC components for a business scenario",
-              template: "Scenario: You need help creating a product launch strategy\n\nRole: You are a...\nTask: Your specific task is to...\nContext: The business situation is...\nTemplate: Format your response as...\nConstraints: You must follow these limitations..."
-            },
-            {
-              title: "Structure a Business Analysis Prompt", 
-              description: "Create a well-structured prompt using the RTCTC framework for business analysis",
-              template: "Business Challenge: A startup needs to understand their competition\n\nUse RTCTC to create a comprehensive prompt:\n• Role: Define the expert persona\n• Task: Specify the analysis needed\n• Context: Provide business background\n• Template: Structure the output format\n• Constraints: Set analysis parameters"
-            }
-          ]
+          sections: MODULE_CONTENT["prompt-structure"].sections,
+          exercises: MODULE_CONTENT["prompt-structure"].exercises
         }
       },
       {
