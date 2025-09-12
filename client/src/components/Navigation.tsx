@@ -1,8 +1,20 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import type { UserProgress } from "@shared/schema";
 
 export default function Navigation() {
   const [location] = useLocation();
+  
+  // Fetch user progress for real progress calculation
+  const { data: userProgress = [] } = useQuery<UserProgress[]>({
+    queryKey: ["/api/progress"]
+  });
+
+  // Calculate actual progress
+  const completedModules = userProgress.filter(p => p.isCompleted).length;
+  const totalModules = 5; // We have 5 modules
+  const overallProgress = totalModules > 0 ? Math.round((completedModules / totalModules) * 100) : 0;
 
   const navItems = [
     { href: "/", label: "Dashboard", id: "dashboard" },
@@ -44,10 +56,14 @@ export default function Navigation() {
           </div>
           <div className="flex items-center space-x-4">
             <div className="text-sm text-muted-foreground" data-testid="progress-indicator">
-              Progress: 45%
+              Progress: {overallProgress}%
             </div>
             <div className="w-24 h-2 bg-muted rounded-full">
-              <div className="w-11 h-2 bg-secondary rounded-full transition-all duration-500" data-testid="progress-bar"></div>
+              <div 
+                className="h-2 bg-secondary rounded-full transition-all duration-500" 
+                style={{ width: `${overallProgress}%` }}
+                data-testid="progress-bar"
+              ></div>
             </div>
             <button className="p-2 rounded-full bg-primary text-primary-foreground" data-testid="user-menu">
               <i className="fas fa-user w-4 h-4"></i>
