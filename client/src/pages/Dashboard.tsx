@@ -60,11 +60,6 @@ export default function Dashboard() {
     setCurrentFeedback(undefined);
   };
 
-  const handleModuleStart = (moduleId: string) => {
-    setActiveModuleId(moduleId);
-    setCurrentPrompt("");
-    setCurrentFeedback(undefined);
-  };
 
   const getModuleProgress = (moduleId: string) => {
     return userProgress.find(p => p.moduleId === moduleId);
@@ -106,7 +101,6 @@ export default function Dashboard() {
                   module={module}
                   progress={getModuleProgress(module.id)}
                   isLocked={isModuleLocked(module)}
-                  onStart={() => handleModuleStart(module.id)}
                 />
               ))}
             </div>
@@ -188,7 +182,6 @@ export default function Dashboard() {
                     module={module}
                     progress={getModuleProgress(module.id)}
                     isLocked={isModuleLocked(module)}
-                    onStart={() => handleModuleStart(module.id)}
                   />
                 ))}
               </div>

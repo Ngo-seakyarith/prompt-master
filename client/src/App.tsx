@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Dashboard from "@/pages/Dashboard";
+import ModuleDetail from "@/pages/ModuleDetail";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -11,6 +12,9 @@ function Router() {
     <Switch>
       <Route path="/" component={Dashboard} />
       <Route path="/modules" component={Dashboard} />
+      <Route path="/modules/:moduleId">
+        {(params) => <ModuleDetail moduleId={params.moduleId} />}
+      </Route>
       <Route path="/practice" component={Dashboard} />
       <Route path="/progress" component={Dashboard} />
       {/* Fallback to 404 */}

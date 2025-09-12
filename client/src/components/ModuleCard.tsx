@@ -1,3 +1,4 @@
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -7,10 +8,9 @@ interface ModuleCardProps {
   module: Module;
   progress?: UserProgress;
   isLocked: boolean;
-  onStart: () => void;
 }
 
-export default function ModuleCard({ module, progress, isLocked, onStart }: ModuleCardProps) {
+export default function ModuleCard({ module, progress, isLocked }: ModuleCardProps) {
   const getStatusBadge = () => {
     if (isLocked) {
       return <span className="bg-muted text-muted-foreground px-3 py-1 rounded-full text-sm font-medium">Locked</span>;
@@ -88,15 +88,25 @@ export default function ModuleCard({ module, progress, isLocked, onStart }: Modu
           <span className="text-sm text-muted-foreground" data-testid={`module-score-${module.id}`}>
             {progress?.score ? `Score: ${progress.score}/100` : isLocked ? "Requires 80+ score" : "Not started"}
           </span>
-          <Button
-            onClick={onStart}
-            disabled={isLocked}
-            variant={progress?.isCompleted ? "outline" : "default"}
-            className={progress?.isCompleted ? "border-secondary text-secondary hover:bg-secondary/10" : ""}
-            data-testid={`module-button-${module.id}`}
-          >
-            {getButtonText()}
-          </Button>
+          {isLocked ? (
+            <Button
+              disabled
+              variant="outline"
+              data-testid={`module-button-${module.id}`}
+            >
+              {getButtonText()}
+            </Button>
+          ) : (
+            <Link href={`/modules/${module.id}`}>
+              <Button
+                variant={progress?.isCompleted ? "outline" : "default"}
+                className={progress?.isCompleted ? "border-secondary text-secondary hover:bg-secondary/10" : ""}
+                data-testid={`module-button-${module.id}`}
+              >
+                {getButtonText()}
+              </Button>
+            </Link>
+          )}
         </div>
       </CardContent>
     </Card>
