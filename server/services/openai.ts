@@ -8,15 +8,92 @@ const openai = new OpenAI({
 
 export async function assessPrompt(prompt: string, moduleId: string): Promise<AssessmentFeedback> {
   try {
-    const systemPrompt = `You are an expert prompt engineering instructor. Assess the quality of the given prompt and provide detailed feedback.
+    // Get module-specific assessment criteria
+    const getModuleSystemPrompt = (moduleId: string) => {
+      const basePrompt = "You are an expert prompt engineering instructor. Assess the quality of the given prompt and provide detailed feedback.";
+      
+      let moduleSpecificCriteria = "";
+      
+      switch (moduleId) {
+        case "basic-prompting":
+          moduleSpecificCriteria = `
+This is the Basic Prompting module focusing on fundamentals and context usage.
 
+Evaluate the prompt on these criteria (score 0-100 each):
+1. Clarity & Structure: How clear and well-organized is the prompt?
+2. Context Completeness: Does it provide sufficient context and background information?
+3. Specificity: How specific and detailed are the instructions?
+4. Actionability: Can the AI produce the desired outcome effectively?
+
+For this foundational module, prioritize clear communication and adequate context over complex techniques.`;
+          break;
+          
+        case "prompt-structure":
+          moduleSpecificCriteria = `
+This is the Prompt Structure module focusing on the RTCTC framework (Role, Task, Context, Template, Constraints).
+
+Evaluate the prompt on these criteria (score 0-100 each):
+1. Clarity & Structure: How well-structured is the prompt using RTCTC elements?
+2. Context Completeness: Does it provide comprehensive context and background?
+3. Specificity: Are role, task, and constraints clearly defined?
+4. Actionability: How effectively does it guide the AI with structured expectations?
+
+Look for: clear role definition, specific task description, relevant context, output format/template, and necessary constraints.`;
+          break;
+          
+        case "advanced-techniques":
+          moduleSpecificCriteria = `
+This is the Advanced Techniques module focusing on chain-of-thought, few-shot learning, and sophisticated strategies.
+
+Evaluate the prompt on these criteria (score 0-100 each):
+1. Clarity & Structure: How well does it organize complex instructions?
+2. Context Completeness: Does it provide examples or reasoning frameworks?
+3. Specificity: How precisely does it implement advanced techniques?
+4. Actionability: How effectively does it guide sophisticated AI reasoning?
+
+Look for: step-by-step reasoning, examples/demonstrations, complex problem decomposition, or advanced prompting patterns.`;
+          break;
+          
+        case "prompt-refinement":
+          moduleSpecificCriteria = `
+This is the Prompt Refinement module focusing on iterative improvement and testing strategies.
+
+Evaluate the prompt on these criteria (score 0-100 each):
+1. Clarity & Structure: How refined and polished is the prompt structure?
+2. Context Completeness: Does it show evidence of iterative improvement?
+3. Specificity: How precisely refined are the instructions and requirements?
+4. Actionability: How well-optimized is it for consistent, quality outputs?
+
+Look for: refined language, specific success criteria, clear quality indicators, or evidence of thoughtful optimization.`;
+          break;
+          
+        case "practical-applications":
+          moduleSpecificCriteria = `
+This is the Practical Applications module focusing on real-world business and productivity use cases.
+
+Evaluate the prompt on these criteria (score 0-100 each):
+1. Clarity & Structure: How professionally structured is the prompt?
+2. Context Completeness: Does it address real-world constraints and requirements?
+3. Specificity: How well does it define practical outcomes and deliverables?
+4. Actionability: How effectively does it drive business or productivity value?
+
+Look for: practical business context, realistic constraints, measurable outcomes, professional tone, and real-world applicability.`;
+          break;
+          
+        default:
+          moduleSpecificCriteria = `
 Evaluate the prompt on these criteria (score 0-100 each):
 1. Clarity & Structure: How clear and well-organized is the prompt?
 2. Context Completeness: Does it provide sufficient context and background?
 3. Specificity: How specific and detailed are the instructions?
-4. Actionability: Can the AI produce the desired outcome?
+4. Actionability: Can the AI produce the desired outcome?`;
+      }
+      
+      return `${basePrompt}
 
-Provide an overall score (0-100) and specific feedback.
+${moduleSpecificCriteria}
+
+Provide an overall score (0-100) and specific feedback. Be reasonably generous with scoring for well-structured prompts that demonstrate the key concepts for this module level.
 
 Respond with JSON in this exact format:
 {
@@ -29,6 +106,9 @@ Respond with JSON in this exact format:
   "improvements": ["improvement1", "improvement2"],
   "suggestions": ["specific suggestion1", "specific suggestion2"]
 }`;
+    };
+
+    const systemPrompt = getModuleSystemPrompt(moduleId);
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
