@@ -4,6 +4,7 @@ export default {
     dashboard: "Dashboard",
     courses: "Courses",
     modules: "Modules",
+    goals: "Goals",
     practice: "Practice",
     progress: "Progress",
     logo: "PromptMaster"
@@ -47,7 +48,21 @@ export default {
     sequentialLearning: "Complete modules in order for the best learning experience",
     moduleBlocked: "This module is currently locked",
     moduleBlockedDesc: "Complete the previous module to unlock this content",
-    progressToUnlock: "{{progress}}% progress to unlock next module"
+    progressToUnlock: "{{progress}}% progress to unlock next module",
+    edit: "Edit",
+    delete: "Delete",
+    cancel: "Cancel",
+    save: "Save",
+    saving: "Saving...",
+    optional: "Optional"
+  },
+
+  // Authentication
+  auth: {
+    loginRequired: "Please log in to continue",
+    loginRequiredDescription: "You need to be logged in to access this feature. Click the button below to sign in with your Replit account.",
+    loginButton: "Log in with Replit",
+    loginRedirectNotice: "You will be redirected to Replit for authentication."
   },
 
   // Dashboard
@@ -63,7 +78,8 @@ export default {
     recentActivity: "Recent Activity",
     continueLearning: "Continue Learning",
     exploreMore: "Explore More Courses",
-    learningModules: "Learning Modules"
+    learningModules: "Learning Modules",
+    myGoals: "My Goals"
   },
 
   // Courses
@@ -87,6 +103,96 @@ export default {
     moduleCount: "{{count}} Modules",
     courseProgress: "Course Progress",
     backToCourses: "Back to Courses"
+  },
+
+  // Goals
+  goals: {
+    title: "Learning Goals",
+    subtitle: "Set goals to track your learning progress and stay motivated on your journey.",
+    createGoal: "Create Goal",
+    editGoal: "Edit Goal",
+    updateGoal: "Update Goal",
+    createGoalDescription: "Set a learning goal to help track your progress and stay motivated.",
+    editGoalDescription: "Update your learning goal details.",
+    manageGoals: "Manage Goals",
+    setYourGoals: "Set Your Learning Goals",
+    setGoalsDescription: "Create personalized learning goals to stay motivated and track your progress effectively.",
+    createFirstGoal: "Create Your First Goal",
+    viewAllGoals: "View All Goals",
+    noActiveGoals: "No Active Goals",
+    noActiveGoalsDescription: "You don't have any active goals yet. Create your first goal to start tracking your learning progress.",
+    noCompletedGoals: "No Completed Goals",
+    noCompletedGoalsDescription: "You haven't completed any goals yet. Keep learning to achieve your first goal!",
+    noExpiredGoals: "No Expired Goals",
+    noExpiredGoalsDescription: "Great job! You don't have any expired goals.",
+    activeGoals: "Active Goals",
+    completedGoals: "Completed Goals",
+    expiredGoals: "Expired Goals",
+    totalGoals: "Total Goals",
+    active: "Active",
+    completed: "Completed",
+    expired: "Expired",
+    confirmDelete: "Are you sure you want to delete this goal?",
+    
+    // Goal Types
+    goalType: "Goal Type",
+    types: {
+      course_completion: "Course Completion",
+      module_count: "Module Count",
+      streak: "Learning Streak",
+      progress_percentage: "Progress Percentage"
+    },
+    typeDescriptions: {
+      course_completion: "Complete all modules in a specific course",
+      module_count: "Complete a target number of modules",
+      streak: "Maintain a learning streak for consecutive days",
+      progress_percentage: "Reach a target percentage of progress in a course"
+    },
+    
+    // Goal Form
+    goalTitle: "Goal Title",
+    goalTitlePlaceholder: "Enter a descriptive title for your goal",
+    goalTitleDescription: "Give your goal a clear, motivating title",
+    selectCourse: "Select Course",
+    selectCoursePlaceholder: "Choose a course for this goal",
+    selectCourseDescription: "Select the course this goal relates to",
+    targetValue: "Target Value",
+    targetLabels: {
+      modules: "modules",
+      course: "course completion",
+      percentage: "% progress",
+      days: "days"
+    },
+    targetValueDescriptions: {
+      moduleCount: "Number of modules you want to complete",
+      courseCompletion: "Complete the entire course",
+      percentage: "Target percentage of progress (0-100%)",
+      streak: "Number of consecutive days to maintain your learning streak"
+    },
+    targetDate: "Target Date",
+    pickDate: "Pick a date",
+    targetDateDescription: "When do you want to achieve this goal?",
+    description: "Description",
+    descriptionPlaceholder: "Optional: Add more details about your goal",
+    descriptionDescription: "Provide additional context or motivation for your goal",
+    
+    // Progress Descriptions
+    progressDescriptions: {
+      courseCompletion: "{{current}} of {{target}} modules completed",
+      moduleCount: "{{current}} of {{target}} modules completed", 
+      streak: "{{current}} of {{target}} days streak",
+      progressPercentage: "{{current}}% of {{target}}% progress"
+    },
+    
+    // Status and Progress
+    completedOn: "Completed on",
+    expiredOn: "Expired on",
+    daysRemaining: "{{days}} days remaining",
+    overdue: "Overdue",
+    relatedCourse: "Related course",
+    congratulations: "Congratulations!",
+    goalCompleted: "You have successfully achieved this goal!",
+    noDescription: "No description provided"
   },
 
   // Module Content

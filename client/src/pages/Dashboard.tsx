@@ -2,20 +2,26 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useAuth } from "@/hooks/useAuth";
 import Navigation from "@/components/Navigation";
 import CourseCard from "@/components/CourseCard";
+import GoalCard from "@/components/GoalCard";
 import PromptEditor from "@/components/PromptEditor";
 import FeedbackPanel from "@/components/FeedbackPanel";
 import ProgressTracker from "@/components/ProgressTracker";
+import UnauthorizedState from "@/components/UnauthorizedState";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiRequest } from "@/lib/queryClient";
 import { COURSES, MODULES } from "@/lib/constants";
-import type { UserProgress, AssessmentFeedback } from "@shared/schema";
+import { safeParseNotes, safeGetNumber } from "@/lib/goalUtils";
+import { Target, Plus, TrendingUp } from "lucide-react";
+import type { UserProgress, AssessmentFeedback, Goal } from "@shared/schema";
 
 export default function Dashboard() {
   const [location] = useLocation();
   const { t } = useTranslation();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [currentPrompt, setCurrentPrompt] = useState("");
   const [currentFeedback, setCurrentFeedback] = useState<AssessmentFeedback | undefined>();
   const [activeModuleId, setActiveModuleId] = useState<string>("basic-prompting");
@@ -23,8 +29,17 @@ export default function Dashboard() {
   const queryClient = useQueryClient();
 
   // Fetch user progress
-  const { data: userProgress = [], isLoading: progressLoading } = useQuery<UserProgress[]>({
-    queryKey: ["/api/progress"]
+  const { data: userProgress = [], isLoading: progressLoading, isError: progressError, error: progressErrorData } = useQuery<UserProgress[]>({
+    queryKey: ["/api/progress"],
+    enabled: isAuthenticated,
+    retry: false
+  });
+
+  // Fetch user goals
+  const { data: goals = [], isError: goalsError, error: goalsErrorData } = useQuery<Goal[]>({
+    queryKey: ["/api/goals"],
+    enabled: isAuthenticated,
+    retry: false
   });
 
   // Assessment mutation
@@ -93,6 +108,121 @@ export default function Dashboard() {
   const completedModules = userProgress.filter(p => p.isCompleted).length;
   const totalModules = MODULES.length;
   const overallProgress = totalModules > 0 ? (completedModules / totalModules) * 100 : 0;
+
+  // Calculate goal progress using authoritative MODULES mapping and safe parsing
+  const calculateGoalProgress = (goal: Goal) => {
+    const goalMetadata = safeParseNotes(goal.notes);
+    const goalType = goalMetadata.type || "module_count";
+    
+    let currentValue = 0;
+    let targetValue = safeGetNumber(goal.targetModulesPerWeek, 1);
+    let isCompleted = false;
+
+    switch (goalType) {
+      case "course_completion":
+        if (goal.courseId) {
+          // Use authoritative MODULES mapping instead of brittle startsWith
+          const courseModules = MODULES.filter(m => m.courseId === goal.courseId);
+          const completedModules = courseModules.filter(m => 
+            userProgress.find(p => p.moduleId === m.id)?.isCompleted
+          );
+          currentValue = completedModules.length;
+          targetValue = courseModules.length;
+          isCompleted = currentValue >= targetValue;
+        }
+        break;
+      
+      case "module_count":
+        if (goal.courseId) {
+          // Course-specific module count
+          const courseModules = MODULES.filter(m => m.courseId === goal.courseId);
+          const completedModules = courseModules.filter(m => 
+            userProgress.find(p => p.moduleId === m.id)?.isCompleted
+          );
+          currentValue = completedModules.length;
+        } else {
+          // Global module count
+          const completedModules = userProgress.filter(p => p.isCompleted);
+          currentValue = completedModules.length;
+        }
+        isCompleted = currentValue >= targetValue;
+        break;
+
+      case "progress_percentage":
+        if (goal.courseId) {
+          const courseModules = MODULES.filter(m => m.courseId === goal.courseId);
+          const completedModules = courseModules.filter(m => 
+            userProgress.find(p => p.moduleId === m.id)?.isCompleted
+          );
+          const totalModules = courseModules.length;
+          currentValue = totalModules > 0 ? Math.round((completedModules.length / totalModules) * 100) : 0;
+          isCompleted = currentValue >= targetValue;
+        }
+        break;
+
+      case "streak":
+        // For streak goals, use metadata or calculate based on recent activity
+        currentValue = goalMetadata.currentStreak || 0;
+        isCompleted = currentValue >= targetValue;
+        break;
+    }
+
+    return {
+      currentValue,
+      targetValue,
+      progress: targetValue > 0 ? Math.min((currentValue / targetValue) * 100, 100) : 0,
+      isCompleted
+    };
+  };
+
+  // Filter goals by status
+  const activeGoals = goals.filter(goal => {
+    const progress = calculateGoalProgress(goal);
+    const now = new Date();
+    const targetDate = new Date(goal.targetDate);
+    return !progress.isCompleted && targetDate >= now;
+  });
+
+  // Handle authentication loading
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center">{t("common.loading")}</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle authentication required
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <UnauthorizedState 
+          title={t("dashboard.heroTitle")}
+          description={t("auth.loginRequiredDescription")}
+        />
+      </div>
+    );
+  }
+
+  // Handle API errors (including potential 401s that slip through)
+  if ((progressError || goalsError) && !progressLoading) {
+    const errorMessage = progressErrorData?.message || goalsErrorData?.message;
+    if (errorMessage?.includes('401') || errorMessage?.includes('Unauthorized')) {
+      return (
+        <div className="min-h-screen bg-background">
+          <Navigation />
+          <UnauthorizedState 
+            title={t("dashboard.heroTitle")}
+            description={t("auth.loginRequiredDescription")}
+          />
+        </div>
+      );
+    }
+  }
 
   if (progressLoading) {
     return (
@@ -178,6 +308,62 @@ export default function Dashboard() {
                 <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
                 <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/4"></div>
               </div>
+            </section>
+
+            {/* Goals Section */}
+            <section className="mb-12" data-testid="goals-section">
+              <div className="flex items-center justify-between mb-8">
+                <h3 className="text-3xl font-bold flex items-center gap-3">
+                  <Target className="w-8 h-8 text-primary" />
+                  {t("dashboard.myGoals")}
+                </h3>
+                <Link href="/goals">
+                  <Button variant="outline" className="flex items-center gap-2" data-testid="view-all-goals">
+                    <Plus className="w-4 h-4" />
+                    {t("goals.manageGoals")}
+                  </Button>
+                </Link>
+              </div>
+
+              {activeGoals.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {activeGoals.slice(0, 3).map((goal) => (
+                    <GoalCard
+                      key={goal.id}
+                      goal={goal}
+                      progress={calculateGoalProgress(goal)}
+                      onEdit={() => {}}
+                      onDelete={() => {}}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <Card className="text-center py-12" data-testid="no-goals">
+                  <CardContent>
+                    <Target className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                    <CardTitle className="text-2xl mb-2">{t("goals.setYourGoals")}</CardTitle>
+                    <CardDescription className="mb-6">
+                      {t("goals.setGoalsDescription")}
+                    </CardDescription>
+                    <Link href="/goals">
+                      <Button className="flex items-center gap-2" data-testid="create-first-goal">
+                        <Plus className="w-4 h-4" />
+                        {t("goals.createFirstGoal")}
+                      </Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+              )}
+              
+              {activeGoals.length > 3 && (
+                <div className="text-center mt-6">
+                  <Link href="/goals">
+                    <Button variant="outline" data-testid="view-more-goals">
+                      {t("goals.viewAllGoals")} ({activeGoals.length})
+                    </Button>
+                  </Link>
+                </div>
+              )}
             </section>
 
             {/* My Courses Section */}

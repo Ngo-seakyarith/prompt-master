@@ -13,7 +13,8 @@ interface PromptEditorProps {
 
 export default function PromptEditor({ moduleId, onAnalyze, isAnalyzing }: PromptEditorProps) {
   const [prompt, setPrompt] = useState("");
-  const exercise = SAMPLE_EXERCISES[moduleId as keyof typeof SAMPLE_EXERCISES];
+  const moduleContent = SAMPLE_EXERCISES[moduleId as keyof typeof SAMPLE_EXERCISES];
+  const exercise = (moduleContent as any)?.exercises?.[0]; // Get first exercise with type assertion
 
   const handleClear = () => {
     setPrompt("");

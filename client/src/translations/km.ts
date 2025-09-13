@@ -4,6 +4,7 @@ export default {
     dashboard: "ផ្ទាំងគ្រប់គ្រង",
     courses: "វគ្គសិក្សា",
     modules: "ម៉ូឌុល",
+    goals: "គោលដៅ",
     practice: "អនុវត្ត",
     progress: "ការរីកចម្រើន",
     logo: "PromptMaster"
@@ -47,7 +48,21 @@ export default {
     sequentialLearning: "បញ្ចប់ម៉ូឌុលតាមលំដាប់ដើម្បីទទួលបានបទពិសោធន៍សិក្សាដ៏ល្អបំផុត",
     moduleBlocked: "ម៉ូឌុលនេះជាប់សោបច្ចុប្បន្ន",
     moduleBlockedDesc: "បញ្ចប់ម៉ូឌុលមុនដើម្បីដោះសោមាតិកានេះ",
-    progressToUnlock: "ការរីកចម្រើន {{progress}}% ដើម្បីដោះសោម៉ូឌុលបន្ទាប់"
+    progressToUnlock: "ការរីកចម្រើន {{progress}}% ដើម្បីដោះសោម៉ូឌុលបន្ទាប់",
+    edit: "កែប្រែ",
+    delete: "លុប",
+    cancel: "បោះបង់",
+    save: "រក្សាទុក",
+    saving: "កំពុងរក្សាទុក...",
+    optional: "ជម្រើស"
+  },
+
+  // Authentication
+  auth: {
+    loginRequired: "សូមចូលប្រព័ន្ធដើម្បីបន្ត",
+    loginRequiredDescription: "អ្នកត្រូវចូលប្រព័ន្ធដើម្បីប្រើប្រាស់មុខងារនេះ។ ចុចប៊ូតុងខាងក្រោមដើម្បីចូលជាមួយគណនី Replit របស់អ្នក។",
+    loginButton: "ចូលជាមួយ Replit",
+    loginRedirectNotice: "អ្នកនឹងត្រូវបានបញ្ជូនទៅ Replit សម្រាប់ការផ្ទៀងផ្ទាត់។"
   },
 
   // Dashboard
@@ -63,7 +78,8 @@ export default {
     recentActivity: "សកម្មភាពថ្មីៗ",
     continueLearning: "បន្តការសិក្សា",
     exploreMore: "ស្វែងរកវគ្គសិក្សាបន្ថែម",
-    learningModules: "ម៉ូឌុលសិក្សា"
+    learningModules: "ម៉ូឌុលសិក្សា",
+    myGoals: "គោលដៅរបស់ខ្ញុំ"
   },
 
   // Courses
@@ -87,6 +103,96 @@ export default {
     moduleCount: "ម៉ូឌុល {{count}}",
     courseProgress: "ការរីកចម្រើនវគ្គសិក្សា",
     backToCourses: "ត្រលប់ទៅវគ្គសិក្សា"
+  },
+
+  // Goals
+  goals: {
+    title: "គោលដៅសិក្សា",
+    subtitle: "កំណត់គោលដៅដើម្បីតាមដានការរីកចម្រើនការសិក្សា និងរក្សាការលើកទឹកចិត្តក្នុងដំណើររបស់អ្នក។",
+    createGoal: "បង្កើតគោលដៅ",
+    editGoal: "កែប្រែគោលដៅ",
+    updateGoal: "ធ្វើបច្ចុប្បន្នភាពគោលដៅ",
+    createGoalDescription: "កំណត់គោលដៅសិក្សាដើម្បីជួយតាមដានការរីកចម្រើន និងរក្សាការលើកទឹកចិត្ត។",
+    editGoalDescription: "ធ្វើបច្ចុប្បន្នភាពព័ត៌មានលម្អិតគោលដៅសិក្សារបស់អ្នក។",
+    manageGoals: "គ្រប់គ្រងគោលដៅ",
+    setYourGoals: "កំណត់គោលដៅសិក្សារបស់អ្នក",
+    setGoalsDescription: "បង្កើតគោលដៅសិក្សាផ្ទាល់ខ្លួនដើម្បីរក្សាការលើកទឹកចិត្ត និងតាមដានការរីកចម្រើនប្រកបដោយប្រសិទ្ធភាព។",
+    createFirstGoal: "បង្កើតគោលដៅដំបូងរបស់អ្នក",
+    viewAllGoals: "មើលគោលដៅទាំងអស់",
+    noActiveGoals: "មិនមានគោលដៅសកម្ម",
+    noActiveGoalsDescription: "អ្នកមិនទាន់មានគោលដៅសកម្មណាមួយទេ។ បង្កើតគោលដៅដំបូងរបស់អ្នកដើម្បីចាប់ផ្តើមតាមដានការរីកចម្រើនការសិក្សា។",
+    noCompletedGoals: "មិនមានគោលដៅបានបញ្ចប់",
+    noCompletedGoalsDescription: "អ្នកមិនទាន់បានបញ្ចប់គោលដៅណាមួយទេ។ បន្តសិក្សាដើម្បីសម្រេចបានគោលដៅដំបូងរបស់អ្នក!",
+    noExpiredGoals: "មិនមានគោលដៅផុតកំណត់",
+    noExpiredGoalsDescription: "ល្អណាស់! អ្នកមិនមានគោលដៅផុតកំណត់ណាមួយទេ។",
+    activeGoals: "គោលដៅសកម្ម",
+    completedGoals: "គោលដៅបានបញ្ចប់",
+    expiredGoals: "គោលដៅផុតកំណត់",
+    totalGoals: "គោលដៅសរុប",
+    active: "សកម្ម",
+    completed: "បានបញ្ចប់",
+    expired: "ផុតកំណត់",
+    confirmDelete: "តើអ្នកពិតជាចង់លុបគោលដៅនេះមែនទេ?",
+    
+    // Goal Types
+    goalType: "ប្រភេទគោលដៅ",
+    types: {
+      course_completion: "បញ្ចប់វគ្គសិក្សា",
+      module_count: "ចំនួនម៉ូឌុល",
+      streak: "ការបន្តសិក្សា",
+      progress_percentage: "ភាគរយការរីកចម្រើន"
+    },
+    typeDescriptions: {
+      course_completion: "បញ្ចប់ម៉ូឌុលទាំងអស់នៅក្នុងវគ្គសិក្សាជាក់លាក់",
+      module_count: "បញ្ចប់ចំនួនម៉ូឌុលគោលដៅ",
+      streak: "រក្សាការបន្តសិក្សាអស់រយៈពេលច្រើនថ្ងៃ",
+      progress_percentage: "ទៅដល់ភាគរយគោលដៅនៃការរីកចម្រើននៅក្នុងវគ្គសិក្សា"
+    },
+    
+    // Goal Form
+    goalTitle: "ចំណងជើងគោលដៅ",
+    goalTitlePlaceholder: "បញ្ចូលចំណងជើងពិពណ៌នាសម្រាប់គោលដៅរបស់អ្នក",
+    goalTitleDescription: "ផ្តល់ឱ្យគោលដៅរបស់អ្នកនូវចំណងជើងច្បាស់លាស់ និងលើកទឹកចិត្ត",
+    selectCourse: "ជ្រើសរើសវគ្គសិក្សា",
+    selectCoursePlaceholder: "ជ្រើសរើសវគ្គសិក្សាសម្រាប់គោលដៅនេះ",
+    selectCourseDescription: "ជ្រើសរើសវគ្គសិក្សាដែលគោលដៅនេះទាក់ទងនឹង",
+    targetValue: "តម្លៃគោលដៅ",
+    targetLabels: {
+      modules: "ម៉ូឌុល",
+      course: "បញ្ចប់វគ្គសិក្សា",
+      percentage: "% ការរីកចម្រើន",
+      days: "ថ្ងៃ"
+    },
+    targetValueDescriptions: {
+      moduleCount: "ចំនួនម៉ូឌុលដែលអ្នកចង់បញ្ចប់",
+      courseCompletion: "បញ្ចប់វគ្គសិក្សាទាំងមូល",
+      percentage: "ភាគរយគោលដៅនៃការរីកចម្រើន (0-100%)",
+      streak: "ចំនួនថ្ងៃបន្តបន្ទាប់ដើម្បីរក្សាការបន្តសិក្សារបស់អ្នក"
+    },
+    targetDate: "កាលបរិច្ឆេទគោលដៅ",
+    pickDate: "ជ្រើសរើសកាលបរិច្ឆេទ",
+    targetDateDescription: "តើអ្នកចង់សម្រេចបានគោលដៅនេះនៅពេលណា?",
+    description: "ការពិពណ៌នា",
+    descriptionPlaceholder: "ស្រេចចិត្ត៖ បន្ថែមព័ត៌មានលម្អិតបន្ថែមអំពីគោលដៅរបស់អ្នក",
+    descriptionDescription: "ផ្តល់នូវបរិបទបន្ថែម ឬការលើកទឹកចិត្តសម្រាប់គោលដៅរបស់អ្នក",
+    
+    // Progress Descriptions
+    progressDescriptions: {
+      courseCompletion: "{{current}} នៃ {{target}} ម៉ូឌុលបានបញ្ចប់",
+      moduleCount: "{{current}} នៃ {{target}} ម៉ូឌុលបានបញ្ចប់", 
+      streak: "{{current}} នៃ {{target}} ថ្ងៃបន្ត",
+      progressPercentage: "{{current}}% នៃ {{target}}% ការរីកចម្រើន"
+    },
+    
+    // Status and Progress
+    completedOn: "បានបញ្ចប់នៅ",
+    expiredOn: "ផុតកំណត់នៅ",
+    daysRemaining: "នៅសល់ {{days}} ថ្ងៃ",
+    overdue: "លើសកំណត់",
+    relatedCourse: "វគ្គសិក្សាទាក់ទង",
+    congratulations: "អបអរសាទរ!",
+    goalCompleted: "អ្នកបានសម្រេចបានគោលដៅនេះដោយជោគជ័យ!",
+    noDescription: "មិនបានផ្តល់ការពិពណ៌នា"
   },
 
   // Module Content

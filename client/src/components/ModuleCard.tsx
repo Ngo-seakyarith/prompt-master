@@ -93,13 +93,13 @@ export default function ModuleCard({ module, progress, isLocked }: ModuleCardPro
         </div>
         
         <h4 className="text-xl font-semibold mb-2" data-testid={`module-title-${module.id}`}>
-          {module.titleKey ? t(module.titleKey) : module.title}
+          {module.title}
         </h4>
         
         <p className="text-muted-foreground mb-4" data-testid={`module-description-${module.id}`}>
           {isLocked 
             ? t("common.moduleBlockedDesc")
-            : (module.descriptionKey ? t(module.descriptionKey) : module.description)
+            : module.description
           }
         </p>
 
