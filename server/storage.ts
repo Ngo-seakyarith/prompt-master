@@ -1,10 +1,12 @@
-import { type User, type InsertUser, type Course, type InsertCourse, type Module, type UserProgress, type InsertUserProgress, type PromptAttempt, type InsertPromptAttempt, type ExerciseAttempt, type InsertExerciseAttempt, type Goal, type InsertGoal, type Certificate, type InsertCertificate, type ModuleContent } from "@shared/schema";
+import { type User, type InsertUser, type UpsertUser, type Course, type InsertCourse, type Module, type UserProgress, type InsertUserProgress, type PromptAttempt, type InsertPromptAttempt, type ExerciseAttempt, type InsertExerciseAttempt, type Goal, type InsertGoal, type Certificate, type InsertCertificate, type ModuleContent } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { MODULE_CONTENT } from "../client/src/lib/constants";
 
 export interface IStorage {
-  // User methods
+  // User methods (Required for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
+  upsertUser(user: UpsertUser): Promise<User>;
+  // Legacy methods (for backward compatibility)
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   
@@ -369,16 +371,39 @@ export class MemStorage implements IStorage {
     return this.users.get(id);
   }
 
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const userId = userData.id || randomUUID();
+    const existingUser = this.users.get(userId);
+    
+    const user: User = {
+      id: userId,
+      email: userData.email || null,
+      firstName: userData.firstName || null,
+      lastName: userData.lastName || null,
+      profileImageUrl: userData.profileImageUrl || null,
+      createdAt: existingUser?.createdAt || new Date(),
+      updatedAt: new Date(),
+    };
+    
+    this.users.set(userId, user);
+    return user;
+  }
+
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(user => user.username === username);
+    // Legacy method - no longer applicable with Replit Auth
+    return undefined;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
+    const id = insertUser.id || randomUUID();
     const user: User = { 
-      ...insertUser, 
       id,
-      createdAt: new Date()
+      email: insertUser.email || null,
+      firstName: insertUser.firstName || null,
+      lastName: insertUser.lastName || null,
+      profileImageUrl: insertUser.profileImageUrl || null,
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
     this.users.set(id, user);
     return user;
