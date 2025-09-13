@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
-import { ArrowLeft, BookOpen, PenTool, CheckCircle, Circle, Lightbulb } from "lucide-react";
+import { ArrowLeft, BookOpen, PenTool, CheckCircle, Circle, Lightbulb, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,6 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
+import { useTranslation } from "@/hooks/useTranslation";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { MODULES, MODULE_CONTENT } from "@/lib/constants";
@@ -26,15 +27,45 @@ export default function ModuleDetail({ moduleId }: ModuleDetailProps) {
   
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   // Get module data
   const moduleData = MODULES.find(m => m.id === moduleId);
   const moduleContent = MODULE_CONTENT[moduleId as keyof typeof MODULE_CONTENT];
 
+  // Get all course modules for locking logic
+  const courseModules = MODULES.filter(module => module.courseId === moduleData?.courseId);
+
   // Fetch user progress
   const { data: userProgress = [] } = useQuery<UserProgress[]>({
     queryKey: ["/api/progress"]
   });
+
+  // Check if current module is locked
+  const isModuleLocked = (module: typeof moduleData) => {
+    if (!module) return false;
+    
+    // Module 1 is always unlocked
+    if (module.order === 1) {
+      return false;
+    }
+
+    // For modules 2-5, check if the previous module is completed
+    const requiredModuleOrder = module.order - 1;
+    const requiredModule = courseModules.find(m => m.order === requiredModuleOrder);
+    
+    if (!requiredModule) {
+      return false; // Fallback if required module not found
+    }
+
+    // Check if the required previous module is completed
+    const requiredModuleProgress = userProgress.find(p => p.moduleId === requiredModule.id);
+    
+    // Module is locked if the previous module is not completed
+    return !requiredModuleProgress?.isCompleted;
+  };
+
+  const isCurrentModuleLocked = moduleData ? isModuleLocked(moduleData) : false;
 
   // Fetch exercise-specific data from backend
   const { data: completedExercisesArray = [] } = useQuery<number[]>({
@@ -137,11 +168,70 @@ export default function ModuleDetail({ moduleId }: ModuleDetailProps) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-2">Module Not Found</h2>
-          <p className="text-muted-foreground mb-4">The requested module could not be found.</p>
+          <h2 className="text-2xl font-bold mb-2">{t("common.moduleNotFound")}</h2>
+          <p className="text-muted-foreground mb-4">{t("common.moduleNotFoundDesc")}</p>
           <Link href="/modules">
-            <Button>Back to Modules</Button>
+            <Button>{t("common.backToModules")}</Button>
           </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Check if module is locked and show locked state
+  if (isCurrentModuleLocked) {
+    const requiredModule = courseModules.find(m => m.order === moduleData.order - 1);
+    
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="max-w-md mx-auto text-center">
+          <Card className="p-8">
+            <CardContent className="space-y-6">
+              <div className="w-16 h-16 mx-auto bg-destructive/10 rounded-full flex items-center justify-center">
+                <Lock className="w-8 h-8 text-destructive" />
+              </div>
+              
+              <div className="space-y-2">
+                <h2 className="text-2xl font-bold">{t("common.moduleBlocked")}</h2>
+                <p className="text-muted-foreground">{t("common.moduleBlockedDesc")}</p>
+              </div>
+
+              {requiredModule && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">
+                    {t("common.unlockRequirement")}:
+                  </p>
+                  <div className="p-3 bg-muted rounded-lg">
+                    <p className="text-sm">
+                      <strong>{requiredModule.title}</strong>
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {requiredModule.description}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <p className="text-xs text-muted-foreground">
+                  {t("common.sequentialLearning")}
+                </p>
+              </div>
+
+              <div className="flex gap-3 justify-center">
+                <Link href={`/courses/${moduleData.courseId}`}>
+                  <Button variant="outline">{t("common.backToCourses")}</Button>
+                </Link>
+                {requiredModule && (
+                  <Link href={`/modules/${requiredModule.id}`}>
+                    <Button>
+                      {t("common.start")} {requiredModule.title}
+                    </Button>
+                  </Link>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );

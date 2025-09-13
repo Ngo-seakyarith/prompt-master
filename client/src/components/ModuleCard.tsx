@@ -1,8 +1,10 @@
 import { Link } from "wouter";
+import { Lock, CheckCircle, PlayCircle } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 import type { Module, UserProgress } from "@shared/schema";
 
 interface ModuleCardProps {
@@ -16,15 +18,34 @@ export default function ModuleCard({ module, progress, isLocked }: ModuleCardPro
   
   const getStatusBadge = () => {
     if (isLocked) {
-      return <span className="bg-muted text-muted-foreground px-3 py-1 rounded-full text-sm font-medium">{t("common.locked")}</span>;
+      return (
+        <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20">
+          <Lock className="w-3 h-3 mr-1" />
+          {t("common.locked")}
+        </Badge>
+      );
     }
     if (progress?.isCompleted) {
-      return <span className="bg-secondary text-secondary-foreground px-3 py-1 rounded-full text-sm font-medium">{t("common.completed")}</span>;
+      return (
+        <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200 dark:bg-green-900 dark:text-green-200">
+          <CheckCircle className="w-3 h-3 mr-1" />
+          {t("common.completed")}
+        </Badge>
+      );
     }
     if (progress && (progress.attempts || 0) > 0) {
-      return <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-medium">{t("common.inProgress")}</span>;
+      return (
+        <Badge className="bg-primary text-primary-foreground">
+          <PlayCircle className="w-3 h-3 mr-1" />
+          {t("common.inProgress")}
+        </Badge>
+      );
     }
-    return <span className="bg-accent text-accent-foreground px-3 py-1 rounded-full text-sm font-medium">{t("common.available")}</span>;
+    return (
+      <Badge variant="outline" className="bg-accent/10 text-accent">
+        {t("common.available")}
+      </Badge>
+    );
   };
 
   const getButtonText = () => {
@@ -76,8 +97,23 @@ export default function ModuleCard({ module, progress, isLocked }: ModuleCardPro
         </h4>
         
         <p className="text-muted-foreground mb-4" data-testid={`module-description-${module.id}`}>
-          {module.descriptionKey ? t(module.descriptionKey) : module.description}
+          {isLocked 
+            ? t("common.moduleBlockedDesc")
+            : (module.descriptionKey ? t(module.descriptionKey) : module.description)
+          }
         </p>
+
+        {isLocked && (
+          <div className="mb-4 p-3 bg-destructive/5 border border-destructive/20 rounded-lg">
+            <div className="flex items-center text-sm text-destructive">
+              <Lock className="w-4 h-4 mr-2" />
+              <span>{t("common.unlockRequirement")}</span>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {t("common.sequentialLearning")}
+            </p>
+          </div>
+        )}
         
         <div className="mb-4">
           <div className="flex justify-between text-sm mb-1">

@@ -53,8 +53,24 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
   };
 
   const isModuleLocked = (module: typeof courseModules[0]) => {
-    // All modules are accessible for now (Phase 6 will implement proper locking)
-    return false;
+    // Module 1 (basic-prompting) is always unlocked
+    if (module.order === 1) {
+      return false;
+    }
+
+    // For modules 2-5, check if the previous module is completed
+    const requiredModuleOrder = module.order - 1;
+    const requiredModule = courseModules.find(m => m.order === requiredModuleOrder);
+    
+    if (!requiredModule) {
+      return false; // Fallback if required module not found
+    }
+
+    // Check if the required previous module is completed
+    const requiredModuleProgress = userProgress.find(p => p.moduleId === requiredModule.id);
+    
+    // Module is locked if the previous module is not completed
+    return !requiredModuleProgress?.isCompleted;
   };
 
   const getDifficultyColor = (difficulty: string) => {

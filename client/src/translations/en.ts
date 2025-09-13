@@ -42,7 +42,12 @@ export default {
     emptyPrompt: "Empty Prompt",
     emptyPromptDesc: "Please write a prompt before analyzing.",
     assessmentFailed: "Assessment Failed",
-    assessmentFailedDesc: "There was an error analyzing your prompt. Please try again."
+    assessmentFailedDesc: "There was an error analyzing your prompt. Please try again.",
+    unlockRequirement: "Complete previous module to unlock",
+    sequentialLearning: "Complete modules in order for the best learning experience",
+    moduleBlocked: "This module is currently locked",
+    moduleBlockedDesc: "Complete the previous module to unlock this content",
+    progressToUnlock: "{{progress}}% progress to unlock next module"
   },
 
   // Dashboard

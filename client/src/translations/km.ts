@@ -42,7 +42,12 @@ export default {
     emptyPrompt: "Prompt ទទេ",
     emptyPromptDesc: "សូមសរសេរ prompt មុនពេលវិភាគ។",
     assessmentFailed: "ការវាយតម្លៃបានបរាជ័យ",
-    assessmentFailedDesc: "មានកំហុសក្នុងការវិភាគ prompt របស់អ្នក។ សូមព្យាយាមម្តងទៀត។"
+    assessmentFailedDesc: "មានកំហុសក្នុងការវិភាគ prompt របស់អ្នក។ សូមព្យាយាមម្តងទៀត។",
+    unlockRequirement: "បញ្ចប់ម៉ូឌុលមុនដើម្បីដោះសោ",
+    sequentialLearning: "បញ្ចប់ម៉ូឌុលតាមលំដាប់ដើម្បីទទួលបានបទពិសោធន៍សិក្សាដ៏ល្អបំផុត",
+    moduleBlocked: "ម៉ូឌុលនេះជាប់សោបច្ចុប្បន្ន",
+    moduleBlockedDesc: "បញ្ចប់ម៉ូឌុលមុនដើម្បីដោះសោមាតិកានេះ",
+    progressToUnlock: "ការរីកចម្រើន {{progress}}% ដើម្បីដោះសោម៉ូឌុលបន្ទាប់"
   },
 
   // Dashboard
