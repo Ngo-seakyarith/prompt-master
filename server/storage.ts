@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Module, type UserProgress, type InsertUserProgress, type PromptAttempt, type InsertPromptAttempt, type ExerciseAttempt, type InsertExerciseAttempt, type ModuleContent } from "@shared/schema";
+import { type User, type InsertUser, type Course, type InsertCourse, type Module, type UserProgress, type InsertUserProgress, type PromptAttempt, type InsertPromptAttempt, type ExerciseAttempt, type InsertExerciseAttempt, type Goal, type InsertGoal, type Certificate, type InsertCertificate, type ModuleContent } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { MODULE_CONTENT } from "../client/src/lib/constants";
 
@@ -8,14 +8,36 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   
+  // Course methods
+  getCourses(): Promise<Course[]>;
+  getCourse(id: string): Promise<Course | undefined>;
+  createCourse(course: InsertCourse): Promise<Course>;
+  
   // Module methods
   getModules(): Promise<Module[]>;
   getModule(id: string): Promise<Module | undefined>;
+  getModulesByCourse(courseId: string): Promise<Module[]>;
+  updateModule(id: string, updates: Partial<Module>): Promise<Module | undefined>;
   
   // User progress methods
   getUserProgress(userId: string): Promise<UserProgress[]>;
   getUserModuleProgress(userId: string, moduleId: string): Promise<UserProgress | undefined>;
   updateUserProgress(userId: string, moduleId: string, progress: Partial<InsertUserProgress>): Promise<UserProgress>;
+  
+  // Goal methods
+  getUserGoals(userId: string): Promise<Goal[]>;
+  createGoal(goal: InsertGoal): Promise<Goal>;
+  updateGoal(id: string, updates: Partial<InsertGoal>): Promise<Goal | undefined>;
+  deleteGoal(id: string): Promise<boolean>;
+  
+  // Certificate methods
+  getUserCertificates(userId: string): Promise<Certificate[]>;
+  issueCertificate(userId: string, courseId: string): Promise<Certificate>;
+  getCertificate(id: string): Promise<Certificate | undefined>;
+  
+  // Progress helper methods
+  getMaxCompletedModuleOrder(userId: string, courseId: string): Promise<number>;
+  isCourseComplete(userId: string, courseId: string): Promise<boolean>;
   
   // Prompt attempts
   savePromptAttempt(attempt: InsertPromptAttempt): Promise<PromptAttempt>;
@@ -30,24 +52,62 @@ export interface IStorage {
 
 export class MemStorage implements IStorage {
   private users: Map<string, User>;
+  private courses: Map<string, Course>;
   private modules: Map<string, Module>;
   private userProgress: Map<string, UserProgress>;
+  private goals: Map<string, Goal>;
+  private certificates: Map<string, Certificate>;
   private promptAttempts: Map<string, PromptAttempt>;
   private exerciseAttempts: Map<string, ExerciseAttempt>;
 
   constructor() {
     this.users = new Map();
+    this.courses = new Map();
     this.modules = new Map();
     this.userProgress = new Map();
+    this.goals = new Map();
+    this.certificates = new Map();
     this.promptAttempts = new Map();
     this.exerciseAttempts = new Map();
-    this.initializeModules();
+    this.initializeCoursesAndModules();
   }
 
-  private initializeModules() {
+  private initializeCoursesAndModules() {
+    // Initialize courses
+    const courses: Course[] = [
+      {
+        id: "prompt-engineering-mastery",
+        titleKey: "Prompt Engineering Mastery",
+        descriptionKey: "Master the fundamentals of prompt engineering with hands-on practice and real-world applications.",
+        order: 1,
+        isActive: true
+      },
+      {
+        id: "advanced-ai-communication",
+        titleKey: "Advanced AI Communication",
+        descriptionKey: "Learn sophisticated techniques for communicating with AI systems, including multi-step reasoning and context management.",
+        order: 2,
+        isActive: true
+      },
+      {
+        id: "ai-automation-workflows",
+        titleKey: "AI Automation & Workflows",
+        descriptionKey: "Build automated workflows and systems using AI, from simple tasks to complex business processes.",
+        order: 3,
+        isActive: true
+      }
+    ];
+
+    courses.forEach(course => {
+      this.courses.set(course.id, course);
+    });
+
+    // Initialize modules
     const modules: Module[] = [
+      // Course 1: Prompt Engineering Mastery modules
       {
         id: "basic-prompting",
+        courseId: "prompt-engineering-mastery",
         title: "Basic Prompting",
         description: "Learn the fundamentals of prompting with and without context. Understand how context shapes AI responses.",
         icon: "fas fa-play",
@@ -72,24 +132,6 @@ export class MemStorage implements IStorage {
                 "With context: 'Create a marketing plan for a new eco-friendly skincare brand targeting millennials with a budget of $50k' → Specific, actionable plan",
                 "Rich context: 'Create a 6-month digital marketing plan for EcoGlow, a new organic skincare startup targeting environmentally-conscious millennials (ages 25-35) in urban areas. Budget: $50k. Focus on Instagram and TikTok. Launch in 3 months.'"
               ]
-            },
-            {
-              title: "Specificity Matters",
-              content: "The more specific your prompt, the more useful the response. Specificity includes details about format, length, tone, audience, and desired outcomes. Think of prompts as instructions to a highly capable assistant who needs clear direction.",
-              examples: [
-                "General: 'Help me with my presentation' → Vague advice",
-                "Specific: 'Help me create an outline for a 20-minute presentation about renewable energy trends for a corporate executive audience' → Structured, targeted outline",
-                "Very specific: 'Create a compelling slide-by-slide outline for a 20-minute presentation on renewable energy investment opportunities, targeting Fortune 500 executives, including 3 key statistics, 2 case studies, and actionable next steps'"
-              ]
-            },
-            {
-              title: "Common Prompt Mistakes",
-              content: "Understanding what makes prompts ineffective helps you avoid common pitfalls. The most frequent mistakes include being too vague, not providing enough context, or expecting the AI to read your mind about unstated preferences.",
-              examples: [
-                "Mistake: 'Write something good' → No clear direction or criteria",
-                "Better: 'Write a compelling product description' → Clear purpose but still vague",
-                "Best: 'Write a compelling 150-word product description for a wireless fitness tracker targeting active millennials, emphasizing battery life and health insights'"
-              ]
             }
           ],
           exercises: MODULE_CONTENT["basic-prompting"].exercises
@@ -97,6 +139,7 @@ export class MemStorage implements IStorage {
       },
       {
         id: "prompt-structure",
+        courseId: "prompt-engineering-mastery",
         title: "Prompt Structure",
         description: "Master the anatomy of effective prompts: role, task, context, template, and constraints.",
         icon: "fas fa-layer-group",
@@ -109,6 +152,7 @@ export class MemStorage implements IStorage {
       },
       {
         id: "advanced-techniques",
+        courseId: "prompt-engineering-mastery",
         title: "Advanced Techniques",
         description: "Explore chain-of-thought, few-shot learning, and advanced prompting strategies.",
         icon: "fas fa-rocket",
@@ -121,6 +165,7 @@ export class MemStorage implements IStorage {
       },
       {
         id: "prompt-refinement",
+        courseId: "prompt-engineering-mastery",
         title: "Prompt Refinement",
         description: "Master key prompt patterns: persona, question refinement, cognitive verifier, and audience persona.",
         icon: "fas fa-tools",
@@ -133,6 +178,7 @@ export class MemStorage implements IStorage {
       },
       {
         id: "practical-applications",
+        courseId: "prompt-engineering-mastery",
         title: "Practical Applications",
         description: "Apply prompt engineering to productivity, automation, creativity, and business planning.",
         icon: "fas fa-briefcase",
@@ -141,6 +187,175 @@ export class MemStorage implements IStorage {
         content: {
           sections: MODULE_CONTENT["practical-applications"].sections,
           exercises: MODULE_CONTENT["practical-applications"].exercises
+        }
+      },
+      
+      // Course 2: Advanced AI Communication modules
+      {
+        id: "context-management",
+        courseId: "advanced-ai-communication",
+        title: "Context Management",
+        description: "Learn to manage long conversations and complex contexts effectively with AI systems.",
+        icon: "fas fa-memory",
+        order: 1,
+        isActive: true,
+        content: {
+          sections: [
+            {
+              title: "Understanding Context Windows",
+              content: "Context windows define how much information an AI can remember in a single conversation. Learn to maximize context usage and manage information effectively."
+            },
+            {
+              title: "Context Chunking Strategies",
+              content: "Break down complex information into manageable chunks that AI can process effectively while maintaining coherence."
+            }
+          ],
+          exercises: [
+            {
+              title: "Long Document Analysis",
+              description: "Practice breaking down a lengthy document into contextual chunks for AI analysis."
+            }
+          ]
+        }
+      },
+      {
+        id: "multi-step-reasoning",
+        courseId: "advanced-ai-communication",
+        title: "Multi-Step Reasoning",
+        description: "Guide AI through complex, multi-step problem-solving processes.",
+        icon: "fas fa-route",
+        order: 2,
+        isActive: true,
+        content: {
+          sections: [
+            {
+              title: "Chain of Thought Prompting",
+              content: "Learn to structure prompts that guide AI through logical reasoning steps, improving accuracy and transparency."
+            }
+          ],
+          exercises: [
+            {
+              title: "Mathematical Problem Solving",
+              description: "Create prompts that guide AI through complex mathematical problem solving step by step."
+            }
+          ]
+        }
+      },
+      {
+        id: "persona-development",
+        courseId: "advanced-ai-communication",
+        title: "Advanced Persona Development",
+        description: "Create sophisticated AI personas for specialized tasks and interactions.",
+        icon: "fas fa-user-tie",
+        order: 3,
+        isActive: true,
+        content: {
+          sections: [
+            {
+              title: "Professional Personas",
+              content: "Develop AI personas for specific professional roles, from consultants to creative writers."
+            }
+          ],
+          exercises: [
+            {
+              title: "Expert Consultant Creation",
+              description: "Design an AI persona that acts as a domain expert consultant in your field."
+            }
+          ]
+        }
+      },
+
+      // Course 3: AI Automation & Workflows modules
+      {
+        id: "workflow-design",
+        courseId: "ai-automation-workflows",
+        title: "AI Workflow Design",
+        description: "Design efficient workflows that leverage AI for business process automation.",
+        icon: "fas fa-sitemap",
+        order: 1,
+        isActive: true,
+        content: {
+          sections: [
+            {
+              title: "Workflow Planning",
+              content: "Learn to identify automation opportunities and design AI-powered workflows that integrate with existing business processes."
+            }
+          ],
+          exercises: [
+            {
+              title: "Business Process Automation",
+              description: "Design an AI workflow to automate a common business process in your organization."
+            }
+          ]
+        }
+      },
+      {
+        id: "api-integration",
+        courseId: "ai-automation-workflows",
+        title: "API Integration Patterns",
+        description: "Connect AI systems with external APIs and services for comprehensive automation.",
+        icon: "fas fa-plug",
+        order: 2,
+        isActive: true,
+        content: {
+          sections: [
+            {
+              title: "API Design for AI",
+              content: "Understand how to structure API calls and responses that work effectively with AI systems."
+            }
+          ],
+          exercises: [
+            {
+              title: "API Workflow Creation",
+              description: "Create a workflow that combines AI processing with external API calls."
+            }
+          ]
+        }
+      },
+      {
+        id: "error-handling",
+        courseId: "ai-automation-workflows",
+        title: "Error Handling & Recovery",
+        description: "Build robust AI systems that handle errors gracefully and recover from failures.",
+        icon: "fas fa-shield-alt",
+        order: 3,
+        isActive: true,
+        content: {
+          sections: [
+            {
+              title: "Failure Modes",
+              content: "Identify common failure patterns in AI workflows and design recovery strategies."
+            }
+          ],
+          exercises: [
+            {
+              title: "Robust Workflow Design",
+              description: "Design an AI workflow with comprehensive error handling and recovery mechanisms."
+            }
+          ]
+        }
+      },
+      {
+        id: "monitoring-optimization",
+        courseId: "ai-automation-workflows",
+        title: "Monitoring & Optimization",
+        description: "Monitor AI workflow performance and optimize for efficiency and reliability.",
+        icon: "fas fa-chart-line",
+        order: 4,
+        isActive: true,
+        content: {
+          sections: [
+            {
+              title: "Performance Metrics",
+              content: "Learn to define and track key performance indicators for AI workflows."
+            }
+          ],
+          exercises: [
+            {
+              title: "Workflow Optimization",
+              description: "Analyze and optimize an existing AI workflow for better performance."
+            }
+          ]
         }
       }
     ];
@@ -269,6 +484,136 @@ export class MemStorage implements IStorage {
     });
     
     return completed;
+  }
+
+  // Course methods
+  async getCourses(): Promise<Course[]> {
+    return Array.from(this.courses.values()).sort((a, b) => a.order - b.order);
+  }
+
+  async getCourse(id: string): Promise<Course | undefined> {
+    return this.courses.get(id);
+  }
+
+  async createCourse(courseData: InsertCourse): Promise<Course> {
+    const course: Course = {
+      ...courseData,
+      isActive: courseData.isActive ?? true
+    };
+    this.courses.set(course.id, course);
+    return course;
+  }
+
+  // Extended Module methods
+  async getModulesByCourse(courseId: string): Promise<Module[]> {
+    return Array.from(this.modules.values())
+      .filter(module => module.courseId === courseId)
+      .sort((a, b) => a.order - b.order);
+  }
+
+  async updateModule(id: string, updates: Partial<Module>): Promise<Module | undefined> {
+    const existing = this.modules.get(id);
+    if (!existing) {
+      return undefined;
+    }
+    
+    const updated: Module = { ...existing, ...updates };
+    this.modules.set(id, updated);
+    return updated;
+  }
+
+  // Goal methods
+  async getUserGoals(userId: string): Promise<Goal[]> {
+    return Array.from(this.goals.values())
+      .filter(goal => goal.userId === userId)
+      .sort((a, b) => (a.createdAt?.getTime() || 0) - (b.createdAt?.getTime() || 0));
+  }
+
+  async createGoal(goalData: InsertGoal): Promise<Goal> {
+    const id = randomUUID();
+    const goal: Goal = {
+      ...goalData,
+      courseId: goalData.courseId ?? null,
+      notes: goalData.notes ?? null,
+      id,
+      createdAt: new Date()
+    };
+    this.goals.set(id, goal);
+    return goal;
+  }
+
+  async updateGoal(id: string, updates: Partial<InsertGoal>): Promise<Goal | undefined> {
+    const existing = this.goals.get(id);
+    if (!existing) {
+      return undefined;
+    }
+
+    const updated: Goal = { ...existing, ...updates };
+    this.goals.set(id, updated);
+    return updated;
+  }
+
+  async deleteGoal(id: string): Promise<boolean> {
+    return this.goals.delete(id);
+  }
+
+  // Certificate methods
+  async getUserCertificates(userId: string): Promise<Certificate[]> {
+    return Array.from(this.certificates.values())
+      .filter(cert => cert.userId === userId)
+      .sort((a, b) => (a.issuedAt?.getTime() || 0) - (b.issuedAt?.getTime() || 0));
+  }
+
+  async issueCertificate(userId: string, courseId: string): Promise<Certificate> {
+    const id = randomUUID();
+    const serial = `CERT-${Date.now()}-${randomUUID().substring(0, 8).toUpperCase()}`;
+    
+    const certificate: Certificate = {
+      id,
+      userId,
+      courseId,
+      serial,
+      issuedAt: new Date()
+    };
+    
+    this.certificates.set(id, certificate);
+    return certificate;
+  }
+
+  async getCertificate(id: string): Promise<Certificate | undefined> {
+    return this.certificates.get(id);
+  }
+
+  // Progress helper methods
+  async getMaxCompletedModuleOrder(userId: string, courseId: string): Promise<number> {
+    const courseModules = await this.getModulesByCourse(courseId);
+    const userProgress = await this.getUserProgress(userId);
+    
+    let maxCompletedOrder = 0;
+    
+    for (const module of courseModules) {
+      const progress = userProgress.find(p => p.moduleId === module.id);
+      if (progress && progress.isCompleted && module.order > maxCompletedOrder) {
+        maxCompletedOrder = module.order;
+      }
+    }
+    
+    return maxCompletedOrder;
+  }
+
+  async isCourseComplete(userId: string, courseId: string): Promise<boolean> {
+    const courseModules = await this.getModulesByCourse(courseId);
+    const userProgress = await this.getUserProgress(userId);
+    
+    // A course is complete if all its modules are completed
+    for (const module of courseModules) {
+      const progress = userProgress.find(p => p.moduleId === module.id);
+      if (!progress || !progress.isCompleted) {
+        return false;
+      }
+    }
+    
+    return courseModules.length > 0; // Ensure there are modules to complete
   }
 }
 

@@ -10,8 +10,17 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").default(sql`now()`),
 });
 
+export const courses = pgTable("courses", {
+  id: varchar("id").primaryKey(),
+  titleKey: text("title_key").notNull(),
+  descriptionKey: text("description_key").notNull(),
+  order: integer("order").notNull(),
+  isActive: boolean("is_active").default(true),
+});
+
 export const modules = pgTable("modules", {
   id: varchar("id").primaryKey(),
+  courseId: varchar("course_id").notNull(),
   title: text("title").notNull(),
   description: text("description").notNull(),
   icon: text("icon").notNull(),
@@ -52,14 +61,32 @@ export const exerciseAttempts = pgTable("exercise_attempts", {
   createdAt: timestamp("created_at").default(sql`now()`),
 });
 
+export const goals = pgTable("goals", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  courseId: varchar("course_id"),
+  targetDate: timestamp("target_date").notNull(),
+  targetModulesPerWeek: integer("target_modules_per_week").notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").default(sql`now()`),
+});
+
+export const certificates = pgTable("certificates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  courseId: varchar("course_id").notNull(),
+  issuedAt: timestamp("issued_at").default(sql`now()`),
+  serial: text("serial").notNull().unique(),
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
 });
 
-export const insertModuleSchema = createInsertSchema(modules).omit({
-  id: true,
-});
+export const insertCourseSchema = createInsertSchema(courses);
+
+export const insertModuleSchema = createInsertSchema(modules);
 
 export const insertUserProgressSchema = createInsertSchema(userProgress).omit({
   id: true,
@@ -76,8 +103,21 @@ export const insertExerciseAttemptSchema = createInsertSchema(exerciseAttempts).
   createdAt: true,
 });
 
+export const insertGoalSchema = createInsertSchema(goals).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertCertificateSchema = createInsertSchema(certificates).omit({
+  id: true,
+  issuedAt: true,
+  serial: true,
+});
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
+export type Course = typeof courses.$inferSelect;
+export type InsertCourse = z.infer<typeof insertCourseSchema>;
 export type Module = typeof modules.$inferSelect;
 export type InsertModule = z.infer<typeof insertModuleSchema>;
 export type UserProgress = typeof userProgress.$inferSelect;
@@ -86,6 +126,10 @@ export type PromptAttempt = typeof promptAttempts.$inferSelect;
 export type InsertPromptAttempt = z.infer<typeof insertPromptAttemptSchema>;
 export type ExerciseAttempt = typeof exerciseAttempts.$inferSelect;
 export type InsertExerciseAttempt = z.infer<typeof insertExerciseAttemptSchema>;
+export type Goal = typeof goals.$inferSelect;
+export type InsertGoal = z.infer<typeof insertGoalSchema>;
+export type Certificate = typeof certificates.$inferSelect;
+export type InsertCertificate = z.infer<typeof insertCertificateSchema>;
 
 export interface AssessmentFeedback {
   overall_score: number;
