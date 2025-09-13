@@ -2,6 +2,7 @@ export default {
   // Navigation
   nav: {
     dashboard: "ផ្ទាំងគ្រប់គ្រង",
+    courses: "វគ្គសិក្សា",
     modules: "ម៉ូឌុល",
     practice: "អនុវត្ត",
     progress: "ការរីកចម្រើន",
@@ -22,6 +23,7 @@ export default {
     review: "ពិនិត្យឡើងវិញ",
     notStarted: "មិនទាន់ចាប់ផ្តើម",
     backToModules: "ត្រលប់ទៅម៉ូឌុល",
+    backToCourses: "ត្រលប់ទៅវគ្គសិក្សា",
     clear: "សម្អាត",
     useTemplate: "ប្រើគំរូ",
     analyzePrompt: "វិភាគ Prompt",
@@ -46,12 +48,40 @@ export default {
   // Dashboard
   dashboard: {
     heroTitle: "ស្ទាត់ជំនាញការវិស្វកម្ម Prompt",
-    heroSubtitle: "រៀនទំនាក់ទំនងជាមួយ AI យ៉ាងមានប្រសិទ្ធភាពតាមរយៈម៉ូឌុលដែលមានរចនាសម្ព័ន្ធ និងការអនុវត្តជាក់ស្តែង។",
-    learningModules: "ម៉ូឌុលសិក្សា",
+    heroSubtitle: "រៀនទំនាក់ទំនងជាមួយ AI យ៉ាងមានប្រសិទ្ធភាពតាមរយៈវគ្គសិក្សាដែលមានរចនាសម្ព័ន្ធ និងការអនុវត្តជាក់ស្តែង។",
+    enrolledCourses: "វគ្គសិក្សារបស់ខ្ញុំ",
+    allCourses: "រុករកវគ្គសិក្សាទាំងអស់",
     interactivePractice: "ការអនុវត្តអន្តរកម្ម",
     yourLearningJourney: "ដំណើរសិក្សារបស់អ្នក",
     currentScore: "ពិន្ទុបច្ចុប្បន្ន",
-    masterArt: "ស្ទាត់ជំនាញការទំនាក់ទំនងជាមួយ AI"
+    masterArt: "ស្ទាត់ជំនាញការទំនាក់ទំនងជាមួយ AI",
+    recentActivity: "សកម្មភាពថ្មីៗ",
+    continueLearning: "បន្តការសិក្សា",
+    exploreMore: "ស្វែងរកវគ្គសិក្សាបន្ថែម",
+    learningModules: "ម៉ូឌុលសិក្សា"
+  },
+
+  // Courses
+  courses: {
+    promptEngineeringFundamentals: {
+      title: "គោលការណ៍ជាមូលដ្ឋាននៃការវិស្វកម្ម Prompt",
+      description: "ស្ទាត់ជំនាញការទំនាក់ទំនងជាមួយ AI តាមរយៈការសិក្សាដែលមានរចនាសម្ព័ន្ធ និងការរីកចម្រើន។ បង្កើតជំនាញពី prompting មូលដ្ឋានទៅកាន់បច្ចេកទេសកម្រិតខ្ពស់។"
+    },
+    allCourses: "វគ្គសិក្សាទាំងអស់",
+    courseOverview: "ទិដ្ឋភាពរួមវគ្គសិក្សា",
+    startCourse: "ចាប់ផ្តើមវគ្គសិក្សា",
+    continueCourse: "បន្តវគ្គសិក្សា",
+    courseModules: "ម៉ូឌុលវគ្គសិក្សា",
+    difficulty: "កម្រិតពិបាក",
+    duration: "រយៈពេល",
+    beginner: "ដំបូង",
+    intermediate: "មធ្យម",
+    advanced: "កម្រិតខ្ពស់",
+    enrolled: "បានចុះឈ្មោះ",
+    notEnrolled: "មិនបានចុះឈ្មោះ",
+    moduleCount: "ម៉ូឌុល {{count}}",
+    courseProgress: "ការរីកចម្រើនវគ្គសិក្សា",
+    backToCourses: "ត្រលប់ទៅវគ្គសិក្សា"
   },
 
   // Module Content

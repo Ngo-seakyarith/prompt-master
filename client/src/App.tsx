@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import Dashboard from "@/pages/Dashboard";
+import CoursesList from "@/pages/CoursesList";
+import CourseDetail from "@/pages/CourseDetail";
 import ModuleDetail from "@/pages/ModuleDetail";
 import NotFound from "@/pages/not-found";
 
@@ -12,7 +14,10 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Dashboard} />
-      <Route path="/modules" component={Dashboard} />
+      <Route path="/courses" component={CoursesList} />
+      <Route path="/courses/:courseId">
+        {(params) => <CourseDetail courseId={params.courseId} />}
+      </Route>
       <Route path="/modules/:moduleId">
         {(params) => <ModuleDetail moduleId={params.moduleId} />}
       </Route>

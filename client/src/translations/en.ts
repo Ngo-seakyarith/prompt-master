@@ -2,6 +2,7 @@ export default {
   // Navigation
   nav: {
     dashboard: "Dashboard",
+    courses: "Courses",
     modules: "Modules",
     practice: "Practice",
     progress: "Progress",
@@ -22,6 +23,7 @@ export default {
     review: "Review",
     notStarted: "Not started",
     backToModules: "Back to Modules",
+    backToCourses: "Back to Courses",
     clear: "Clear",
     useTemplate: "Use Template",
     analyzePrompt: "Analyze Prompt",
@@ -46,12 +48,40 @@ export default {
   // Dashboard
   dashboard: {
     heroTitle: "Master the Art of Prompt Engineering",
-    heroSubtitle: "Learn to communicate effectively with AI through structured, progressive modules and hands-on practice.",
-    learningModules: "Learning Modules",
+    heroSubtitle: "Learn to communicate effectively with AI through structured, progressive courses and hands-on practice.",
+    enrolledCourses: "My Courses",
+    allCourses: "Browse All Courses",
     interactivePractice: "Interactive Practice",
     yourLearningJourney: "Your Learning Journey",
     currentScore: "Current Score",
-    masterArt: "Master the art of AI communication"
+    masterArt: "Master the art of AI communication",
+    recentActivity: "Recent Activity",
+    continueLearning: "Continue Learning",
+    exploreMore: "Explore More Courses",
+    learningModules: "Learning Modules"
+  },
+
+  // Courses
+  courses: {
+    promptEngineeringFundamentals: {
+      title: "Prompt Engineering Fundamentals",
+      description: "Master the art of AI communication through structured, progressive learning. Build expertise from basic prompting to advanced techniques."
+    },
+    allCourses: "All Courses",
+    courseOverview: "Course Overview",
+    startCourse: "Start Course",
+    continueCourse: "Continue Course",
+    courseModules: "Course Modules",
+    difficulty: "Difficulty",
+    duration: "Duration",
+    beginner: "Beginner",
+    intermediate: "Intermediate",
+    advanced: "Advanced",
+    enrolled: "Enrolled",
+    notEnrolled: "Not Enrolled",
+    moduleCount: "{{count}} Modules",
+    courseProgress: "Course Progress",
+    backToCourses: "Back to Courses"
   },
 
   // Module Content

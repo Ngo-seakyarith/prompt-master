@@ -21,7 +21,7 @@ export default function Navigation() {
 
   const navItems = [
     { href: "/", label: t("nav.dashboard"), id: "dashboard" },
-    { href: "/modules", label: t("nav.modules"), id: "modules" },
+    { href: "/courses", label: t("nav.courses"), id: "courses" },
     { href: "/practice", label: t("nav.practice"), id: "practice" },
     { href: "/progress", label: t("nav.progress"), id: "progress" }
   ];
@@ -44,7 +44,7 @@ export default function Navigation() {
                   <Link key={item.id} href={item.href}>
                     <span
                       className={`px-3 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer ${
-                        location === item.href || (item.href === "/" && location === "")
+                        location === item.href || (item.href === "/" && location === "") || (item.href === "/courses" && location.startsWith("/courses"))
                           ? "text-primary bg-primary/10"
                           : "text-muted-foreground hover:text-foreground"
                       }`}

@@ -1,48 +1,78 @@
+export const COURSES = [
+  {
+    id: "prompt-engineering-fundamentals",
+    title: "Prompt Engineering Fundamentals",
+    description: "Master the art of AI communication through structured, progressive learning. Build expertise from basic prompting to advanced techniques.",
+    titleKey: "courses.promptEngineeringFundamentals.title",
+    descriptionKey: "courses.promptEngineeringFundamentals.description",
+    icon: "fas fa-brain",
+    order: 1,
+    difficulty: "beginner",
+    estimatedDuration: "8-10 hours",
+    isActive: true
+  }
+];
+
 export const MODULES = [
   {
     id: "basic-prompting",
+    courseId: "prompt-engineering-fundamentals",
     title: "Basic Prompting",
     description: "Learn the fundamentals of prompting with and without context. Understand how context shapes AI responses.",
     titleKey: "modules.basicPrompting.title",
     descriptionKey: "modules.basicPrompting.description",
     icon: "fas fa-play",
-    order: 1
+    order: 1,
+    content: {},
+    isActive: true
   },
   {
     id: "prompt-structure", 
+    courseId: "prompt-engineering-fundamentals",
     title: "Prompt Structure",
     description: "Master the anatomy of effective prompts: role, task, context, template, and constraints.",
     titleKey: "modules.promptStructure.title",
     descriptionKey: "modules.promptStructure.description",
     icon: "fas fa-layer-group",
-    order: 2
+    order: 2,
+    content: {},
+    isActive: true
   },
   {
     id: "advanced-techniques",
+    courseId: "prompt-engineering-fundamentals",
     title: "Advanced Techniques",
     description: "Explore chain-of-thought, few-shot learning, and advanced prompting strategies.",
     titleKey: "modules.advancedTechniques.title",
     descriptionKey: "modules.advancedTechniques.description",
     icon: "fas fa-rocket",
-    order: 3
+    order: 3,
+    content: {},
+    isActive: true
   },
   {
     id: "prompt-refinement",
+    courseId: "prompt-engineering-fundamentals",
     title: "Prompt Refinement",
     description: "Master key prompt patterns: persona, question refinement, cognitive verifier, and audience persona.",
     titleKey: "modules.promptRefinement.title",
     descriptionKey: "modules.promptRefinement.description",
     icon: "fas fa-tools", 
-    order: 4
+    order: 4,
+    content: {},
+    isActive: true
   },
   {
     id: "practical-applications",
+    courseId: "prompt-engineering-fundamentals",
     title: "Practical Applications",
     description: "Apply prompt engineering to productivity, automation, creativity, and business planning.",
     titleKey: "modules.practicalApplications.title",
     descriptionKey: "modules.practicalApplications.description",
     icon: "fas fa-briefcase",
-    order: 5
+    order: 5,
+    content: {},
+    isActive: true
   }
 ];
 
