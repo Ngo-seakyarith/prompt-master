@@ -10,13 +10,14 @@ import PromptEditor from "@/components/PromptEditor";
 import FeedbackPanel from "@/components/FeedbackPanel";
 import ProgressTracker from "@/components/ProgressTracker";
 import UnauthorizedState from "@/components/UnauthorizedState";
+import CertificateCard from "@/components/CertificateCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiRequest } from "@/lib/queryClient";
 import { COURSES, MODULES } from "@/lib/constants";
 import { safeParseNotes, safeGetNumber } from "@/lib/goalUtils";
-import { Target, Plus, TrendingUp } from "lucide-react";
-import type { UserProgress, AssessmentFeedback, Goal } from "@shared/schema";
+import { Target, Plus, TrendingUp, Award } from "lucide-react";
+import type { UserProgress, AssessmentFeedback, Goal, Certificate } from "@shared/schema";
 
 export default function Dashboard() {
   const [location] = useLocation();
@@ -38,6 +39,13 @@ export default function Dashboard() {
   // Fetch user goals
   const { data: goals = [], isError: goalsError, error: goalsErrorData } = useQuery<Goal[]>({
     queryKey: ["/api/goals"],
+    enabled: isAuthenticated,
+    retry: false
+  });
+
+  // Fetch user certificates
+  const { data: certificates = [], isError: certificatesError } = useQuery<Certificate[]>({
+    queryKey: ["/api/certificates"],
     enabled: isAuthenticated,
     retry: false
   });
@@ -364,6 +372,121 @@ export default function Dashboard() {
                   </Link>
                 </div>
               )}
+            </section>
+
+            {/* Certificates & Achievements Section */}
+            <section className="mb-12" data-testid="certificates-section">
+              <div className="flex items-center justify-between mb-8">
+                <h3 className="text-3xl font-bold flex items-center gap-3">
+                  <Award className="w-8 h-8 text-amber-600" />
+                  {t("certificates.achievements")}
+                </h3>
+                <Link href="/certificates">
+                  <Button variant="outline" className="flex items-center gap-2" data-testid="view-all-certificates">
+                    <Award className="w-4 h-4" />
+                    {t("certificates.viewAllCertificates")}
+                  </Button>
+                </Link>
+              </div>
+
+              {!certificatesError && certificates.length > 0 ? (
+                <div className="space-y-6">
+                  {/* Recent Certificates */}
+                  <div>
+                    <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                      <Award className="w-5 h-5 text-amber-600" />
+                      {t("certificates.recentCertificates")}
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {certificates.slice(0, 3).map((certificate) => {
+                        const course = COURSES.find(c => c.id === certificate.courseId);
+                        const courseInfo = {
+                          title: course?.title || "Unknown Course",
+                          titleKey: course?.titleKey
+                        };
+                        
+                        return (
+                          <CertificateCard
+                            key={certificate.id}
+                            certificate={certificate}
+                            courseInfo={courseInfo}
+                            compact={true}
+                            onView={() => console.log('View certificate:', certificate.id)}
+                            onDownload={() => console.log('Download certificate:', certificate.id)}
+                            onPrint={() => console.log('Print certificate:', certificate.id)}
+                            onShare={() => console.log('Share certificate:', certificate.id)}
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Achievement Stats */}
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <Card className="text-center p-6 bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-950/20 dark:to-yellow-950/20 border-amber-200 dark:border-amber-800">
+                      <div className="text-3xl font-bold text-amber-600 mb-2" data-testid="total-certificates">
+                        {certificates.length}
+                      </div>
+                      <div className="text-sm text-amber-700 dark:text-amber-300">{t("certificates.earnedCertificates")}</div>
+                    </Card>
+                    <Card className="text-center p-6">
+                      <div className="text-3xl font-bold text-green-600 mb-2" data-testid="completed-courses">
+                        {[...new Set(certificates.map(c => c.courseId))].length}
+                      </div>
+                      <div className="text-sm text-muted-foreground">Completed Courses</div>
+                    </Card>
+                    <Card className="text-center p-6">
+                      <div className="text-3xl font-bold text-blue-600 mb-2" data-testid="learning-streak">
+                        {completedModules > 0 ? Math.ceil(completedModules / 7) : 0}
+                      </div>
+                      <div className="text-sm text-muted-foreground">Week Streak</div>
+                    </Card>
+                    <Card className="text-center p-6">
+                      <div className="text-3xl font-bold text-purple-600 mb-2" data-testid="achievement-score">
+                        {Math.round(overallProgress)}%
+                      </div>
+                      <div className="text-sm text-muted-foreground">Mastery Level</div>
+                    </Card>
+                  </div>
+
+                  {certificates.length > 3 && (
+                    <div className="text-center">
+                      <Link href="/certificates">
+                        <Button variant="outline" data-testid="view-more-certificates">
+                          {t("certificates.viewAllCertificates")} ({certificates.length})
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              ) : certificates.length === 0 && !certificatesError ? (
+                <Card className="text-center py-12 bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-950/20 dark:to-yellow-950/20 border-amber-200 dark:border-amber-800" data-testid="no-certificates">
+                  <CardContent>
+                    <Award className="w-16 h-16 text-amber-400 mx-auto mb-4" />
+                    <CardTitle className="text-2xl mb-2 text-amber-800 dark:text-amber-200">
+                      {t("certificates.noCertificates")}
+                    </CardTitle>
+                    <CardDescription className="mb-6 text-amber-700 dark:text-amber-300">
+                      {t("certificates.noCertificatesDesc")}
+                    </CardDescription>
+                    <Link href="/courses">
+                      <Button className="bg-amber-600 hover:bg-amber-700 text-white" data-testid="start-earning-certificates">
+                        Start Earning Certificates
+                        <Award className="w-4 h-4 ml-2" />
+                      </Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+              ) : certificatesError ? (
+                <Card className="text-center py-8 border-amber-200 dark:border-amber-800">
+                  <CardContent>
+                    <Award className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                    <CardDescription>
+                      {t("certificates.certificateError")}
+                    </CardDescription>
+                  </CardContent>
+                </Card>
+              ) : null}
             </section>
 
             {/* My Courses Section */}

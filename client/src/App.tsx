@@ -9,6 +9,7 @@ import CoursesList from "@/pages/CoursesList";
 import CourseDetail from "@/pages/CourseDetail";
 import ModuleDetail from "@/pages/ModuleDetail";
 import Goals from "@/pages/Goals";
+import Certificates from "@/pages/Certificates";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -23,6 +24,7 @@ function Router() {
         {(params) => <ModuleDetail moduleId={params.moduleId} />}
       </Route>
       <Route path="/goals" component={Goals} />
+      <Route path="/certificates" component={Certificates} />
       <Route path="/practice" component={Dashboard} />
       <Route path="/progress" component={Dashboard} />
       {/* Fallback to 404 */}

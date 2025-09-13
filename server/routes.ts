@@ -7,6 +7,34 @@ import { z } from "zod";
 import { MODULE_CONTENT } from "../client/src/lib/constants";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 
+// Helper function to check course completion and generate certificates
+async function checkAndGenerateCertificate(userId: string, moduleId: string) {
+  try {
+    // Get the module to find its course
+    const module = await storage.getModule(moduleId);
+    if (!module) return;
+
+    const courseId = module.courseId;
+    
+    // Check if certificate already exists for this user and course
+    const existingCertificates = await storage.getUserCertificates(userId);
+    if (existingCertificates.some(cert => cert.courseId === courseId)) {
+      return; // Certificate already exists
+    }
+    
+    // Check if course is complete
+    const isCourseComplete = await storage.isCourseComplete(userId, courseId);
+    if (isCourseComplete) {
+      // Generate certificate
+      console.log(`Generating certificate for user ${userId} for course ${courseId}`);
+      await storage.issueCertificate(userId, courseId);
+      console.log(`Certificate generated successfully for user ${userId} for course ${courseId}`);
+    }
+  } catch (error) {
+    console.error("Error in certificate generation:", error);
+  }
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup Replit Auth
   await setupAuth(app);
@@ -53,7 +81,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!course) {
         return res.status(404).json({ message: "Course not found" });
       }
-      res.json(course);
+      
+      // Transform the course to include displayable title and description
+      // For now, use the titleKey as the title since we don't have translation implementation
+      const transformedCourse = {
+        ...course,
+        title: course.titleKey || course.id,
+        description: course.descriptionKey || "No description available"
+      };
+      
+      res.json(transformedCourse);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch course" });
     }
@@ -135,6 +172,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         attempts
       });
       
+      // Check for course completion and generate certificate if module was completed
+      if (isCompleted) {
+        await checkAndGenerateCertificate(userId, moduleId);
+      }
+      
       res.json(progress);
     } catch (error) {
       res.status(500).json({ message: "Failed to update progress" });
@@ -206,6 +248,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isCompleted: allExercisesCompleted,
         attempts: newAttempts
       });
+
+      // Check for course completion and generate certificate if needed
+      if (allExercisesCompleted) {
+        await checkAndGenerateCertificate(userId, moduleId);
+      }
 
       res.json(feedback);
     } catch (error) {
@@ -446,6 +493,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(certificate);
     } catch (error) {
+      res.status(500).json({ message: "Failed to fetch certificate" });
+    }
+  });
+
+  // Public certificate verification endpoints (no authentication required)
+  app.get("/api/verify/certificate/:serial", async (req, res) => {
+    try {
+      const serial = req.params.serial;
+      
+      if (!serial) {
+        return res.status(400).json({ message: "Certificate serial is required" });
+      }
+      
+      // Find certificate by serial number
+      const certificate = await storage.getCertificateBySerial(serial);
+      
+      if (!certificate) {
+        return res.status(404).json({ 
+          valid: false, 
+          message: "Certificate not found or invalid serial number" 
+        });
+      }
+      
+      // Get user info for the certificate
+      const user = await storage.getUser(certificate.userId);
+      const course = await storage.getCourse(certificate.courseId);
+      
+      res.json({
+        valid: true,
+        certificate: {
+          id: certificate.id,
+          serial: certificate.serial,
+          issuedAt: certificate.issuedAt,
+          courseName: course?.titleKey || course?.id || "Unknown Course",
+          recipientName: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email : "Unknown User"
+        }
+      });
+    } catch (error) {
+      console.error("Certificate verification error:", error);
+      res.status(500).json({ 
+        valid: false, 
+        message: "Failed to verify certificate" 
+      });
+    }
+  });
+
+  // Public certificate view endpoint (for sharing certificates)
+  app.get("/api/public/certificates/:id", async (req, res) => {
+    try {
+      const certificate = await storage.getCertificate(req.params.id);
+      
+      if (!certificate) {
+        return res.status(404).json({ message: "Certificate not found" });
+      }
+      
+      // Get additional information for public display
+      const user = await storage.getUser(certificate.userId);
+      const course = await storage.getCourse(certificate.courseId);
+      
+      // Return public certificate information
+      res.json({
+        certificate: {
+          id: certificate.id,
+          serial: certificate.serial,
+          issuedAt: certificate.issuedAt,
+          courseId: certificate.courseId
+        },
+        user: {
+          firstName: user?.firstName || null,
+          lastName: user?.lastName || null,
+          email: user?.email || null
+        },
+        course: {
+          titleKey: course?.titleKey || null,
+          descriptionKey: course?.descriptionKey || null,
+          title: course?.titleKey || "Unknown Course"
+        }
+      });
+    } catch (error) {
+      console.error("Public certificate fetch error:", error);
       res.status(500).json({ message: "Failed to fetch certificate" });
     }
   });

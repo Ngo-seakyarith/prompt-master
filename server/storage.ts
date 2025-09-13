@@ -34,6 +34,8 @@ export interface IStorage {
   
   // Certificate methods
   getUserCertificates(userId: string): Promise<Certificate[]>;
+  getAllCertificates(): Promise<Certificate[]>;
+  getCertificateBySerial(serial: string): Promise<Certificate | undefined>;
   issueCertificate(userId: string, courseId: string): Promise<Certificate>;
   getCertificate(id: string): Promise<Certificate | undefined>;
   
@@ -607,6 +609,14 @@ export class MemStorage implements IStorage {
 
   async getCertificate(id: string): Promise<Certificate | undefined> {
     return this.certificates.get(id);
+  }
+
+  async getAllCertificates(): Promise<Certificate[]> {
+    return Array.from(this.certificates.values());
+  }
+
+  async getCertificateBySerial(serial: string): Promise<Certificate | undefined> {
+    return Array.from(this.certificates.values()).find(cert => cert.serial === serial);
   }
 
   // Progress helper methods
