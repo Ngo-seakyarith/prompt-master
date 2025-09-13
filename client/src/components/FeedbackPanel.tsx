@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -20,6 +21,7 @@ export default function FeedbackPanel({
   onApplySuggestions, 
   onNewExercise 
 }: FeedbackPanelProps) {
+  const { t } = useTranslation();
   const [isGenerating, setIsGenerating] = useState(false);
 
   const improveMutation = useMutation({
@@ -49,11 +51,11 @@ export default function FeedbackPanel({
     return (
       <Card data-testid="feedback-panel-empty">
         <CardHeader>
-          <CardTitle>AI Assessment & Feedback</CardTitle>
+          <CardTitle>{t("feedback.assessmentFeedback")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8 text-muted-foreground">
-            <p>Write a prompt and click "Analyze Prompt" to get detailed feedback and scoring.</p>
+            <p>{t("feedback.writeAndAnalyze")}</p>
           </div>
         </CardContent>
       </Card>
@@ -75,14 +77,14 @@ export default function FeedbackPanel({
   return (
     <Card data-testid="feedback-panel">
       <CardHeader>
-        <CardTitle>AI Assessment & Feedback</CardTitle>
+        <CardTitle>{t("feedback.assessmentFeedback")}</CardTitle>
       </CardHeader>
       
       <CardContent className="space-y-6">
         {/* Overall Score */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium">Overall Score</span>
+            <span className="text-sm font-medium">{t("feedback.overallScore")}</span>
             <span className={`text-2xl font-bold ${getScoreColor(feedback.overall_score)}`} data-testid="overall-score">
               {feedback.overall_score}/100
             </span>
@@ -93,10 +95,10 @@ export default function FeedbackPanel({
         {/* Score Breakdown */}
         <div className="space-y-3">
           {[
-            { label: "Clarity & Structure", score: feedback.clarity_structure, key: "clarity" },
-            { label: "Context Completeness", score: feedback.context_completeness, key: "context" },
-            { label: "Specificity", score: feedback.specificity, key: "specificity" },
-            { label: "Actionability", score: feedback.actionability, key: "actionability" }
+            { label: t("feedback.clarityStructure"), score: feedback.clarity_structure, key: "clarity" },
+            { label: t("feedback.contextCompleteness"), score: feedback.context_completeness, key: "context" },
+            { label: t("feedback.specificity"), score: feedback.specificity, key: "specificity" },
+            { label: t("feedback.actionability"), score: feedback.actionability, key: "actionability" }
           ].map(({ label, score, key }) => (
             <div key={key} className="flex items-center justify-between">
               <span className="text-sm">{label}</span>
@@ -121,7 +123,7 @@ export default function FeedbackPanel({
             <div className="mb-4">
               <h5 className="font-medium mb-3 text-secondary flex items-center">
                 <i className="fas fa-check-circle mr-2"></i>
-                Strengths
+                {t("feedback.strengths")}
               </h5>
               <ul className="text-sm text-muted-foreground space-y-1">
                 {feedback.strengths.map((strength, index) => (
@@ -137,7 +139,7 @@ export default function FeedbackPanel({
             <div className="mb-4">
               <h5 className="font-medium mb-3 text-accent flex items-center">
                 <i className="fas fa-exclamation-triangle mr-2"></i>
-                Areas for Improvement
+                {t("feedback.areasForImprovement")}
               </h5>
               <ul className="text-sm text-muted-foreground space-y-1">
                 {feedback.improvements.map((improvement, index) => (
@@ -153,7 +155,7 @@ export default function FeedbackPanel({
             <div className="mb-4">
               <h5 className="font-medium mb-3 text-primary flex items-center">
                 <i className="fas fa-lightbulb mr-2"></i>
-                Suggestions
+                {t("feedback.suggestions")}
               </h5>
               <ul className="text-sm text-muted-foreground space-y-1">
                 {feedback.suggestions.map((suggestion, index) => (
@@ -171,12 +173,12 @@ export default function FeedbackPanel({
           {feedback.overall_score >= 80 ? (
             <Badge variant="secondary" className="text-lg px-4 py-2">
               <i className="fas fa-trophy mr-2"></i>
-              Excellent! Ready for next module
+              {t("feedback.excellentReady")}
             </Badge>
           ) : (
             <Badge variant="outline" className="text-lg px-4 py-2 border-accent text-accent">
               <i className="fas fa-target mr-2"></i>
-              Score 80+ to unlock next module
+              {t("feedback.scoreToUnlock")}
             </Badge>
           )}
         </div>
@@ -192,10 +194,10 @@ export default function FeedbackPanel({
             {isGenerating || improveMutation.isPending ? (
               <>
                 <i className="fas fa-spinner fa-spin mr-2"></i>
-                Generating...
+                {t("common.generating")}
               </>
             ) : (
-              "Apply Suggestions"
+              t("common.applySuggestions")
             )}
           </Button>
           <Button
@@ -204,7 +206,7 @@ export default function FeedbackPanel({
             className="flex-1 border-accent text-accent hover:bg-accent/10"
             data-testid="button-new-exercise"
           >
-            Try New Exercise
+            {t("common.tryNewExercise")}
           </Button>
         </div>
       </CardContent>

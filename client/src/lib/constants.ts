@@ -3,6 +3,8 @@ export const MODULES = [
     id: "basic-prompting",
     title: "Basic Prompting",
     description: "Learn the fundamentals of prompting with and without context. Understand how context shapes AI responses.",
+    titleKey: "modules.basicPrompting.title",
+    descriptionKey: "modules.basicPrompting.description",
     icon: "fas fa-play",
     order: 1
   },
@@ -10,13 +12,17 @@ export const MODULES = [
     id: "prompt-structure", 
     title: "Prompt Structure",
     description: "Master the anatomy of effective prompts: role, task, context, template, and constraints.",
+    titleKey: "modules.promptStructure.title",
+    descriptionKey: "modules.promptStructure.description",
     icon: "fas fa-layer-group",
     order: 2
   },
   {
     id: "advanced-techniques",
-    title: "Advanced Techniques", 
+    title: "Advanced Techniques",
     description: "Explore chain-of-thought, few-shot learning, and advanced prompting strategies.",
+    titleKey: "modules.advancedTechniques.title",
+    descriptionKey: "modules.advancedTechniques.description",
     icon: "fas fa-rocket",
     order: 3
   },
@@ -24,6 +30,8 @@ export const MODULES = [
     id: "prompt-refinement",
     title: "Prompt Refinement",
     description: "Master key prompt patterns: persona, question refinement, cognitive verifier, and audience persona.",
+    titleKey: "modules.promptRefinement.title",
+    descriptionKey: "modules.promptRefinement.description",
     icon: "fas fa-tools", 
     order: 4
   },
@@ -31,6 +39,8 @@ export const MODULES = [
     id: "practical-applications",
     title: "Practical Applications",
     description: "Apply prompt engineering to productivity, automation, creativity, and business planning.",
+    titleKey: "modules.practicalApplications.title",
+    descriptionKey: "modules.practicalApplications.description",
     icon: "fas fa-briefcase",
     order: 5
   }

@@ -1,10 +1,13 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "@/hooks/useTranslation";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import type { UserProgress } from "@shared/schema";
 
 export default function Navigation() {
   const [location] = useLocation();
+  const { t } = useTranslation();
   
   // Fetch user progress for real progress calculation
   const { data: userProgress = [] } = useQuery<UserProgress[]>({
@@ -17,10 +20,10 @@ export default function Navigation() {
   const overallProgress = totalModules > 0 ? Math.round((completedModules / totalModules) * 100) : 0;
 
   const navItems = [
-    { href: "/", label: "Dashboard", id: "dashboard" },
-    { href: "/modules", label: "Modules", id: "modules" },
-    { href: "/practice", label: "Practice", id: "practice" },
-    { href: "/progress", label: "Progress", id: "progress" }
+    { href: "/", label: t("nav.dashboard"), id: "dashboard" },
+    { href: "/modules", label: t("nav.modules"), id: "modules" },
+    { href: "/practice", label: t("nav.practice"), id: "practice" },
+    { href: "/progress", label: t("nav.progress"), id: "progress" }
   ];
 
   return (
@@ -31,7 +34,7 @@ export default function Navigation() {
             <div className="flex-shrink-0">
               <Link href="/">
                 <h1 className="text-2xl font-bold text-primary cursor-pointer" data-testid="logo">
-                  PromptMaster
+                  {t("nav.logo")}
                 </h1>
               </Link>
             </div>
@@ -56,7 +59,7 @@ export default function Navigation() {
           </div>
           <div className="flex items-center space-x-4">
             <div className="text-sm text-muted-foreground" data-testid="progress-indicator">
-              Progress: {overallProgress}%
+              {t("common.progress")}: {overallProgress}%
             </div>
             <div className="w-24 h-2 bg-muted rounded-full">
               <div 
@@ -65,6 +68,7 @@ export default function Navigation() {
                 data-testid="progress-bar"
               ></div>
             </div>
+            <LanguageSwitcher />
             <button className="p-2 rounded-full bg-primary text-primary-foreground" data-testid="user-menu">
               <i className="fas fa-user w-4 h-4"></i>
             </button>

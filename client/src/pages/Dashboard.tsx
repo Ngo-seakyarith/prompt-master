@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
+import { useTranslation } from "@/hooks/useTranslation";
 import Navigation from "@/components/Navigation";
 import ModuleCard from "@/components/ModuleCard";
 import PromptEditor from "@/components/PromptEditor";
@@ -13,6 +14,7 @@ import type { Module, UserProgress, AssessmentFeedback } from "@shared/schema";
 
 export default function Dashboard() {
   const [location] = useLocation();
+  const { t } = useTranslation();
   const [currentPrompt, setCurrentPrompt] = useState("");
   const [currentFeedback, setCurrentFeedback] = useState<AssessmentFeedback | undefined>();
   const [activeModuleId, setActiveModuleId] = useState<string>("basic-prompting");
@@ -80,7 +82,7 @@ export default function Dashboard() {
       <div className="min-h-screen bg-background">
         <Navigation />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center">Loading...</div>
+          <div className="text-center">{t("common.loading")}</div>
         </div>
       </div>
     );
@@ -91,7 +93,7 @@ export default function Dashboard() {
       case "/modules":
         return (
           <section className="mb-12" data-testid="modules-section">
-            <h3 className="text-3xl font-bold mb-8">Learning Modules</h3>
+            <h3 className="text-3xl font-bold mb-8">{t("dashboard.learningModules")}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {modules.map((module) => (
                 <ModuleCard
@@ -108,7 +110,7 @@ export default function Dashboard() {
       case "/practice":
         return (
           <section className="mb-12" data-testid="practice-section">
-            <h3 className="text-3xl font-bold mb-8">Interactive Practice</h3>
+            <h3 className="text-3xl font-bold mb-8">{t("dashboard.interactivePractice")}</h3>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <PromptEditor
                 moduleId={activeModuleId}
@@ -128,7 +130,7 @@ export default function Dashboard() {
       case "/progress":
         return (
           <section className="mb-12" data-testid="progress-section">
-            <h3 className="text-3xl font-bold mb-8">Your Learning Journey</h3>
+            <h3 className="text-3xl font-bold mb-8">{t("dashboard.yourLearningJourney")}</h3>
             <ProgressTracker modules={modules} userProgress={userProgress} />
           </section>
         );
@@ -140,28 +142,28 @@ export default function Dashboard() {
             <section className="mb-12" data-testid="hero-section">
               <div className="gradient-bg rounded-xl p-8 text-white relative overflow-hidden">
                 <div className="relative z-10">
-                  <h2 className="text-4xl font-bold mb-4">Master the Art of Prompt Engineering</h2>
+                  <h2 className="text-4xl font-bold mb-4">{t("dashboard.heroTitle")}</h2>
                   <p className="text-xl mb-6 opacity-90">
-                    Learn to communicate effectively with AI through structured, progressive modules and hands-on practice.
+                    {t("dashboard.heroSubtitle")}
                   </p>
                   <div className="flex flex-wrap gap-4">
                     <div className="bg-white/20 rounded-lg p-4 backdrop-blur-sm">
                       <div className="text-2xl font-bold" data-testid="hero-modules">
                         {totalModules}
                       </div>
-                      <div className="text-sm opacity-80">Learning Modules</div>
+                      <div className="text-sm opacity-80">{t("dashboard.learningModules")}</div>
                     </div>
                     <div className="bg-white/20 rounded-lg p-4 backdrop-blur-sm">
                       <div className="text-2xl font-bold" data-testid="hero-score">
                         {currentFeedback ? currentFeedback.overall_score : 0}
                       </div>
-                      <div className="text-sm opacity-80">Current Score</div>
+                      <div className="text-sm opacity-80">{t("dashboard.currentScore")}</div>
                     </div>
                     <div className="bg-white/20 rounded-lg p-4 backdrop-blur-sm">
                       <div className="text-2xl font-bold" data-testid="hero-completed">
                         {completedModules}/{totalModules}
                       </div>
-                      <div className="text-sm opacity-80">Completed</div>
+                      <div className="text-sm opacity-80">{t("common.completed")}</div>
                     </div>
                   </div>
                 </div>
@@ -172,7 +174,7 @@ export default function Dashboard() {
 
             {/* Learning Modules */}
             <section className="mb-12" data-testid="modules-section">
-              <h3 className="text-3xl font-bold mb-8">Learning Modules</h3>
+              <h3 className="text-3xl font-bold mb-8">{t("dashboard.learningModules")}</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {modules.map((module) => (
                   <ModuleCard
@@ -187,7 +189,7 @@ export default function Dashboard() {
 
             {/* Interactive Practice Section */}
             <section className="mb-12" data-testid="practice-section">
-              <h3 className="text-3xl font-bold mb-8">Interactive Practice</h3>
+              <h3 className="text-3xl font-bold mb-8">{t("dashboard.interactivePractice")}</h3>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <PromptEditor
                   moduleId={activeModuleId}
@@ -205,7 +207,7 @@ export default function Dashboard() {
 
             {/* Progress Tracking */}
             <section className="mb-12" data-testid="progress-section">
-              <h3 className="text-3xl font-bold mb-8">Your Learning Journey</h3>
+              <h3 className="text-3xl font-bold mb-8">{t("dashboard.yourLearningJourney")}</h3>
               <ProgressTracker modules={modules} userProgress={userProgress} />
             </section>
           </>
@@ -226,14 +228,14 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="mb-4 md:mb-0">
-              <h3 className="text-lg font-bold text-primary">PromptMaster</h3>
-              <p className="text-sm text-muted-foreground">Master the art of AI communication</p>
+              <h3 className="text-lg font-bold text-primary">{t("nav.logo")}</h3>
+              <p className="text-sm text-muted-foreground">{t("dashboard.masterArt")}</p>
             </div>
             <div className="flex space-x-6 text-sm text-muted-foreground">
-              <a href="#" className="hover:text-foreground">Help</a>
-              <a href="#" className="hover:text-foreground">Documentation</a>
-              <a href="#" className="hover:text-foreground">Community</a>
-              <a href="#" className="hover:text-foreground">Contact</a>
+              <a href="#" className="hover:text-foreground">{t("footer.help")}</a>
+              <a href="#" className="hover:text-foreground">{t("footer.documentation")}</a>
+              <a href="#" className="hover:text-foreground">{t("footer.community")}</a>
+              <a href="#" className="hover:text-foreground">{t("footer.contact")}</a>
             </div>
           </div>
         </div>

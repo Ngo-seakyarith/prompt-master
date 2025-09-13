@@ -1,4 +1,5 @@
 import { Link } from "wouter";
+import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -11,24 +12,26 @@ interface ModuleCardProps {
 }
 
 export default function ModuleCard({ module, progress, isLocked }: ModuleCardProps) {
+  const { t } = useTranslation();
+  
   const getStatusBadge = () => {
     if (isLocked) {
-      return <span className="bg-muted text-muted-foreground px-3 py-1 rounded-full text-sm font-medium">Locked</span>;
+      return <span className="bg-muted text-muted-foreground px-3 py-1 rounded-full text-sm font-medium">{t("common.locked")}</span>;
     }
     if (progress?.isCompleted) {
-      return <span className="bg-secondary text-secondary-foreground px-3 py-1 rounded-full text-sm font-medium">Completed</span>;
+      return <span className="bg-secondary text-secondary-foreground px-3 py-1 rounded-full text-sm font-medium">{t("common.completed")}</span>;
     }
     if (progress && (progress.attempts || 0) > 0) {
-      return <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-medium">In Progress</span>;
+      return <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-medium">{t("common.inProgress")}</span>;
     }
-    return <span className="bg-accent text-accent-foreground px-3 py-1 rounded-full text-sm font-medium">Available</span>;
+    return <span className="bg-accent text-accent-foreground px-3 py-1 rounded-full text-sm font-medium">{t("common.available")}</span>;
   };
 
   const getButtonText = () => {
-    if (isLocked) return "Locked";
-    if (progress?.isCompleted) return "Review";
-    if (progress && (progress.attempts || 0) > 0) return "Continue";
-    return "Start";
+    if (isLocked) return t("common.locked");
+    if (progress?.isCompleted) return t("common.review");
+    if (progress && (progress.attempts || 0) > 0) return t("common.continue");
+    return t("common.start");
   };
 
   const progressPercentage = progress?.isCompleted ? 100 : (progress?.score || 0);
@@ -69,16 +72,16 @@ export default function ModuleCard({ module, progress, isLocked }: ModuleCardPro
         </div>
         
         <h4 className="text-xl font-semibold mb-2" data-testid={`module-title-${module.id}`}>
-          {module.title}
+          {module.titleKey ? t(module.titleKey) : module.title}
         </h4>
         
         <p className="text-muted-foreground mb-4" data-testid={`module-description-${module.id}`}>
-          {module.description}
+          {module.descriptionKey ? t(module.descriptionKey) : module.description}
         </p>
         
         <div className="mb-4">
           <div className="flex justify-between text-sm mb-1">
-            <span>Progress</span>
+            <span>{t("common.progress")}</span>
             <span data-testid={`module-progress-${module.id}`}>{progressPercentage}%</span>
           </div>
           <Progress value={progressPercentage} className="h-2" />
@@ -86,7 +89,7 @@ export default function ModuleCard({ module, progress, isLocked }: ModuleCardPro
         
         <div className="flex justify-between items-center">
           <span className="text-sm text-muted-foreground" data-testid={`module-score-${module.id}`}>
-            {progress?.score ? `Score: ${progress.score}/100` : "Not started"}
+            {progress?.score ? `${t("common.score")}: ${progress.score}/100` : t("common.notStarted")}
           </span>
           {isLocked ? (
             <Button
