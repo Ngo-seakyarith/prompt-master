@@ -139,79 +139,8 @@ export class MemStorage implements IStorage {
         order: 5,
         isActive: true,
         content: {
-          sections: [
-            {
-              title: "Business Strategy and Planning",
-              content: "Transform your business planning process with strategic prompt engineering. Create comprehensive plans, analyze markets, and develop strategies by leveraging AI's analytical capabilities with well-structured prompts that guide systematic thinking and thorough analysis.",
-              examples: [
-                "Basic: 'Help me plan my business' → Vague, generic advice",
-                "Strategic: 'You are a seasoned business strategist. Analyze the market opportunity for a SaaS project management tool targeting remote teams of 10-50 people. Include market size, competitive landscape, differentiation opportunities, and go-to-market strategy. Present as an executive summary with clear recommendations.'",
-                "Comprehensive: 'Acting as a management consultant with expertise in SaaS businesses, create a detailed 12-month strategic plan for TechFlow, a project management startup. Current situation: Pre-revenue, 2 co-founders, $500k seed funding, competing against Asana/Monday. Target: 1000 paying customers, $1M ARR. Address product development, marketing strategy, hiring plan, and key milestones. Present in sections with timelines and success metrics.'"
-              ]
-            },
-            {
-              title: "Content Marketing and Communication",
-              content: "Revolutionize your content creation process with prompt engineering. Generate targeted blog posts, social media content, email campaigns, and marketing materials that align with your brand voice and audience needs through strategic AI collaboration.",
-              examples: [
-                "Generic: 'Write a blog post about our product' → Unfocused content",
-                "Targeted: 'Write a 1200-word blog post for software developers about how our API monitoring tool reduces debugging time by 60%. Include technical examples, code snippets, and a compelling ROI case study. Tone: Technical but approachable.'",
-                "Strategic series: 'Create a 5-part blog series introducing AI prompt engineering to marketing professionals. Part 1: Basics and benefits, Part 2: Content creation applications, Part 3: Customer research and personas, Part 4: Campaign optimization, Part 5: Measuring success. Each post 800 words, actionable tips, real examples.'"
-              ]
-            },
-            {
-              title: "Customer Research and Analysis",
-              content: "Use prompt engineering to analyze customer feedback, market trends, and competitive intelligence. Transform raw data into actionable insights through systematic AI analysis guided by expertly crafted prompts.",
-              examples: [
-                "Surface level: 'Analyze this customer feedback' → Basic summary",
-                "Insightful: 'You are a customer experience analyst. Analyze these 100 support tickets to identify the top 5 pain points, their frequency, impact on customer satisfaction, and recommended solutions. Prioritize by business impact and implementation difficulty.'",
-                "Comprehensive: 'Acting as a market research specialist, analyze our competitor's recent product launches, pricing changes, and customer reviews from the past 6 months. Identify their strategic direction, strengths/weaknesses, and 3 specific opportunities for us to gain competitive advantage. Support with data and examples.'"
-              ]
-            },
-            {
-              title: "Productivity and Automation",
-              content: "Streamline your workflow and automate routine tasks using prompt engineering. Create systems for email templates, meeting summaries, project planning, and decision-making frameworks that save time and improve consistency.",
-              examples: [
-                "Basic automation: 'Summarize this meeting' → Simple notes",
-                "Productive system: 'Create a meeting summary template that captures: Key decisions made, action items with owners and deadlines, unresolved issues requiring follow-up, next meeting agenda items. Apply this format to today's product planning meeting notes.'",
-                "Advanced workflow: 'You are an executive assistant. Transform these rough project notes into a comprehensive project brief including: Objectives, scope, timeline, resource requirements, risk assessment, success metrics. Format for executive review with clear next steps and decision points.'"
-              ]
-            },
-            {
-              title: "Creative Problem Solving",
-              content: "Unlock creative solutions and innovative thinking through strategic prompt engineering. Use AI to brainstorm ideas, explore alternatives, and approach challenges from multiple perspectives for breakthrough solutions.",
-              examples: [
-                "Standard approach: 'Give me ideas for improving our app' → Generic suggestions",
-                "Creative exploration: 'You are an innovative product designer. Our mobile app has 20% user retention after 30 days. Brainstorm 10 unconventional approaches to increase engagement, thinking beyond typical features. Consider psychology, gamification, community, and unexpected use cases.'",
-                "Systematic innovation: 'Use the SCAMPER method (Substitute, Combine, Adapt, Modify, Put to other uses, Eliminate, Reverse) to generate innovative solutions for reducing customer support volume. Apply each technique to our current support process and generate specific, actionable improvements.'"
-              ]
-            },
-            {
-              title: "Professional Development and Learning",
-              content: "Accelerate your professional growth using AI as a personalized coach, mentor, and learning partner. Create customized learning paths, skill assessments, and development plans tailored to your goals and industry demands.",
-              examples: [
-                "General request: 'Help me learn data science' → Generic learning advice",
-                "Personalized guidance: 'You are a senior data scientist and career mentor. Create a 6-month learning plan for a marketing professional transitioning to data science. Current skills: Excel proficiency, basic SQL, business analytics. Goal: Land entry-level data scientist role. Include specific resources, projects, and weekly milestones.'",
-                "Comprehensive development: 'Acting as an executive coach, assess my leadership skills based on this 360-feedback summary. Identify top 3 development areas, create specific improvement strategies with measurable goals, and design a 90-day action plan with weekly check-ins and progress indicators.'"
-              ]
-            }
-          ],
-          exercises: [
-            {
-              title: "Complete Business Strategy Prompt",
-              description: "Create a comprehensive business strategy prompt for a real-world scenario",
-              template: "Scenario: A traditional retail clothing store wants to expand online\n\nCreate a strategic prompt that addresses:\n• Market analysis and opportunity sizing\n• Digital transformation roadmap\n• Competition and differentiation\n• Financial projections and resource needs\n• Implementation timeline with milestones\n• Risk assessment and mitigation strategies\n\nYour prompt should guide the AI to think like a senior business consultant."
-            },
-            {
-              title: "Content Marketing Campaign Prompt",
-              description: "Design a prompt for creating a complete content marketing campaign",
-              template: "Challenge: Launch a thought leadership campaign for a B2B software company\n\nCreate a prompt that generates:\n• Content themes and topics (6 months)\n• Multi-channel distribution strategy\n• Audience segmentation and personalization\n• Content calendar with production timeline\n• Success metrics and measurement plan\n• Brand voice and messaging guidelines\n\nEnsure the prompt produces actionable, specific outputs."
-            },
-            {
-              title: "Problem-Solving Workshop Prompt",
-              description: "Create a prompt that facilitates creative problem-solving for complex business challenges",
-              template: "Business Challenge: A SaaS company's customer churn rate is 15% monthly\n\nDesign a problem-solving prompt that:\n• Guides systematic root cause analysis\n• Generates creative solution alternatives\n• Evaluates solutions using multiple criteria\n• Prioritizes recommendations by impact/effort\n• Creates implementation roadmap\n• Identifies success metrics and monitoring\n\nYour prompt should think through the problem comprehensively and creatively."
-            }
-          ]
+          sections: MODULE_CONTENT["practical-applications"].sections,
+          exercises: MODULE_CONTENT["practical-applications"].exercises
         }
       }
     ];
