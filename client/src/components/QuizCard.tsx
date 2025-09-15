@@ -22,7 +22,7 @@ export default function QuizCard({ quiz, bestAttempt, isLocked = false, prerequi
   
   // Fetch quiz attempts count for authenticated users
   const { data: attemptsData } = useQuery<{ count: number }>({
-    queryKey: ["/api/quiz-attempts/count", quiz.id],
+    queryKey: [`/api/quiz-attempts/count/${quiz.id}`],
     enabled: !!user && !!bestAttempt, // Only fetch if user is logged in and has attempted the quiz
   });
   

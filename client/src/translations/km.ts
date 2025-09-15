@@ -478,7 +478,7 @@ export default {
     // General module content terms
     exercise: "លំហាត់",
     exercises: "លំហាត់", 
-    quiz: "សំណួរ",
+    singleQuiz: "សំណួរ",
     quizzes: "សំណួរ",
     
     basicPrompting: {

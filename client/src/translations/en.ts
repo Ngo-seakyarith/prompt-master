@@ -339,7 +339,7 @@ export default {
     // General module content terms
     exercise: "Exercise",
     exercises: "Exercises", 
-    quiz: "Quiz",
+    singleQuiz: "Quiz",
     quizzes: "Quizzes",
     
     basicPrompting: {
