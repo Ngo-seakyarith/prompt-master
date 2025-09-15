@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
-import { ArrowLeft, BookOpen, PenTool, CheckCircle, Circle, Lightbulb, Lock, Trophy } from "lucide-react";
+import { ArrowLeft, BookOpen, PenTool, CheckCircle, Circle, Lightbulb, Lock, Trophy, FlaskConical, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -176,6 +176,58 @@ export default function ModuleDetail({ moduleId }: ModuleDetailProps) {
     if (currentExerciseIndex > 0) {
       setCurrentExerciseIndex(currentExerciseIndex - 1);
     }
+  };
+
+  // Playground integration functions
+  const handleTestInPlayground = () => {
+    const prompt = exercisePrompts[currentExerciseIndex] || currentExercise?.template || "";
+    if (!prompt.trim()) {
+      toast({
+        title: t("common.emptyPrompt"),
+        description: t("common.emptyPromptDesc"),
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Navigate to playground with pre-filled prompt
+    const urlParams = new URLSearchParams({
+      prompt: prompt,
+      source: `module-${moduleId}`,
+      exercise: currentExerciseIndex.toString()
+    });
+    setLocation(`/playground?${urlParams.toString()}`);
+  };
+
+  const handleImportToPlayground = () => {
+    const prompt = exercisePrompts[currentExerciseIndex] || currentExercise?.template || "";
+    if (!prompt.trim()) {
+      toast({
+        title: t("common.emptyPrompt"),
+        description: t("common.emptyPromptDesc"),
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Save prompt to playground library and navigate
+    const promptData = {
+      title: `${moduleData?.title} - ${currentExercise?.title || 'Exercise'}`,
+      content: prompt,
+      moduleId: moduleId,
+      exerciseIndex: currentExerciseIndex
+    };
+    
+    // Store in localStorage for immediate use
+    localStorage.setItem('playground_import', JSON.stringify(promptData));
+    
+    toast({
+      title: t("common.promptImported"),
+      description: `Prompt saved to Playground library`,
+    });
+    
+    // Navigate to playground
+    setLocation('/playground');
   };
 
   const currentPrompt = exercisePrompts[currentExerciseIndex] || "";
@@ -445,14 +497,28 @@ export default function ModuleDetail({ moduleId }: ModuleDetailProps) {
                           </span>
                         </div>
                         
-                        <Button
-                          onClick={handleAnalyzeExercise}
-                          disabled={!currentPrompt.trim() || assessMutation.isPending}
-                          className="bg-secondary text-secondary-foreground hover:bg-secondary/90"
-                          data-testid="button-analyze"
-                        >
-                          {assessMutation.isPending ? "Analyzing..." : "Analyze Prompt"}
-                        </Button>
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleTestInPlayground}
+                            disabled={!currentPrompt.trim() && !currentExercise?.template}
+                            className="text-primary border-primary hover:bg-primary/10"
+                            data-testid="button-test-playground"
+                          >
+                            <FlaskConical className="h-4 w-4 mr-1" />
+                            {t("common.testInPlayground")}
+                          </Button>
+                          
+                          <Button
+                            onClick={handleAnalyzeExercise}
+                            disabled={!currentPrompt.trim() || assessMutation.isPending}
+                            className="bg-secondary text-secondary-foreground hover:bg-secondary/90"
+                            data-testid="button-analyze"
+                          >
+                            {assessMutation.isPending ? "Analyzing..." : "Analyze Prompt"}
+                          </Button>
+                        </div>
                       </div>
                       
                       <div className="flex items-center justify-between pt-4 border-t">
@@ -566,6 +632,40 @@ export default function ModuleDetail({ moduleId }: ModuleDetailProps) {
                         </div>
                       )}
 
+                      {/* Playground Integration Section */}
+                      {currentFeedback.overall_score >= 70 && (
+                        <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
+                          <h5 className="font-medium mb-3 text-primary flex items-center">
+                            <FlaskConical className="h-4 w-4 mr-2" />
+                            {t("common.playgroundIntegration")}
+                          </h5>
+                          <p className="text-sm text-muted-foreground mb-3">
+                            Great work! Your prompt scored {currentFeedback.overall_score}/100. Test it with different AI models in the Playground to explore its versatility.
+                          </p>
+                          <div className="flex space-x-2">
+                            <Button
+                              size="sm"
+                              onClick={handleImportToPlayground}
+                              className="bg-primary text-primary-foreground hover:bg-primary/90"
+                              data-testid="button-import-playground"
+                            >
+                              <ExternalLink className="h-4 w-4 mr-1" />
+                              {t("common.importToPlayground")}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={handleTestInPlayground}
+                              className="text-primary border-primary hover:bg-primary/10"
+                              data-testid="button-test-playground-feedback"
+                            >
+                              <FlaskConical className="h-4 w-4 mr-1" />
+                              {t("common.testInPlayground")}
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                      
                       {/* Suggestions */}
                       {currentFeedback.suggestions.length > 0 && (
                         <div>

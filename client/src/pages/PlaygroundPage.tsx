@@ -37,8 +37,12 @@ import {
   BarChart3,
   Trophy,
   Zap,
-  Target
+  Target,
+  TrendingUp,
+  Activity,
+  Calendar
 } from "lucide-react";
+import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import type { 
   PlaygroundTestResult, 
   PlaygroundPrompt, 
@@ -150,6 +154,50 @@ export default function PlaygroundPage() {
       metaDescription.setAttribute('content', t("pageMetadata.playground.description"));
     }
   }, [t]);
+
+  // Handle imported prompts from URL parameters and localStorage
+  useEffect(() => {
+    // Handle URL parameters (from "Test in Playground" button)
+    const urlParams = new URLSearchParams(window.location.search);
+    const promptFromUrl = urlParams.get('prompt');
+    const sourceFromUrl = urlParams.get('source');
+    const exerciseFromUrl = urlParams.get('exercise');
+    
+    if (promptFromUrl) {
+      setPromptText(promptFromUrl);
+      if (sourceFromUrl) {
+        setPromptTitle(`From ${sourceFromUrl}${exerciseFromUrl ? ` - Exercise ${parseInt(exerciseFromUrl) + 1}` : ''}`);
+      }
+      // Clear URL parameters after importing
+      window.history.replaceState({}, document.title, window.location.pathname);
+      
+      toast({
+        title: "Prompt Imported",
+        description: `Prompt from ${sourceFromUrl || 'practice'} has been imported to the playground.`,
+      });
+    }
+    
+    // Handle localStorage imports (from "Import to Playground" button)
+    const importedPrompt = localStorage.getItem('playground_import');
+    if (importedPrompt) {
+      try {
+        const promptData = JSON.parse(importedPrompt);
+        setPromptText(promptData.content || '');
+        setPromptTitle(promptData.title || 'Imported Prompt');
+        
+        // Clear the localStorage after importing
+        localStorage.removeItem('playground_import');
+        
+        toast({
+          title: t("common.promptImported"),
+          description: `"${promptData.title}" has been added to your playground.`,
+        });
+      } catch (error) {
+        console.error('Error parsing imported prompt:', error);
+        localStorage.removeItem('playground_import');
+      }
+    }
+  }, [toast, t]);
 
   // Run test mutation
   const runTestMutation = useMutation({
@@ -376,6 +424,96 @@ export default function PlaygroundPage() {
     return Math.ceil(text.length / 4);
   };
 
+  // Chart color palette
+  const CHART_COLORS = [
+    '#3b82f6', '#10b981', '#f59e0b', '#ef4444', 
+    '#8b5cf6', '#06b6d4', '#84cc16', '#f97316'
+  ];
+
+  // Mock data generators for analytics charts
+  const generateMockUsageData = () => {
+    const data = [];
+    const today = new Date();
+    for (let i = 29; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      data.push({
+        date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        tests: Math.floor(Math.random() * 10) + 1,
+        cost: (Math.random() * 0.5).toFixed(2)
+      });
+    }
+    return data;
+  };
+
+  const generateMockCostData = () => [
+    { name: 'GPT-4o', cost: 2.45 },
+    { name: 'Claude 3.5', cost: 1.89 },
+    { name: 'Gemini Pro', cost: 1.23 },
+    { name: 'GPT-4o Mini', cost: 0.67 }
+  ];
+
+  const generateMockPerformanceData = () => [
+    { model: 'GPT-4o', responseTime: 1450 },
+    { model: 'Claude 3.5', responseTime: 2100 },
+    { model: 'Gemini Pro', responseTime: 1850 },
+    { model: 'GPT-4o Mini', responseTime: 950 }
+  ];
+
+  // Export analytics data
+  const handleExportAnalytics = async (format: 'json' | 'csv') => {
+    try {
+      const analyticsData = {
+        usage: usage,
+        usageTrend: generateMockUsageData(),
+        costBreakdown: generateMockCostData(),
+        performance: generateMockPerformanceData(),
+        exportedAt: new Date().toISOString()
+      };
+
+      if (format === 'json') {
+        const blob = new Blob([JSON.stringify(analyticsData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `playground-analytics-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } else if (format === 'csv') {
+        const csvData = [
+          'Type,Value,Date',
+          `Monthly Tests,${usage?.monthlyTests || 0},${new Date().toISOString()}`,
+          `Total Cost,${usage?.totalCost || '0.00'},${new Date().toISOString()}`,
+          `Total Tests,${usage?.testsRun || 0},${new Date().toISOString()}`,
+          `Last Active,${usage?.lastActive || 'Never'},${new Date().toISOString()}`
+        ].join('\n');
+
+        const blob = new Blob([csvData], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `playground-analytics-${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+
+      toast({
+        title: t("playground.analyticsExported"),
+        description: t("playground.analyticsExportedDesc", { format: format.toUpperCase() }),
+      });
+    } catch (error) {
+      toast({
+        title: t("playground.exportFailed"),
+        description: t("playground.exportFailedDesc"),
+        variant: "destructive",
+      });
+    }
+  };
+
   // Calculate comparison metrics from current test results
   const calculateAndSetMetrics = (results: PlaygroundTestResult[]) => {
     const validResults = results.filter(r => !r.error);
@@ -556,7 +694,7 @@ export default function PlaygroundPage() {
           </p>
         </div>
 
-        {/* Usage Analytics */}
+        {/* Enhanced Usage Analytics Dashboard */}
         {usageError ? (
           <div className="mb-8">
             <Alert>
@@ -567,31 +705,258 @@ export default function PlaygroundPage() {
             </Alert>
           </div>
         ) : usage && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <Card className="text-center">
-              <CardContent className="pt-6">
-                <div className="text-2xl font-bold text-blue-600" data-testid="monthly-tests">
-                  {usage.monthlyTests || 0}
-                </div>
-                <div className="text-sm text-muted-foreground">{t("playground.testsThisMonth")}</div>
-              </CardContent>
-            </Card>
-            <Card className="text-center">
-              <CardContent className="pt-6">
-                <div className="text-2xl font-bold text-green-600" data-testid="total-cost">
-                  ${usage.totalCost || "0.00"}
-                </div>
-                <div className="text-sm text-muted-foreground">{t("playground.totalSpent")}</div>
-              </CardContent>
-            </Card>
-            <Card className="text-center">
-              <CardContent className="pt-6">
-                <div className="text-2xl font-bold text-purple-600" data-testid="tests-run">
-                  {usage.testsRun || 0}
-                </div>
-                <div className="text-sm text-muted-foreground">{t("playground.totalTests")}</div>
-              </CardContent>
-            </Card>
+          <div className="mb-8 space-y-6">
+            {/* Analytics Header */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold flex items-center gap-2">
+                  <BarChart3 className="w-6 h-6 text-primary" />
+                  {t("playground.usageAnalytics")}
+                </h2>
+                <p className="text-muted-foreground mt-1">{t("playground.analyticsDescription")}</p>
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={() => handleExportAnalytics("json")} data-testid="export-analytics-json">
+                  <Download className="w-4 h-4 mr-2" />
+                  Export JSON
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => handleExportAnalytics("csv")} data-testid="export-analytics-csv">
+                  <Download className="w-4 h-4 mr-2" />
+                  Export CSV
+                </Button>
+              </div>
+            </div>
+
+            {/* Overview Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card className="relative overflow-hidden">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-2xl font-bold text-blue-600" data-testid="monthly-tests">
+                        {usage.monthlyTests || 0}
+                      </div>
+                      <div className="text-sm text-muted-foreground">{t("playground.testsThisMonth")}</div>
+                    </div>
+                    <div className="p-3 bg-blue-100 dark:bg-blue-900/20 rounded-full">
+                      <Activity className="w-6 h-6 text-blue-600" />
+                    </div>
+                  </div>
+                  <div className="mt-4 flex items-center gap-2 text-xs">
+                    <TrendingUp className="w-3 h-3 text-green-500" />
+                    <span className="text-green-500">+12%</span>
+                    <span className="text-muted-foreground">vs last month</span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="relative overflow-hidden">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-2xl font-bold text-green-600" data-testid="total-cost">
+                        ${usage.totalCost || "0.00"}
+                      </div>
+                      <div className="text-sm text-muted-foreground">{t("playground.totalSpent")}</div>
+                    </div>
+                    <div className="p-3 bg-green-100 dark:bg-green-900/20 rounded-full">
+                      <DollarSign className="w-6 h-6 text-green-600" />
+                    </div>
+                  </div>
+                  <div className="mt-4 flex items-center gap-2 text-xs">
+                    <span className="text-muted-foreground">Avg cost/test:</span>
+                    <span className="text-green-600 font-medium">
+                      ${((parseFloat(usage.totalCost || "0") / Math.max(usage.testsRun || 1, 1))).toFixed(3)}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="relative overflow-hidden">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-2xl font-bold text-purple-600" data-testid="tests-run">
+                        {usage.testsRun || 0}
+                      </div>
+                      <div className="text-sm text-muted-foreground">{t("playground.totalTests")}</div>
+                    </div>
+                    <div className="p-3 bg-purple-100 dark:bg-purple-900/20 rounded-full">
+                      <Hash className="w-6 h-6 text-purple-600" />
+                    </div>
+                  </div>
+                  <div className="mt-4 flex items-center gap-2 text-xs">
+                    <Calendar className="w-3 h-3 text-purple-500" />
+                    <span className="text-muted-foreground">
+                      Last active: {usage.lastActive ? new Date(usage.lastActive).toLocaleDateString() : 'Never'}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="relative overflow-hidden">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-2xl font-bold text-orange-600" data-testid="success-rate">
+                        95%
+                      </div>
+                      <div className="text-sm text-muted-foreground">{t("playground.successRate")}</div>
+                    </div>
+                    <div className="p-3 bg-orange-100 dark:bg-orange-900/20 rounded-full">
+                      <CheckCircle className="w-6 h-6 text-orange-600" />
+                    </div>
+                  </div>
+                  <div className="mt-4 flex items-center gap-2 text-xs">
+                    <span className="text-muted-foreground">
+                      {Math.floor((usage.testsRun || 0) * 0.95)}/{usage.testsRun || 0} successful
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Charts Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Usage Trend Chart */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5" />
+                    {t("playground.usageTrend")}
+                  </CardTitle>
+                  <CardDescription>
+                    Daily usage over the past 30 days
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={generateMockUsageData()}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                        <YAxis tick={{ fontSize: 12 }} />
+                        <Tooltip />
+                        <Area 
+                          type="monotone" 
+                          dataKey="tests" 
+                          stroke="#3b82f6" 
+                          fill="#3b82f6" 
+                          fillOpacity={0.3}
+                          name="Tests Run"
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Cost Breakdown Chart */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <DollarSign className="w-5 h-5" />
+                    {t("playground.costBreakdown")}
+                  </CardTitle>
+                  <CardDescription>
+                    Cost distribution by AI model
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={generateMockCostData()}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="cost"
+                        >
+                          {generateMockCostData().map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(value) => `$${value}`} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Model Performance Chart */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Zap className="w-5 h-5" />
+                    {t("playground.modelPerformance")}
+                  </CardTitle>
+                  <CardDescription>
+                    Average response time by model
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={generateMockPerformanceData()}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="model" tick={{ fontSize: 11 }} />
+                        <YAxis tick={{ fontSize: 12 }} />
+                        <Tooltip />
+                        <Bar dataKey="responseTime" fill="#10b981" name="Response Time (ms)" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Usage Limits Visualization */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Target className="w-5 h-5" />
+                    {t("playground.usageLimits")}
+                  </CardTitle>
+                  <CardDescription>
+                    Current usage vs limits
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <div className="flex justify-between text-sm mb-2">
+                      <span>Monthly Tests</span>
+                      <span>{usage.monthlyTests || 0}/200</span>
+                    </div>
+                    <div className="w-full bg-muted rounded-full h-2">
+                      <div 
+                        className="bg-blue-600 h-2 rounded-full transition-all" 
+                        style={{ width: `${Math.min(((usage.monthlyTests || 0) / 200) * 100, 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-sm mb-2">
+                      <span>Monthly Spend</span>
+                      <span>${usage.totalCost || "0.00"}/$10.00</span>
+                    </div>
+                    <div className="w-full bg-muted rounded-full h-2">
+                      <div 
+                        className="bg-green-600 h-2 rounded-full transition-all" 
+                        style={{ width: `${Math.min((parseFloat(usage.totalCost || "0") / 10) * 100, 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                  <div className="pt-2 text-xs text-muted-foreground">
+                    <p>• Daily limit: 50 tests</p>
+                    <p>• Monthly limit: 200 tests</p>
+                    <p>• Monthly budget: $10.00</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         )}
 

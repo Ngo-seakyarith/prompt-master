@@ -268,8 +268,8 @@ export default function PromptLibrary({
       const request: SavePlaygroundPromptRequest = {
         title: `${originalPrompt.title} (Fork)`,
         content: originalPrompt.content,
-        category: originalPrompt.category || undefined,
-        tags: originalPrompt.tags || undefined,
+        category: originalPrompt.category ?? undefined,
+        tags: originalPrompt.tags ?? undefined,
         isPublic: false,
         parentId: originalPrompt.id
       };

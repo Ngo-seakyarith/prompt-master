@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { Lock, CheckCircle, PlayCircle, Brain, BookOpen } from "lucide-react";
+import { Lock, CheckCircle, PlayCircle, Brain, BookOpen, FlaskConical } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { TextWithAILinks } from "@/components/AIModelLink";
-import type { Module, UserProgress } from "@shared/schema";
+import type { Module, UserProgress, ModuleContent, Quiz } from "@shared/schema";
 
 interface ModuleCardProps {
   module: Module;
@@ -19,13 +19,14 @@ export default function ModuleCard({ module, progress, isLocked }: ModuleCardPro
   const { t } = useTranslation();
 
   // Fetch quizzes for this module
-  const { data: quizzes = [] } = useQuery({
+  const { data: quizzes = [] } = useQuery<Quiz[]>({
     queryKey: ["/api/quizzes", module.id],
     enabled: !isLocked,
   });
 
   // Calculate combined progress including exercises and quizzes
-  const exerciseCount = module.content.exercises?.length || 0;
+  const moduleContent = module.content as ModuleContent;
+  const exerciseCount = moduleContent.exercises?.length || 0;
   const quizCount = quizzes.length;
   const totalActivities = exerciseCount + quizCount;
   
@@ -154,6 +155,31 @@ export default function ModuleCard({ module, progress, isLocked }: ModuleCardPro
           <Progress value={progressPercentage} className="h-2" />
         </div>
         
+        {/* Playground Integration Section for Completed Modules */}
+        {progress?.isCompleted && !isLocked && (
+          <div className="mb-4 p-3 bg-primary/5 border border-primary/20 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center text-sm text-primary">
+                <FlaskConical className="w-4 h-4 mr-2" />
+                <span>Test your skills in Playground</span>
+              </div>
+              <Link href="/playground">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-primary border-primary hover:bg-primary/10 text-xs px-2 py-1 h-6"
+                  data-testid={`playground-link-${module.id}`}
+                >
+                  Try Now
+                </Button>
+              </Link>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Apply what you learned with different AI models
+            </p>
+          </div>
+        )}
+        
         <div className="flex justify-between items-center">
           <span className="text-sm text-muted-foreground" data-testid={`module-score-${module.id}`}>
             {progress?.score ? `${t("common.score")}: ${progress.score}/100` : t("common.notStarted")}
@@ -167,15 +193,30 @@ export default function ModuleCard({ module, progress, isLocked }: ModuleCardPro
               {getButtonText()}
             </Button>
           ) : (
-            <Link href={`/modules/${module.id}`}>
-              <Button
-                variant={progress?.isCompleted ? "outline" : "default"}
-                className={progress?.isCompleted ? "border-secondary text-secondary hover:bg-secondary/10" : ""}
-                data-testid={`module-button-${module.id}`}
-              >
-                {getButtonText()}
-              </Button>
-            </Link>
+            <div className="flex items-center space-x-2">
+              {progress && (progress.attempts || 0) > 0 && !progress.isCompleted && (
+                <Link href="/playground">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-primary hover:text-primary/80 text-xs px-2 py-1 h-6"
+                    data-testid={`playground-quick-${module.id}`}
+                  >
+                    <FlaskConical className="w-3 h-3 mr-1" />
+                    Playground
+                  </Button>
+                </Link>
+              )}
+              <Link href={`/modules/${module.id}`}>
+                <Button
+                  variant={progress?.isCompleted ? "outline" : "default"}
+                  className={progress?.isCompleted ? "border-secondary text-secondary hover:bg-secondary/10" : ""}
+                  data-testid={`module-button-${module.id}`}
+                >
+                  {getButtonText()}
+                </Button>
+              </Link>
+            </div>
           )}
         </div>
       </CardContent>
