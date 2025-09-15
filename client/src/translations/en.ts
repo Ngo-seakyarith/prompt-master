@@ -9,7 +9,9 @@ export default {
     practice: "Practice",
     progress: "Progress",
     certificates: "Certificates",
-    logo: "PromptMaster"
+    logo: "PromptMaster",
+    learn: "Learn",
+    quiz: "Quiz"
   },
 
   // Common UI Elements
@@ -122,6 +124,7 @@ export default {
     achievements: "Achievements",
     recentCertificates: "Recent Certificates",
     allCertificates: "All Certificates",
+    viewAllCertificates: "View All Certificates",
     filterBy: "Filter by",
     sortBy: "Sort by",
     newest: "Newest First",
@@ -837,6 +840,40 @@ Your creative prompt with constraints:`
 
   // Quiz System
   quiz: {
+    // Quiz Overview
+    moduleQuizzes: "Module Quizzes",
+    totalQuizzes: "Total Quizzes",
+    completedQuizzes: "Completed Quizzes",
+    
+    // Quiz Instructions
+    instructions: "Quiz Instructions",
+    instruction1: "Complete all practice exercises before taking quizzes",
+    instruction2: "You need 80% or higher to pass each quiz",
+    instruction3: "You can retake quizzes to improve your score",
+    instruction4: "Quiz completion contributes to overall module progress",
+    
+    // Module-specific Quiz Content
+    basicPrompting: {
+      title: "Basic Prompting Fundamentals Quiz",
+      description: "Test your understanding of basic prompt engineering principles and the importance of context in AI communication."
+    },
+    promptStructure: {
+      title: "Prompt Structure Mastery Quiz",
+      description: "Assess your knowledge of effective prompt anatomy including roles, tasks, context, templates, and constraints."
+    },
+    advancedTechniques: {
+      title: "Advanced Prompting Techniques Quiz",
+      description: "Evaluate your understanding of chain-of-thought reasoning, few-shot learning, and advanced prompting strategies."
+    },
+    promptRefinement: {
+      title: "Prompt Refinement Patterns Quiz",
+      description: "Test your mastery of key prompt patterns including persona, question refinement, and cognitive verifier techniques."
+    },
+    practicalApplications: {
+      title: "Practical Applications Quiz",
+      description: "Assess your ability to apply prompt engineering to real-world scenarios including productivity, automation, and business planning."
+    },
+    
     // Quiz Card
     available: "Available",
     moduleRequired: "Module Required",

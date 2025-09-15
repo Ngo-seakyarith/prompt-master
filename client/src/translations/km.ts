@@ -9,7 +9,9 @@ export default {
     practice: "អនុវត្ត",
     progress: "ការរីកចម្រើន",
     certificates: "វិញ្ញាបនបត្រ",
-    logo: "PromptMaster"
+    logo: "PromptMaster",
+    learn: "រៀន",
+    quiz: "តេស្ត"
   },
 
   // Common UI Elements
@@ -122,6 +124,7 @@ export default {
     achievements: "សមិទ្ធិផល",
     recentCertificates: "វិញ្ញាបនបត្រថ្មីៗ",
     allCertificates: "វិញ្ញាបនបត្រទាំងអស់",
+    viewAllCertificates: "មើលវិញ្ញាបនបត្រទាំងអស់",
     filterBy: "ត្រងតាម",
     sortBy: "តម្រៀបតាម",
     newest: "ថ្មីបំផុតមុន",
@@ -139,6 +142,18 @@ export default {
 
   // Quiz System
   quiz: {
+    // Quiz Overview
+    moduleQuizzes: "តេស្តម៉ូឌុល",
+    totalQuizzes: "តេស្តសរុប",
+    completedQuizzes: "តេស្តដែលបានបញ្ចប់",
+    
+    // Quiz Instructions
+    instructions: "និទេសការតេស្ត",
+    instruction1: "បញ្ចប់លំហាត់អនុវត្តទាំងអស់មុនពេលធ្វើតេស្ត",
+    instruction2: "អ្នកត្រូវការ 80% ឬខ្ពស់ជាងនេះដើម្បីជាប់តេស្ត",
+    instruction3: "អ្នកអាចធ្វើតេស្តឡើងវិញដើម្បីកែលម្អពិន្ទុ",
+    instruction4: "ការបញ្ចប់តេស្តរួមចំណែកដល់ការរីកចម្រើនម៉ូឌុលទាំងមូល",
+    
     // Quiz Card
     available: "អាចប្រើបាន",
     moduleRequired: "ត្រូវការម៉ូឌុល",
@@ -252,27 +267,28 @@ export default {
     courseCompletedDesc: "ពិសេសណាស់! អ្នកបានបញ្ចប់វគ្គសិក្សាទាំងមូល។",
     viewCertificates: "មើលវិញ្ញាបនបត្រ",
 
-    // Quiz-specific translations
+    // Module-specific Quiz Content
     basicPrompting: {
-      title: "តេស្តគោលការណ៍ជាមូលដ្ឋាន",
-      description: "ទទួលបានចំណេះដឹងរបស់អ្នកអំពីគោលការណ៍ជាមូលដ្ឋាននៃ prompt engineering"
+      title: "តេស្តគោលការណ៍ជាមូលដ្ឋាន Basic Prompting",
+      description: "ធ្វើតេស្តការយល់ដឹងរបស់អ្នកអំពីគោលការណ៍ជាមូលដ្ឋាននៃការវិស្វកម្ម prompt និងសារៈសំខាន់នៃបរិបទក្នុងការទំនាក់ទំនង AI។"
     },
     promptStructure: {
-      title: "តេស្តរចនាសម្ព័ន្ធ Prompt",
-      description: "ធ្វើតេស្តការយល់ដឹងរបស់អ្នកអំពីរចនាសម្ព័ន្ធ prompt ដ៏មានប្រសិទ្ធភាព"
+      title: "តេស្តការស្ទាត់ជំនាញរចនាសម្ព័ន្ធ Prompt",
+      description: "វាយតម្លៃចំណេះដឹងរបស់អ្នកអំពីរចនាសម្ព័ន្ធ prompt ដែលមានប្រសិទ្ធភាព រួមទាំងតួនាទី, កិច្ចការ, បរិបទ, គំរូ, និងការកំណត់។"
     },
     advancedTechniques: {
-      title: "តេស្តបច្ចេកទេសកម្រិតខ្ពស់",
-      description: "ប្រកបការប្រកួតដើម្បីវាស់ស្ទង់ចំណេះដឹងអំពីបច្ចេកទេសកម្រិតខ្ពស់"
+      title: "តេស្តបច្ចេកទេស Prompting កម្រិតខ្ពស់",
+      description: "វាយតម្លៃការយល់ដឹងរបស់អ្នកអំពីការសម្តីតាមច្រវាក់ការគិត, ការរៀនពីគំរូមួយចំនួន, និងយុទ្ធសាស្រ្ត prompting កម្រិតខ្ពស់។"
     },
     promptRefinement: {
-      title: "តេស្តការកែលម្អ Prompt",
-      description: "វាយតម្លៃជំនាញរបស់អ្នកក្នុងការកែលម្អ prompt និងការប្រើប្រាស់លំនាំ"
+      title: "តេស្តគំរូការកែលម្អ Prompt",
+      description: "ធ្វើតេស្តការស្ទាត់ជំនាញរបស់អ្នកចំពោះគំរូ prompt សំខាន់ៗ រួមទាំង persona, ការកែលម្អសំណួរ, និងបច្ចេកទេស cognitive verifier។"
     },
     practicalApplications: {
       title: "តេស្តការអនុវត្តជាក់ស្តែង",
-      description: "ពិនិត្យការយល់ដឹងរបស់អ្នកអំពីការអនុវត្តជាក់ស្តែងនៃ prompt engineering"
+      description: "វាយតម្លៃសមត្ថភាពរបស់អ្នកក្នុងការអនុវត្តការវិស្វកម្ម prompt ទៅលើសាកល្បងពិតប្រាកដ រួមទាំងផលិតភាព, ស្វ័យប្រវត្តកម្ម, និងការគ្រោងអាជីវកម្ម។"
     }
+
   },
 
   // Recommendations
