@@ -11,6 +11,7 @@ import FeedbackPanel from "@/components/FeedbackPanel";
 import ProgressTracker from "@/components/ProgressTracker";
 import UnauthorizedState from "@/components/UnauthorizedState";
 import CertificateCard from "@/components/CertificateCard";
+import RecommendationsSection from "@/components/RecommendationsSection";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiRequest } from "@/lib/queryClient";
@@ -373,6 +374,9 @@ export default function Dashboard() {
                 </div>
               )}
             </section>
+
+            {/* AI-Powered Recommendations Section */}
+            <RecommendationsSection className="mb-12" maxRecommendations={6} />
 
             {/* Certificates & Achievements Section */}
             <section className="mb-12" data-testid="certificates-section">

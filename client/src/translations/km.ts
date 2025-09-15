@@ -266,6 +266,56 @@ export default {
     }
   },
 
+  // Recommendations
+  recommendations: {
+    title: "ការណែនាំផ្ទាល់ខ្លួន",
+    subtitle: "យោបល់ដែលជំរុញដោយ AI ត្រូវបានកំណត់ស្របតាមដំណើរការសិក្សា និងគោលដៅរបស់អ្នក",
+    suggestions: "ការណែនាំ",
+    loadError: "បរាជ័យក្នុងការផ្ទុកការណែនាំ",
+    loadErrorDesc: "យើងមិនអាចទទួលបានការណែនាំផ្ទាល់ខ្លួនរបស់អ្នកបានទេ។ សូមពិនិត្យការតភ្ជាប់ហើយព្យាយាមម្តងទៀត។",
+    noRecommendations: "មិនមានការណែនាំ",
+    noRecommendationsDesc: "បញ្ចប់ម៉ូឌុលមួយចំនួន ឬកំណត់គោលដៅការរៀន ដើម្បីទទួលបានការណែនាំផ្ទាល់ខ្លួន។",
+    filterByType: "ត្រងតាមប្រភេទ",
+    filterByPriority: "ត្រងតាមអាទិភាព",
+    allTypes: "ប្រភេទទាំងអស់",
+    allPriorities: "អាទិភាពទាំងអស់",
+    showAll: "បង្ហាញការណែនាំទាំងអស់",
+    currentProgress: "ការរីកចម្រើនបច្ចុប្បន្ន",
+    prerequisitesMet: "បានបំពេញតំរូវការជាមុន",
+    prerequisitesNotMet: "មិនបានបំពេញតំរូវការជាមុន",
+    modulesCompleted: "ម៉ូឌុលដែលបានបញ្ចប់",
+    averageScore: "ពិន្ទុមធ្យម",
+    learningVelocity: "ម៉ូឌុល/សប្តាហ៍",
+    goalAlignment: "ការតម្រង់គោលដៅ",
+    
+    // Recommendation Types
+    types: {
+      "next-in-sequence": "បន្តរៀន",
+      "goal-aligned": "អាទិភាពគោលដៅ",
+      "review-needed": "ត្រូវការពិនិត្យឡើងវិញ",
+      "similar-interests": "សុំផ្តល់ជូនអ្នក",
+      "difficulty-progressive": "កំណែលម្អ",
+      "time-based": "រក្សាសំទង់"
+    },
+
+    // Priority Levels
+    priority: {
+      high: "អាទិភាពខ្ពស់",
+      medium: "អាទិភាពមធ្យម",
+      low: "អាទិភាពទាប"
+    },
+
+    // Action Labels
+    actions: {
+      "next-in-sequence": "បន្តម៉ូឌុល",
+      "goal-aligned": "ធ្វើការឆ្ពោះទៅគោលដៅ",
+      "review-needed": "ពិនិត្យមាតិកា",
+      "similar-interests": "រុករកប្រធានបទ",
+      "difficulty-progressive": "កំណែលម្អ",
+      "time-based": "បន្តទៅមុខ"
+    }
+  },
+
   // Authentication
   auth: {
     loginRequired: "សូមចូលប្រព័ន្ធដើម្បីបន្ត",

@@ -127,6 +127,56 @@ export default {
     notStarted: "Not Started"
   },
 
+  // Recommendations
+  recommendations: {
+    title: "Personalized Recommendations",
+    subtitle: "AI-powered suggestions tailored to your learning journey and goals",
+    suggestions: "suggestions",
+    loadError: "Failed to Load Recommendations",
+    loadErrorDesc: "We couldn't fetch your personalized recommendations. Please check your connection and try again.",
+    noRecommendations: "No Recommendations Available",
+    noRecommendationsDesc: "Complete some modules or set learning goals to receive personalized recommendations.",
+    filterByType: "Filter by Type",
+    filterByPriority: "Filter by Priority",
+    allTypes: "All Types",
+    allPriorities: "All Priorities",
+    showAll: "Show All Recommendations",
+    currentProgress: "Current Progress",
+    prerequisitesMet: "Prerequisites met",
+    prerequisitesNotMet: "Prerequisites not met",
+    modulesCompleted: "Modules Completed",
+    averageScore: "Average Score",
+    learningVelocity: "Modules/Week",
+    goalAlignment: "Goal Alignment",
+    
+    // Recommendation Types
+    types: {
+      "next-in-sequence": "Continue Learning",
+      "goal-aligned": "Goal Priority",
+      "review-needed": "Review Needed",
+      "similar-interests": "Recommended for You",
+      "difficulty-progressive": "Level Up",
+      "time-based": "Keep Momentum"
+    },
+
+    // Priority Levels
+    priority: {
+      high: "High Priority",
+      medium: "Medium Priority",
+      low: "Low Priority"
+    },
+
+    // Action Labels
+    actions: {
+      "next-in-sequence": "Continue Module",
+      "goal-aligned": "Work Toward Goal",
+      "review-needed": "Review Content",
+      "similar-interests": "Explore Topic",
+      "difficulty-progressive": "Level Up",
+      "time-based": "Keep Going"
+    }
+  },
+
   // Authentication
   auth: {
     loginRequired: "Please log in to continue",
