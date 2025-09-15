@@ -578,6 +578,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Quiz routes
+  // Get single quiz by ID (public route)
+  app.get("/api/quiz/:quizId", async (req, res) => {
+    try {
+      const quizId = req.params.quizId;
+      
+      const quiz = await storage.getQuiz(quizId);
+      if (!quiz) {
+        return res.status(404).json({ message: "Quiz not found" });
+      }
+      
+      res.json(quiz);
+    } catch (error) {
+      console.error("Failed to fetch quiz:", error);
+      res.status(500).json({ message: "Failed to fetch quiz" });
+    }
+  });
+
   // Get quizzes for a module (public route)
   app.get("/api/quizzes/:moduleId", async (req, res) => {
     try {
@@ -684,7 +701,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const attempt = await storage.saveQuizAttempt({
         userId,
         quizId,
-        score: feedback.overall_score,
+        score: feedback.overallScore,
         maxScore,
         answers,
         feedback,
@@ -699,6 +716,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Quiz submission error:", error);
       res.status(500).json({ message: "Failed to submit quiz: " + (error as Error).message });
+    }
+  });
+
+  // Get quiz attempts count for current user (protected route)
+  app.get("/api/quiz-attempts/count/:quizId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const quizId = req.params.quizId;
+      
+      // Verify quiz exists
+      const quiz = await storage.getQuiz(quizId);
+      if (!quiz) {
+        return res.status(404).json({ message: "Quiz not found" });
+      }
+      
+      const attempts = await storage.getUserQuizAttempts(userId, quizId);
+      res.json({ count: attempts.length });
+    } catch (error) {
+      console.error("Failed to fetch quiz attempts count:", error);
+      res.status(500).json({ message: "Failed to fetch quiz attempts count" });
     }
   });
 

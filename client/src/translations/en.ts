@@ -768,5 +768,107 @@ Chosen scenario: [Select one from above]
 
 Your creative prompt with constraints:`
     }
+  },
+
+  // Quiz System
+  quiz: {
+    // Quiz Card
+    available: "Available",
+    moduleRequired: "Module Required",
+    retakeQuiz: "Retake Quiz",
+    startQuiz: "Start Quiz",
+    completeModule: "Complete Module",
+    quizLockedDesc: "Complete the module to unlock this quiz",
+    completeModuleFirst: "Complete module first",
+    moduleCompletionRequired: "Finish all module content before taking the quiz",
+    bestScore: "Best Score",
+    attempts: "Attempts",
+    lastAttempt: "Last Attempt",
+    passed: "Passed",
+    canImprove: "Can Improve",
+    notAttempted: "Not Attempted",
+
+    // Quiz Taker
+    loadingQuiz: "Loading quiz...",
+    loadError: "Quiz Load Error",
+    loadErrorDesc: "Failed to load quiz questions. Please try again.",
+    questionOf: "Question {{current}} of {{total}}",
+    progress: "Progress", 
+    previousQuestion: "Previous",
+    nextQuestion: "Next",
+    submitQuiz: "Submit Quiz",
+    submitting: "Submitting...",
+    allQuestionsAnswered: "All questions answered",
+    quizOverview: "Quiz Overview",
+    overviewDesc: "Click any number to jump to that question",
+    incompleteQuiz: "Incomplete Quiz",
+    answerAllQuestions: "Please answer all questions before submitting",
+    submitError: "Submit Error",
+    
+    // Quiz Results
+    results: {
+      excellent: "Excellent",
+      good: "Good", 
+      fair: "Fair",
+      needsImprovement: "Needs Improvement",
+      correct: "Correct",
+      total: "Total",
+      timeSpent: "Time Spent",
+      notRecorded: "Not recorded",
+      minutes: "m",
+      seconds: "s",
+      performanceBreakdown: "Performance Breakdown",
+      overallScore: "Overall Score",
+      accuracy: "Accuracy",
+      averageTimePerQuestion: "Avg. time per question",
+      strengths: "Your Strengths",
+      areasForImprovement: "Areas for Improvement",
+      detailedFeedback: "Question-by-Question Review",
+      questionNumber: "Question {{number}}",
+      incorrect: "Incorrect",
+      retakeQuiz: "Retake Quiz",
+      reviewQuestions: "Review Questions",
+      continue: "Continue Learning",
+      passingScoreNotMet: "Passing score not reached",
+      passingScoreRequirement: "You need 80% or higher to pass this quiz",
+    },
+
+    // Quiz Management
+    createQuiz: "Create Quiz",
+    editQuiz: "Edit Quiz",
+    deleteQuiz: "Delete Quiz",
+    quizTitle: "Quiz Title",
+    quizDescription: "Quiz Description",
+    addQuestion: "Add Question",
+    questionText: "Question Text",
+    answerOptions: "Answer Options",
+    correctAnswer: "Correct Answer",
+    questionType: "Question Type",
+    multipleChoice: "Multiple Choice",
+    trueFalse: "True/False",
+    points: "Points",
+    saveQuiz: "Save Quiz",
+    publishQuiz: "Publish Quiz",
+    unpublishQuiz: "Unpublish Quiz",
+    
+    // Quiz Statistics
+    stats: {
+      totalQuizzes: "Total Quizzes",
+      completedQuizzes: "Completed",
+      averageScore: "Average Score",
+      timeSpent: "Total Time",
+      bestPerformance: "Best Performance",
+      recentActivity: "Recent Quiz Activity",
+      passingRate: "Passing Rate",
+      improvementNeeded: "Improvement Needed",
+      excellentPerformance: "Excellent Performance"
+    },
+
+    // Common Quiz Actions
+    takeQuiz: "Take Quiz",
+    viewResults: "View Results",
+    shareResults: "Share Results",
+    printCertificate: "Print Certificate",
+    downloadResults: "Download Results"
   }
 };

@@ -280,14 +280,18 @@ ${JSON.stringify(quizData, null, 2)}`;
     }
     
     return {
-      overall_score: totalScore,
+      overallScore: totalScore,
       percentage,
-      correct_answers: correctAnswers,
-      total_questions: totalQuestions,
-      time_spent: timeSpent,
+      correctAnswers: correctAnswers,
+      totalQuestions: totalQuestions,
+      timeSpent: timeSpent,
       strengths: Array.isArray(aiResult.strengths) ? aiResult.strengths : [],
       improvements: Array.isArray(aiResult.improvements) ? aiResult.improvements : [],
-      detailed_feedback: detailedFeedback
+      detailedFeedback: detailedFeedback.map(item => ({
+        questionIndex: item.question_index,
+        isCorrect: item.is_correct,
+        explanation: item.explanation
+      }))
     };
   } catch (error) {
     console.error("Quiz assessment error:", error);

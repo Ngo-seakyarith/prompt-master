@@ -238,16 +238,16 @@ export interface ModuleContent {
 }
 
 export interface QuizFeedback {
-  overall_score: number;
+  overallScore: number;
   percentage: number;
-  correct_answers: number;
-  total_questions: number;
-  time_spent?: number;
+  correctAnswers: number;
+  totalQuestions: number;
+  timeSpent?: number;
   strengths: string[];
   improvements: string[];
-  detailed_feedback: {
-    question_index: number;
-    is_correct: boolean;
+  detailedFeedback: {
+    questionIndex: number;
+    isCorrect: boolean;
     explanation: string;
   }[];
 }
