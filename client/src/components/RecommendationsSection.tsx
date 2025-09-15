@@ -96,9 +96,9 @@ export default function RecommendationsSection({ className = "", maxRecommendati
   const filteredRecommendations = recommendations.filter(rec => {
     const matchesType = selectedFilter === "all" || rec.type === selectedFilter;
     const matchesPriority = selectedPriority === "all" || 
-      (selectedPriority === "high" && rec.priorityScore >= 85) ||
-      (selectedPriority === "medium" && rec.priorityScore >= 70 && rec.priorityScore < 85) ||
-      (selectedPriority === "low" && rec.priorityScore < 70);
+      (selectedPriority === "high" && rec.priorityScore >= 90) ||
+      (selectedPriority === "medium" && rec.priorityScore >= 75 && rec.priorityScore < 90) ||
+      (selectedPriority === "low" && rec.priorityScore < 75);
     
     return matchesType && matchesPriority;
   }).slice(0, maxRecommendations);

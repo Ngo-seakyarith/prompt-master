@@ -67,7 +67,16 @@ export default {
     earned: "បានទទួល",
     pending: "កំពុងរង់ចាំ",
     expired: "ផុតកំណត់",
-    certificateId: "លេខសម្គាល់វិញ្ញាបនបត្រ"
+    certificateId: "លេខសម្គាល់វិញ្ញាបនបត្រ",
+    unknownError: "មានកំហុសមិនស្គាល់កើតឡើង",
+    tryAgain: "ព្យាយាមម្តងទៀត",
+    more: "បន្ថែម",
+    filterBy: "ត្រងតាម",
+    difficulty: {
+      beginner: "កម្រិតដំបូង",
+      intermediate: "កម្រិតមធ្យម",
+      advanced: "កម្រិតខ្ពស់"
+    }
   },
 
   // Certificates

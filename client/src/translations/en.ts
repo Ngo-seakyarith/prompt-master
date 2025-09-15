@@ -67,7 +67,16 @@ export default {
     earned: "Earned",
     pending: "Pending",
     expired: "Expired",
-    certificateId: "Certificate ID"
+    certificateId: "Certificate ID",
+    unknownError: "An unknown error occurred",
+    tryAgain: "Try Again",
+    more: "more",
+    filterBy: "Filter by",
+    difficulty: {
+      beginner: "Beginner",
+      intermediate: "Intermediate",
+      advanced: "Advanced"
+    }
   },
 
   // Certificates
