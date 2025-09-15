@@ -268,8 +268,8 @@ export default function PromptLibrary({
       const request: SavePlaygroundPromptRequest = {
         title: `${originalPrompt.title} (Fork)`,
         content: originalPrompt.content,
-        category: originalPrompt.category,
-        tags: originalPrompt.tags,
+        category: originalPrompt.category || undefined,
+        tags: originalPrompt.tags || undefined,
         isPublic: false,
         parentId: originalPrompt.id
       };
@@ -490,6 +490,78 @@ export default function PromptLibrary({
       title: t('promptLibrary.exportSuccess'),
       description: t('promptLibrary.exportSuccessDesc', { count: selectedPrompts.length }),
     });
+  };
+
+  const handleImportFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const importData = JSON.parse(text);
+      
+      // Validate import format
+      if (!importData.prompts || !Array.isArray(importData.prompts)) {
+        throw new Error('Invalid file format. Expected format: { prompts: [...] }');
+      }
+
+      let successCount = 0;
+      let errorCount = 0;
+
+      // Import each prompt
+      for (const promptData of importData.prompts) {
+        try {
+          if (!promptData.title || !promptData.content) {
+            errorCount++;
+            continue;
+          }
+
+          await createPromptMutation.mutateAsync({
+            title: promptData.title,
+            content: promptData.content,
+            category: promptData.category || undefined,
+            tags: Array.isArray(promptData.tags) ? promptData.tags : undefined,
+            isPublic: false // Import as private by default
+          });
+          
+          successCount++;
+        } catch (error) {
+          console.error('Error importing prompt:', error);
+          errorCount++;
+        }
+      }
+
+      setShowImportDialog(false);
+      
+      if (successCount > 0) {
+        toast({
+          title: t('promptLibrary.importSuccess'),
+          description: t('promptLibrary.importSuccessDesc', { 
+            imported: successCount, 
+            failed: errorCount 
+          }),
+        });
+      } else {
+        toast({
+          title: t('promptLibrary.importFailed'),
+          description: t('promptLibrary.importFailedDesc'),
+          variant: 'destructive',
+        });
+      }
+
+      // Reset file input
+      event.target.value = '';
+    } catch (error) {
+      console.error('Import error:', error);
+      toast({
+        title: t('promptLibrary.importError'),
+        description: error instanceof Error ? error.message : t('promptLibrary.importErrorGeneric'),
+        variant: 'destructive',
+      });
+      
+      // Reset file input
+      event.target.value = '';
+    }
   };
 
   const getCategoryIcon = (categoryId: string) => {
@@ -912,6 +984,56 @@ export default function PromptLibrary({
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               )}
               {editingPrompt ? t('common.save') : t('promptLibrary.create')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Import Prompts Dialog */}
+      <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('promptLibrary.importPrompts')}</DialogTitle>
+            <DialogDescription>
+              {t('promptLibrary.importPromptsDesc')}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="import-file">{t('promptLibrary.selectFile')}</Label>
+              <Input
+                id="import-file"
+                type="file"
+                accept=".json"
+                onChange={handleImportFile}
+                data-testid="input-import-file"
+              />
+            </div>
+            
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                {t('promptLibrary.importFormatNote')}
+              </AlertDescription>
+            </Alert>
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowImportDialog(false)}
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button 
+              onClick={() => setShowImportDialog(false)}
+              disabled={createPromptMutation.isPending}
+            >
+              {createPromptMutation.isPending && (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              )}
+              {t('promptLibrary.import')}
             </Button>
           </DialogFooter>
         </DialogContent>
