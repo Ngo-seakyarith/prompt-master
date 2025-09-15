@@ -157,6 +157,46 @@ export default {
       title: "Prompt Engineering Fundamentals",
       description: "Master the art of AI communication through structured, progressive learning. Build expertise from basic prompting to advanced techniques."
     },
+    aiFundamentals: {
+      title: "AI Fundamentals",
+      description: "Understand the core concepts of artificial intelligence, machine learning, and how AI systems work in the modern world."
+    },
+    aiProductivityImprovement: {
+      title: "AI for Productivity Improvement",
+      description: "Leverage AI tools and automation to streamline workflows, optimize processes, and boost personal and team productivity."
+    },
+    aiCriticalThinkingProblemSolving: {
+      title: "AI for Critical Thinking & Problem Solving",
+      description: "Enhance analytical skills and decision-making capabilities using AI-powered frameworks and logical reasoning approaches."
+    },
+    aiCreativesMarketing: {
+      title: "AI for Creatives and Marketing",
+      description: "Transform creative processes and marketing strategies with AI-powered content creation, design tools, and campaign optimization."
+    },
+    aiStrategicPlanning: {
+      title: "AI for Strategic Planning",
+      description: "Utilize AI for business strategy development, market analysis, competitive intelligence, and long-term planning initiatives."
+    },
+    aiCreativityInnovation: {
+      title: "AI for Creativity and Innovation",
+      description: "Unlock creative potential and drive innovation using AI for ideation, creative processes, and breakthrough thinking."
+    },
+    aiPoweredCoaching: {
+      title: "AI-powered Coaching",
+      description: "Master personalized coaching techniques using AI for skill development, performance optimization, and human potential enhancement."
+    },
+    aiBusinessPlanDevelopmentExecution: {
+      title: "AI for Business Plan Development & Execution",
+      description: "Create comprehensive business plans and execution strategies using AI for modeling, projections, and implementation guidance."
+    },
+    aiResearchStudy: {
+      title: "AI for Research & Study",
+      description: "Enhance research capabilities and academic performance using AI for information gathering, analysis, and knowledge synthesis."
+    },
+    genaiDataAnalysisDecisionMaking: {
+      title: "GenAI for Data Analysis & Decision-making",
+      description: "Master generative AI for data interpretation, statistical analysis, and informed decision-making in business contexts."
+    },
     allCourses: "All Courses",
     courseOverview: "Course Overview",
     startCourse: "Start Course",
@@ -285,6 +325,176 @@ export default {
     practicalApplications: {
       title: "Practical Applications",
       description: "Apply prompt engineering to productivity, automation, creativity, and business planning."
+    },
+    // AI Fundamentals Modules
+    aiFundamentalsBasics: {
+      title: "AI Basics and Concepts",
+      description: "Understand what artificial intelligence is, its history, and core concepts that drive modern AI systems."
+    },
+    aiFundamentalsMachineLearning: {
+      title: "Machine Learning Fundamentals",
+      description: "Learn about machine learning, neural networks, and how AI systems learn from data."
+    },
+    aiFundamentalsApplications: {
+      title: "AI Applications and Use Cases",
+      description: "Explore real-world applications of AI across industries and understand how AI is transforming business."
+    },
+    aiFundamentalsEthicsFuture: {
+      title: "AI Ethics and Future",
+      description: "Understand the ethical implications of AI, bias considerations, and future trends in artificial intelligence."
+    },
+    // AI Productivity Improvement Modules
+    aiProductivityAutomationBasics: {
+      title: "Automation Basics",
+      description: "Learn how AI can automate repetitive tasks and streamline everyday workflows."
+    },
+    aiProductivityWorkflowOptimization: {
+      title: "Workflow Optimization",
+      description: "Optimize business processes and personal workflows using AI-powered tools and strategies."
+    },
+    aiProductivityTimeManagement: {
+      title: "AI-Powered Time Management",
+      description: "Use AI tools for scheduling, prioritization, and effective time management strategies."
+    },
+    aiProductivityCollaborationTools: {
+      title: "AI Collaboration Tools",
+      description: "Enhance team collaboration and communication using AI-powered platforms and tools."
+    },
+    // AI Critical Thinking & Problem Solving Modules
+    aiCriticalThinkingFrameworks: {
+      title: "Critical Thinking Frameworks",
+      description: "Learn analytical frameworks and structured thinking approaches enhanced by AI capabilities."
+    },
+    aiCriticalThinkingDecisionMaking: {
+      title: "AI-Enhanced Decision Making",
+      description: "Improve decision-making processes using AI for data analysis and scenario modeling."
+    },
+    aiCriticalThinkingProblemSolvingMethods: {
+      title: "Problem Solving Methods",
+      description: "Master systematic problem-solving approaches using AI tools for analysis and solution generation."
+    },
+    aiCriticalThinkingLogicalReasoning: {
+      title: "Logical Reasoning with AI",
+      description: "Develop logical reasoning skills and use AI to validate arguments and identify logical fallacies."
+    },
+    // AI Creatives and Marketing Modules
+    aiCreativesContentCreation: {
+      title: "AI Content Creation",
+      description: "Create compelling content using AI tools for writing, design, and multimedia production."
+    },
+    aiCreativesDesignTools: {
+      title: "AI Design Tools",
+      description: "Master AI-powered design tools for graphics, logos, and visual content creation."
+    },
+    aiCreativesCampaignOptimization: {
+      title: "Campaign Optimization",
+      description: "Optimize marketing campaigns using AI for targeting, personalization, and performance analysis."
+    },
+    aiCreativesBrandStrategy: {
+      title: "AI-Driven Brand Strategy",
+      description: "Develop brand strategies and positioning using AI insights and market analysis."
+    },
+    // AI Strategic Planning Modules
+    aiStrategicPlanningBusinessStrategy: {
+      title: "AI in Business Strategy",
+      description: "Develop comprehensive business strategies using AI-powered analysis and forecasting."
+    },
+    aiStrategicPlanningMarketAnalysis: {
+      title: "Market Analysis with AI",
+      description: "Conduct thorough market research and analysis using AI tools for data collection and insights."
+    },
+    aiStrategicPlanningCompetitiveIntelligence: {
+      title: "Competitive Intelligence",
+      description: "Gather and analyze competitive intelligence using AI for strategic advantage."
+    },
+    aiStrategicPlanningImplementation: {
+      title: "Strategy Implementation",
+      description: "Execute strategic plans effectively using AI for monitoring, adjustment, and optimization."
+    },
+    // AI Creativity and Innovation Modules
+    aiCreativityIdeationTechniques: {
+      title: "AI Ideation Techniques",
+      description: "Generate innovative ideas using AI-powered brainstorming and creative thinking methods."
+    },
+    aiCreativityCreativeProcesses: {
+      title: "Creative Processes with AI",
+      description: "Enhance creative workflows and processes using AI tools for inspiration and refinement."
+    },
+    aiCreativityInnovationFrameworks: {
+      title: "Innovation Frameworks",
+      description: "Apply structured innovation frameworks enhanced by AI for systematic breakthrough thinking."
+    },
+    aiCreativityBreakthroughThinking: {
+      title: "Breakthrough Thinking",
+      description: "Develop breakthrough solutions and disruptive innovations using AI-assisted thinking methods."
+    },
+    // AI-powered Coaching Modules
+    aiCoachingFundamentals: {
+      title: "AI Coaching Fundamentals",
+      description: "Learn the principles of coaching enhanced by AI for personalized guidance and development."
+    },
+    aiCoachingSkillDevelopment: {
+      title: "AI Skill Development",
+      description: "Design personalized skill development programs using AI for assessment and progression tracking."
+    },
+    aiCoachingPerformanceOptimization: {
+      title: "Performance Optimization",
+      description: "Optimize human performance using AI analytics and personalized coaching strategies."
+    },
+    aiCoachingHumanPotential: {
+      title: "Human Potential Enhancement",
+      description: "Unlock human potential through AI-powered coaching techniques and personal development."
+    },
+    // AI Business Plan Development & Execution Modules
+    aiBusinessPlanModeling: {
+      title: "Business Modeling with AI",
+      description: "Create comprehensive business models using AI for market analysis and validation."
+    },
+    aiBusinessPlanFinancialProjections: {
+      title: "Financial Projections",
+      description: "Develop accurate financial projections and forecasts using AI-powered analysis tools."
+    },
+    aiBusinessPlanStrategyDevelopment: {
+      title: "Strategy Development",
+      description: "Formulate business strategies and go-to-market plans using AI insights and competitive analysis."
+    },
+    aiBusinessPlanExecutionMonitoring: {
+      title: "Execution and Monitoring",
+      description: "Execute business plans effectively and monitor progress using AI-powered tracking systems."
+    },
+    // AI Research & Study Modules
+    aiResearchMethodology: {
+      title: "AI Research Methodology",
+      description: "Learn research methodologies enhanced by AI for efficient and comprehensive academic research."
+    },
+    aiResearchInformationGathering: {
+      title: "Information Gathering",
+      description: "Master AI-powered tools for data collection, literature review, and information synthesis."
+    },
+    aiResearchAnalysisSynthesis: {
+      title: "Analysis and Synthesis",
+      description: "Analyze research data and synthesize knowledge using AI for pattern recognition and insights."
+    },
+    aiResearchAcademicWriting: {
+      title: "Academic Writing with AI",
+      description: "Enhance academic writing and publication processes using AI for clarity and impact."
+    },
+    // GenAI Data Analysis & Decision-making Modules
+    genaiDataAnalysisFundamentals: {
+      title: "GenAI Data Analysis Fundamentals",
+      description: "Master generative AI fundamentals for data interpretation and statistical analysis."
+    },
+    genaiDataAnalysisStatisticalMethods: {
+      title: "Statistical Methods with GenAI",
+      description: "Apply statistical methods and data science techniques enhanced by generative AI capabilities."
+    },
+    genaiDataAnalysisBusinessIntelligence: {
+      title: "Business Intelligence",
+      description: "Transform data into actionable business intelligence using generative AI for insights and reporting."
+    },
+    genaiDataAnalysisDecisionFrameworks: {
+      title: "Decision-making Frameworks",
+      description: "Make informed decisions using GenAI-powered frameworks for data-driven decision making."
     }
   },
 
