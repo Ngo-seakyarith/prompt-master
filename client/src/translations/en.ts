@@ -1052,6 +1052,236 @@ Your creative prompt with constraints:`
     loadingUsage: "Loading usage..."
   },
 
+  // Prompt Library
+  promptLibrary: {
+    title: "Prompt Library",
+    subtitle: "Organize, discover, and share your best prompts with advanced search and collaboration features.",
+    
+    // Navigation and Tabs
+    myPrompts: "My Prompts",
+    sharedPrompts: "Shared with Me",
+    community: "Community",
+    
+    // Actions
+    createPrompt: "Create Prompt",
+    createFirstPrompt: "Create Your First Prompt",
+    import: "Import",
+    export: "Export",
+    use: "Use",
+    edit: "Edit", 
+    delete: "Delete",
+    fork: "Fork",
+    share: "Share",
+    create: "Create",
+    update: "Update",
+    save: "Save",
+    cancel: "Cancel",
+    
+    // Search and Filters
+    searchPlaceholder: "Search prompts, tags, or content...",
+    allCategories: "All Categories",
+    filters: "Filters",
+    sortBy: "Sort By",
+    dateRange: "Date Range",
+    tags: "Tags",
+    selectedCount: "{{count}} selected",
+    loading: "Loading prompts...",
+    
+    // Sort Options
+    sortOptions: {
+      recent: "Most Recent",
+      title: "Title A-Z", 
+      popular: "Most Popular",
+      rating: "Highest Rated"
+    },
+    
+    // Date Range Options
+    dateRangeOptions: {
+      all: "All Time",
+      week: "Past Week",
+      month: "Past Month", 
+      year: "Past Year"
+    },
+    
+    // Categories
+    categories: {
+      business: "Business",
+      creative: "Creative",
+      technical: "Technical", 
+      research: "Research",
+      productivity: "Productivity",
+      education: "Education",
+      marketing: "Marketing",
+      analysis: "Analysis"
+    },
+    
+    // Form Fields
+    promptTitle: "Prompt Title",
+    promptTitlePlaceholder: "Enter a descriptive title for your prompt",
+    promptContent: "Prompt Content", 
+    promptContentPlaceholder: "Write your prompt here...",
+    category: "Category",
+    selectCategory: "Select a category",
+    makePublic: "Make Public",
+    
+    // States and Messages
+    noPrompts: "No Prompts Found",
+    noPromptsDesc: "No prompts match your current filters. Try adjusting your search or create a new prompt.",
+    loadError: "Failed to load prompts",
+    
+    // Create/Edit Dialog
+    editPrompt: "Edit Prompt",
+    editPromptDesc: "Modify your prompt details and content.",
+    createPromptDesc: "Create a new prompt to add to your library.",
+    
+    // Success Messages
+    promptCreated: "Prompt Created",
+    promptCreatedDesc: "Your new prompt has been saved to your library.",
+    promptUpdated: "Prompt Updated", 
+    promptUpdatedDesc: "Your prompt changes have been saved.",
+    promptDeleted: "Prompt Deleted",
+    promptDeletedDesc: "The prompt has been removed from your library.",
+    promptForked: "Prompt Forked",
+    promptForkedDesc: "A copy of the prompt has been added to your library.",
+    exportSuccess: "Export Successful",
+    exportSuccessDesc: "{{count}} prompts exported successfully.",
+    bulkDeleteSuccess: "Prompts Deleted",
+    bulkDeleteSuccessDesc: "{{count}} prompts have been deleted.",
+    
+    // Error Messages
+    createFailed: "Failed to Create Prompt",
+    updateFailed: "Failed to Update Prompt", 
+    deleteFailed: "Failed to Delete Prompt",
+    forkFailed: "Failed to Fork Prompt",
+    bulkDeleteFailed: "Failed to Delete Prompts",
+    missingTitle: "Title Required",
+    missingTitleDesc: "Please enter a title for your prompt.",
+    missingContent: "Content Required",
+    missingContentDesc: "Please enter content for your prompt.",
+    
+    // Confirmations
+    confirmDelete: "Are you sure you want to delete this prompt?",
+    confirmBulkDelete: "Are you sure you want to delete {{count}} prompts?",
+    
+    // Bulk Actions
+    deleteSelected: "Delete Selected",
+    exportSelected: "Export Selected",
+    
+    // Metadata and Stats
+    uses: "uses",
+    createdOn: "Created",
+    updatedOn: "Updated",
+    usageCount: "{{count}} uses",
+    rating: "Rating",
+    author: "Author",
+    forkedFrom: "Forked from",
+    forks: "{{count}} forks",
+    
+    // View Modes
+    gridView: "Grid View",
+    listView: "List View",
+    
+    // Versioning
+    versions: "Versions",
+    currentVersion: "Current",
+    previousVersion: "Previous",
+    compareVersions: "Compare Versions",
+    restoreVersion: "Restore Version",
+    versionHistory: "Version History",
+    
+    // Sharing
+    publicPrompt: "Public Prompt",
+    privatePrompt: "Private Prompt", 
+    sharedBy: "Shared by {{author}}",
+    sharePrompt: "Share Prompt",
+    shareLink: "Share Link",
+    copyLink: "Copy Link",
+    linkCopied: "Link Copied",
+    linkCopiedDesc: "Share link has been copied to clipboard.",
+    
+    // Import/Export
+    importPrompts: "Import Prompts", 
+    importSuccess: "Import Successful",
+    importSuccessDesc: "{{count}} prompts imported successfully.",
+    importFailed: "Import Failed",
+    exportPrompts: "Export Prompts",
+    selectFile: "Select File",
+    uploadFile: "Upload File",
+    
+    // Popular Tags
+    popularTags: "Popular Tags",
+    suggestedTags: "Suggested Tags",
+    addTag: "Add Tag",
+    removeTag: "Remove Tag",
+    
+    // Empty States
+    noSearchResults: "No Search Results",
+    noSearchResultsDesc: "No prompts found matching your search criteria.",
+    emptyLibrary: "Your Library is Empty",
+    emptyLibraryDesc: "Start building your prompt collection by creating your first prompt.",
+    noCommunityPrompts: "No Community Prompts",
+    noCommunityPromptsDesc: "Check back later as the community shares more prompts.",
+    
+    // Tooltips and Help Text
+    forkTooltip: "Create a copy of this prompt in your library",
+    shareTooltip: "Share this prompt with others",
+    ratingTooltip: "Rate this prompt (1-5 stars)",
+    usageTooltip: "Number of times this prompt has been used",
+    categoryTooltip: "Prompt category for organization",
+    tagsTooltip: "Tags for easy searching and filtering",
+    versionTooltip: "View version history and changes",
+    
+    // Advanced Features
+    advancedSearch: "Advanced Search",
+    searchInContent: "Search in content",
+    searchInTags: "Search in tags", 
+    searchInTitles: "Search in titles",
+    exactMatch: "Exact match",
+    caseSensitive: "Case sensitive",
+    regexSearch: "Regex search",
+    
+    // Statistics
+    stats: {
+      totalPrompts: "Total Prompts",
+      publicPrompts: "Public Prompts", 
+      recentlyUsed: "Recently Used",
+      mostPopular: "Most Popular",
+      topRated: "Top Rated",
+      trending: "Trending"
+    },
+    
+    // Templates
+    templates: "Templates",
+    useTemplate: "Use Template",
+    businessTemplate: "Business Template",
+    creativeTemplate: "Creative Template",
+    technicalTemplate: "Technical Template",
+    
+    // Collections
+    collections: "Collections",
+    createCollection: "Create Collection",
+    addToCollection: "Add to Collection", 
+    removeFromCollection: "Remove from Collection",
+    collectionName: "Collection Name",
+    collectionDescription: "Collection Description",
+    
+    // Collaboration
+    collaborate: "Collaborate",
+    inviteCollaborators: "Invite Collaborators",
+    collaborators: "Collaborators", 
+    permissions: "Permissions",
+    canView: "Can View",
+    canEdit: "Can Edit",
+    canShare: "Can Share",
+    
+    // Favorites
+    favorites: "Favorites",
+    addToFavorites: "Add to Favorites",
+    removeFromFavorites: "Remove from Favorites",
+    favoriteAdded: "Added to Favorites",
+    favoriteRemoved: "Removed from Favorites"
+  },
+
   // Page Metadata
   pageMetadata: {
     playground: {
