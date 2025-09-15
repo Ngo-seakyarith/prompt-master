@@ -1,6 +1,6 @@
 # Overview
 
-PromptMaster is a web-based prompt engineering learning platform that teaches users how to craft effective AI prompts through interactive modules and real-time feedback. The application features a structured curriculum covering basic prompting, prompt structure, advanced techniques, refinement strategies, and practical applications. Users can practice writing prompts, receive AI-powered assessments with detailed feedback, and track their progress through the learning modules.
+PromptMaster is a comprehensive AI Learning Management System (LMS) with multilingual support (Khmer/English) that provides education across the full spectrum of artificial intelligence applications. The platform has expanded from a single prompt engineering course to include 11 comprehensive AI courses covering AI fundamentals, productivity improvement, critical thinking, creative applications, strategic planning, innovation, coaching, business development, research, and data analysis. Users can practice AI skills through interactive modules, receive AI-powered assessments with detailed feedback, track their progress, set learning goals, earn certificates, and access courses in both English and Khmer languages. The system includes a module locking mechanism where Modules 3, 4, and 5 are locked until previous modules are completed sequentially.
 
 # User Preferences
 
