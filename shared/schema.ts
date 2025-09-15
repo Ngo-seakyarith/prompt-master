@@ -257,6 +257,16 @@ export interface QuizAnswerOption {
   is_correct?: boolean; // Optional, used only for admin/creation purposes
 }
 
+// Safe DTO for quiz questions that excludes sensitive data
+export interface QuizQuestionDTO {
+  id: string;
+  quizId: string;
+  questionText: string;
+  answerOptions: QuizAnswerOption[];
+  questionType: string;
+  order: number;
+}
+
 // Validation schemas for API endpoints
 export const assessPromptSchema = z.object({
   prompt: z.string().min(1, "Prompt is required and cannot be empty"),

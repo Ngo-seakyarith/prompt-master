@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import type { AssessmentFeedback } from "@shared/schema";
+import type { AssessmentFeedback, QuizFeedback, QuizQuestion } from "@shared/schema";
 
 // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
 const openai = new OpenAI({ 
@@ -119,7 +119,23 @@ Respond with JSON in this exact format:
       response_format: { type: "json_object" }
     });
 
-    const result = JSON.parse(response.choices[0].message.content || "{}");
+    // ERROR HANDLING FIX: Add try/catch around JSON.parse with fallback structure
+    let result;
+    try {
+      result = JSON.parse(response.choices[0].message.content || "{}");
+    } catch (parseError) {
+      console.error("Failed to parse AI response:", parseError);
+      result = {
+        overall_score: 50,
+        clarity_structure: 50,
+        context_completeness: 50,
+        specificity: 50,
+        actionability: 50,
+        strengths: ["Unable to analyze due to parsing error"],
+        improvements: ["Please try again"],
+        suggestions: ["Resubmit your prompt for assessment"]
+      };
+    }
 
     // Ensure scores are within valid range
     return {
@@ -158,5 +174,123 @@ export async function generatePromptSuggestions(prompt: string, feedback: Assess
   } catch (error) {
     console.error("OpenAI suggestion error:", error);
     throw new Error("Failed to generate suggestions: " + (error as Error).message);
+  }
+}
+
+export async function assessQuizAnswers(
+  questions: QuizQuestion[],
+  userAnswers: number[],
+  timeSpent?: number
+): Promise<QuizFeedback> {
+  try {
+    // Calculate basic scores
+    let correctAnswers = 0;
+    let totalScore = 0;
+    const detailedFeedback: { question_index: number; is_correct: boolean; explanation: string; }[] = [];
+    
+    for (let i = 0; i < questions.length; i++) {
+      const question = questions[i];
+      const userAnswer = userAnswers[i];
+      const isCorrect = userAnswer === question.correctAnswerIndex;
+      
+      if (isCorrect) {
+        correctAnswers++;
+        // SCORING FIX: Use question.points instead of hardcoded value
+        totalScore += question.points || 1;
+      }
+      
+      detailedFeedback.push({
+        question_index: i,
+        is_correct: isCorrect,
+        explanation: "" // Will be filled by AI
+      });
+    }
+    
+    const totalQuestions = questions.length;
+    const percentage = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0;
+    
+    // Prepare questions and answers for AI analysis
+    const quizData = questions.map((q, index) => ({
+      question: q.questionText,
+      options: q.answerOptions,
+      correct_answer: q.correctAnswerIndex,
+      user_answer: userAnswers[index],
+      is_correct: userAnswers[index] === q.correctAnswerIndex
+    }));
+    
+    const systemPrompt = `You are an expert educator and quiz assessor. Analyze the quiz performance and provide constructive feedback.
+
+For each question, provide a brief explanation of why the answer is correct or incorrect, focusing on the learning concept.
+Also provide overall strengths and areas for improvement based on the pattern of answers.
+
+Respond with JSON in this exact format:
+{
+  "strengths": ["strength1", "strength2"],
+  "improvements": ["improvement1", "improvement2"],
+  "detailed_feedback": [
+    {
+      "question_index": 0,
+      "explanation": "Brief explanation for question 1"
+    }
+  ]
+}`;
+    
+    const userMessage = `Quiz Performance Analysis:
+Total Questions: ${totalQuestions}
+Correct Answers: ${correctAnswers}
+Percentage: ${percentage}%
+${timeSpent ? `Time Spent: ${Math.round(timeSpent / 60)} minutes` : ""}
+
+Questions and Answers:
+${JSON.stringify(quizData, null, 2)}`;
+    
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userMessage }
+      ],
+      response_format: { type: "json_object" }
+    });
+    
+    // ERROR HANDLING FIX: Add try/catch around JSON.parse with fallback structure
+    let aiResult;
+    try {
+      aiResult = JSON.parse(response.choices[0].message.content || "{}");
+    } catch (parseError) {
+      console.error("Failed to parse AI quiz feedback response:", parseError);
+      aiResult = {
+        strengths: ["Unable to analyze due to parsing error"],
+        improvements: ["Please try again"],
+        detailed_feedback: detailedFeedback.map((_, index) => ({
+          question_index: index,
+          explanation: "Unable to provide feedback due to AI response parsing error"
+        }))
+      };
+    }
+    
+    // Merge AI feedback with our detailed feedback
+    if (aiResult.detailed_feedback && Array.isArray(aiResult.detailed_feedback)) {
+      aiResult.detailed_feedback.forEach((aiFeedback: any) => {
+        const index = aiFeedback.question_index;
+        if (index >= 0 && index < detailedFeedback.length) {
+          detailedFeedback[index].explanation = aiFeedback.explanation || "";
+        }
+      });
+    }
+    
+    return {
+      overall_score: totalScore,
+      percentage,
+      correct_answers: correctAnswers,
+      total_questions: totalQuestions,
+      time_spent: timeSpent,
+      strengths: Array.isArray(aiResult.strengths) ? aiResult.strengths : [],
+      improvements: Array.isArray(aiResult.improvements) ? aiResult.improvements : [],
+      detailed_feedback: detailedFeedback
+    };
+  } catch (error) {
+    console.error("Quiz assessment error:", error);
+    throw new Error("Failed to assess quiz: " + (error as Error).message);
   }
 }

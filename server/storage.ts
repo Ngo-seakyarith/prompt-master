@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type UpsertUser, type Course, type InsertCourse, type Module, type UserProgress, type InsertUserProgress, type PromptAttempt, type InsertPromptAttempt, type ExerciseAttempt, type InsertExerciseAttempt, type Goal, type InsertGoal, type Certificate, type InsertCertificate, type ModuleContent } from "@shared/schema";
+import { type User, type InsertUser, type UpsertUser, type Course, type InsertCourse, type Module, type UserProgress, type InsertUserProgress, type PromptAttempt, type InsertPromptAttempt, type ExerciseAttempt, type InsertExerciseAttempt, type Goal, type InsertGoal, type Certificate, type InsertCertificate, type ModuleContent, type Quiz, type InsertQuiz, type QuizQuestion, type InsertQuizQuestion, type QuizAttempt, type InsertQuizAttempt } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { MODULE_CONTENT } from "../client/src/lib/constants";
 
@@ -52,6 +52,22 @@ export interface IStorage {
   getUserExerciseAttempts(userId: string, moduleId: string): Promise<ExerciseAttempt[]>;
   getBestExerciseScores(userId: string, moduleId: string): Promise<Map<number, number>>;
   getCompletedExercises(userId: string, moduleId: string): Promise<Set<number>>;
+  
+  // Quiz methods
+  getQuizzesByModule(moduleId: string): Promise<Quiz[]>;
+  getQuiz(id: string): Promise<Quiz | undefined>;
+  createQuiz(quiz: InsertQuiz): Promise<Quiz>;
+  
+  // Quiz question methods
+  getQuizQuestions(quizId: string): Promise<QuizQuestion[]>;
+  getQuizQuestion(id: string): Promise<QuizQuestion | undefined>;
+  createQuizQuestion(question: InsertQuizQuestion): Promise<QuizQuestion>;
+  
+  // Quiz attempt methods
+  saveQuizAttempt(attempt: InsertQuizAttempt): Promise<QuizAttempt>;
+  getUserQuizAttempts(userId: string, quizId?: string): Promise<QuizAttempt[]>;
+  getQuizAttempt(id: string): Promise<QuizAttempt | undefined>;
+  getBestQuizScore(userId: string, quizId: string): Promise<number>;
 }
 
 export class MemStorage implements IStorage {
@@ -63,6 +79,9 @@ export class MemStorage implements IStorage {
   private certificates: Map<string, Certificate>;
   private promptAttempts: Map<string, PromptAttempt>;
   private exerciseAttempts: Map<string, ExerciseAttempt>;
+  private quizzes: Map<string, Quiz>;
+  private quizQuestions: Map<string, QuizQuestion>;
+  private quizAttempts: Map<string, QuizAttempt>;
 
   constructor() {
     this.users = new Map();
@@ -73,6 +92,9 @@ export class MemStorage implements IStorage {
     this.certificates = new Map();
     this.promptAttempts = new Map();
     this.exerciseAttempts = new Map();
+    this.quizzes = new Map();
+    this.quizQuestions = new Map();
+    this.quizAttempts = new Map();
     this.initializeCoursesAndModules();
   }
 
@@ -649,6 +671,88 @@ export class MemStorage implements IStorage {
     }
     
     return courseModules.length > 0; // Ensure there are modules to complete
+  }
+
+  // Quiz methods
+  async getQuizzesByModule(moduleId: string): Promise<Quiz[]> {
+    return Array.from(this.quizzes.values())
+      .filter(quiz => quiz.moduleId === moduleId && quiz.isActive)
+      .sort((a, b) => a.order - b.order);
+  }
+
+  async getQuiz(id: string): Promise<Quiz | undefined> {
+    return this.quizzes.get(id);
+  }
+
+  async createQuiz(quizData: InsertQuiz): Promise<Quiz> {
+    const id = randomUUID();
+    const quiz: Quiz = {
+      ...quizData,
+      id,
+      isActive: quizData.isActive ?? true,
+      createdAt: new Date()
+    };
+    this.quizzes.set(id, quiz);
+    return quiz;
+  }
+
+  // Quiz question methods
+  async getQuizQuestions(quizId: string): Promise<QuizQuestion[]> {
+    return Array.from(this.quizQuestions.values())
+      .filter(question => question.quizId === quizId)
+      .sort((a, b) => a.order - b.order);
+  }
+
+  async getQuizQuestion(id: string): Promise<QuizQuestion | undefined> {
+    return this.quizQuestions.get(id);
+  }
+
+  async createQuizQuestion(questionData: InsertQuizQuestion): Promise<QuizQuestion> {
+    const id = randomUUID();
+    const question: QuizQuestion = {
+      ...questionData,
+      id,
+      points: questionData.points ?? 1
+    };
+    this.quizQuestions.set(id, question);
+    return question;
+  }
+
+  // Quiz attempt methods
+  async saveQuizAttempt(attemptData: InsertQuizAttempt): Promise<QuizAttempt> {
+    const id = randomUUID();
+    const attempt: QuizAttempt = {
+      ...attemptData,
+      id,
+      timeSpent: attemptData.timeSpent ?? null,
+      isCompleted: attemptData.isCompleted ?? true,
+      createdAt: new Date()
+    };
+    this.quizAttempts.set(id, attempt);
+    return attempt;
+  }
+
+  async getUserQuizAttempts(userId: string, quizId?: string): Promise<QuizAttempt[]> {
+    const attempts = Array.from(this.quizAttempts.values())
+      .filter(attempt => attempt.userId === userId);
+    
+    if (quizId) {
+      return attempts.filter(attempt => attempt.quizId === quizId)
+        .sort((a, b) => (a.createdAt?.getTime() || 0) - (b.createdAt?.getTime() || 0));
+    }
+    
+    return attempts.sort((a, b) => (a.createdAt?.getTime() || 0) - (b.createdAt?.getTime() || 0));
+  }
+
+  async getQuizAttempt(id: string): Promise<QuizAttempt | undefined> {
+    return this.quizAttempts.get(id);
+  }
+
+  async getBestQuizScore(userId: string, quizId: string): Promise<number> {
+    const attempts = await this.getUserQuizAttempts(userId, quizId);
+    if (attempts.length === 0) return 0;
+    
+    return Math.max(...attempts.map(attempt => attempt.score));
   }
 }
 

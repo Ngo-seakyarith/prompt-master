@@ -1,8 +1,8 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { assessPrompt, generatePromptSuggestions } from "./services/openai";
-import { insertPromptAttemptSchema, assessPromptSchema, insertGoalSchema, insertCertificateSchema } from "@shared/schema";
+import { assessPrompt, generatePromptSuggestions, assessQuizAnswers } from "./services/openai";
+import { insertPromptAttemptSchema, assessPromptSchema, insertGoalSchema, insertCertificateSchema, submitQuizSchema } from "@shared/schema";
 import { z } from "zod";
 import { MODULE_CONTENT } from "../client/src/lib/constants";
 import { setupAuth, isAuthenticated } from "./replitAuth";
@@ -574,6 +574,156 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Public certificate fetch error:", error);
       res.status(500).json({ message: "Failed to fetch certificate" });
+    }
+  });
+
+  // Quiz routes
+  // Get quizzes for a module (public route)
+  app.get("/api/quizzes/:moduleId", async (req, res) => {
+    try {
+      const moduleId = req.params.moduleId;
+      
+      // Verify module exists
+      const module = await storage.getModule(moduleId);
+      if (!module) {
+        return res.status(404).json({ message: "Module not found" });
+      }
+      
+      const quizzes = await storage.getQuizzesByModule(moduleId);
+      res.json(quizzes);
+    } catch (error) {
+      console.error("Failed to fetch quizzes:", error);
+      res.status(500).json({ message: "Failed to fetch quizzes" });
+    }
+  });
+
+  // Get quiz questions (public route)
+  app.get("/api/quiz-questions/:quizId", async (req, res) => {
+    try {
+      const quizId = req.params.quizId;
+      
+      // Verify quiz exists
+      const quiz = await storage.getQuiz(quizId);
+      if (!quiz) {
+        return res.status(404).json({ message: "Quiz not found" });
+      }
+      
+      const questions = await storage.getQuizQuestions(quizId);
+      
+      // SECURITY FIX: Sanitize questions to exclude correctAnswerIndex and points
+      const sanitizedQuestions = questions.map(question => ({
+        id: question.id,
+        quizId: question.quizId,
+        questionText: question.questionText,
+        answerOptions: question.answerOptions,
+        questionType: question.questionType,
+        order: question.order
+      }));
+      
+      res.json(sanitizedQuestions);
+    } catch (error) {
+      console.error("Failed to fetch quiz questions:", error);
+      res.status(500).json({ message: "Failed to fetch quiz questions" });
+    }
+  });
+
+  // Submit quiz attempt (protected route)
+  app.post("/api/quiz-attempts", isAuthenticated, async (req: any, res) => {
+    try {
+      // Validate request body using Zod schema
+      const validationResult = submitQuizSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid request data", 
+          errors: validationResult.error.errors 
+        });
+      }
+
+      const { quizId, answers, timeSpent } = validationResult.data;
+      const userId = req.user.claims.sub;
+
+      // Verify quiz exists
+      const quiz = await storage.getQuiz(quizId);
+      if (!quiz) {
+        return res.status(404).json({ message: "Quiz not found" });
+      }
+
+      // Get quiz questions
+      const questions = await storage.getQuizQuestions(quizId);
+      if (questions.length === 0) {
+        return res.status(400).json({ message: "Quiz has no questions" });
+      }
+
+      // Validate that we have the right number of answers
+      if (answers.length !== questions.length) {
+        return res.status(400).json({ 
+          message: `Expected ${questions.length} answers, received ${answers.length}` 
+        });
+      }
+
+      // VALIDATION FIX: Check each answer index is within bounds for each question
+      for (let i = 0; i < questions.length; i++) {
+        const question = questions[i];
+        const answerIndex = answers[i];
+        const optionsLength = Array.isArray(question.answerOptions) ? question.answerOptions.length : 0;
+        
+        if (answerIndex < 0 || answerIndex >= optionsLength) {
+          return res.status(400).json({ 
+            message: `Answer index ${answerIndex} for question ${i + 1} is out of bounds. Must be between 0 and ${optionsLength - 1}` 
+          });
+        }
+      }
+
+      // Calculate basic score and feedback using AI
+      const feedback = await assessQuizAnswers(questions, answers, timeSpent);
+      
+      // Calculate max possible score
+      const maxScore = questions.reduce((sum, question) => sum + (question.points || 1), 0);
+
+      // Save quiz attempt
+      const attempt = await storage.saveQuizAttempt({
+        userId,
+        quizId,
+        score: feedback.overall_score,
+        maxScore,
+        answers,
+        feedback,
+        isCompleted: true,
+        timeSpent
+      });
+
+      res.json({
+        attempt,
+        feedback
+      });
+    } catch (error) {
+      console.error("Quiz submission error:", error);
+      res.status(500).json({ message: "Failed to submit quiz: " + (error as Error).message });
+    }
+  });
+
+  // Get user's quiz attempts (protected route)
+  app.get("/api/quiz-attempts/:userId/:quizId", isAuthenticated, async (req: any, res) => {
+    try {
+      const { userId: requestedUserId, quizId } = req.params;
+      const currentUserId = req.user.claims.sub;
+
+      // Users can only access their own attempts unless they are an admin
+      if (requestedUserId !== currentUserId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      // Verify quiz exists
+      const quiz = await storage.getQuiz(quizId);
+      if (!quiz) {
+        return res.status(404).json({ message: "Quiz not found" });
+      }
+
+      const attempts = await storage.getUserQuizAttempts(requestedUserId, quizId);
+      res.json(attempts);
+    } catch (error) {
+      console.error("Failed to fetch quiz attempts:", error);
+      res.status(500).json({ message: "Failed to fetch quiz attempts" });
     }
   });
 
