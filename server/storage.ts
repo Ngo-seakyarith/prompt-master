@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type UpsertUser, type Course, type InsertCourse, type Module, type UserProgress, type InsertUserProgress, type PromptAttempt, type InsertPromptAttempt, type ExerciseAttempt, type InsertExerciseAttempt, type Goal, type InsertGoal, type Certificate, type InsertCertificate, type ModuleContent, type Quiz, type InsertQuiz, type QuizQuestion, type InsertQuizQuestion, type QuizAttempt, type InsertQuizAttempt } from "@shared/schema";
+import { type User, type InsertUser, type UpsertUser, type Course, type InsertCourse, type Module, type UserProgress, type InsertUserProgress, type PromptAttempt, type InsertPromptAttempt, type ExerciseAttempt, type InsertExerciseAttempt, type Goal, type InsertGoal, type Certificate, type InsertCertificate, type ModuleContent, type Quiz, type InsertQuiz, type QuizQuestion, type InsertQuizQuestion, type QuizAttempt, type InsertQuizAttempt, type PlaygroundPrompt, type InsertPlaygroundPrompt, type PlaygroundTest, type InsertPlaygroundTest, type PlaygroundUsage } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { MODULE_CONTENT } from "../client/src/lib/constants";
 
@@ -70,6 +70,16 @@ export interface IStorage {
   getUserQuizAttempts(userId: string, quizId?: string): Promise<QuizAttempt[]>;
   getQuizAttempt(id: string): Promise<QuizAttempt | undefined>;
   getBestQuizScore(userId: string, quizId: string): Promise<number>;
+  
+  // Playground methods
+  savePlaygroundTest(test: InsertPlaygroundTest): Promise<PlaygroundTest>;
+  getPlaygroundTests(userId: string): Promise<PlaygroundTest[]>;
+  savePlaygroundPrompt(prompt: InsertPlaygroundPrompt): Promise<PlaygroundPrompt>;
+  getPlaygroundPrompts(userId: string): Promise<PlaygroundPrompt[]>;
+  updatePlaygroundPrompt(userId: string, promptId: string, updates: Partial<InsertPlaygroundPrompt>): Promise<PlaygroundPrompt | null>;
+  deletePlaygroundPrompt(userId: string, promptId: string): Promise<boolean>;
+  upsertPlaygroundUsage(userId: string): Promise<PlaygroundUsage>;
+  getPlaygroundUsage(userId: string): Promise<PlaygroundUsage | null>;
 }
 
 export class MemStorage implements IStorage {
@@ -84,6 +94,9 @@ export class MemStorage implements IStorage {
   private quizzes: Map<string, Quiz>;
   private quizQuestions: Map<string, QuizQuestion>;
   private quizAttempts: Map<string, QuizAttempt>;
+  private playgroundPrompts: Map<string, PlaygroundPrompt>;
+  private playgroundTests: Map<string, PlaygroundTest>;
+  private playgroundUsage: Map<string, PlaygroundUsage>;
 
   constructor() {
     this.users = new Map();
@@ -97,6 +110,9 @@ export class MemStorage implements IStorage {
     this.quizzes = new Map();
     this.quizQuestions = new Map();
     this.quizAttempts = new Map();
+    this.playgroundPrompts = new Map();
+    this.playgroundTests = new Map();
+    this.playgroundUsage = new Map();
     this.initializeCoursesAndModules();
     this.initializeQuizzes();
   }
@@ -1203,7 +1219,8 @@ export class MemStorage implements IStorage {
 
     // Check exercises completion
     const completedExercises = await this.getCompletedExercises(userId, moduleId);
-    const totalExercises = module.content.exercises?.length || 0;
+    const moduleContent = module.content as ModuleContent;
+    const totalExercises = moduleContent.exercises?.length || 0;
     const exercisesCompleted = completedExercises.size === totalExercises && totalExercises > 0;
 
     // Check quizzes completion
@@ -1213,6 +1230,121 @@ export class MemStorage implements IStorage {
 
     // Module is complete if both exercises and quizzes are completed
     return exercisesCompleted && quizzesCompleted;
+  }
+
+  // Playground methods implementation
+  async savePlaygroundTest(test: InsertPlaygroundTest): Promise<PlaygroundTest> {
+    const id = randomUUID();
+    const newTest: PlaygroundTest = {
+      id,
+      userId: test.userId,
+      promptId: test.promptId ?? null,
+      promptText: test.promptText,
+      models: test.models,
+      parameters: test.parameters,
+      results: test.results,
+      totalCost: test.totalCost,
+      createdAt: new Date()
+    };
+    this.playgroundTests.set(id, newTest);
+    return newTest;
+  }
+
+  async getPlaygroundTests(userId: string): Promise<PlaygroundTest[]> {
+    return Array.from(this.playgroundTests.values())
+      .filter(test => test.userId === userId)
+      .sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
+  }
+
+  async savePlaygroundPrompt(prompt: InsertPlaygroundPrompt): Promise<PlaygroundPrompt> {
+    const id = randomUUID();
+    const newPrompt: PlaygroundPrompt = {
+      id,
+      userId: prompt.userId,
+      title: prompt.title,
+      content: prompt.content,
+      category: prompt.category ?? null,
+      tags: prompt.tags ?? null,
+      isPublic: prompt.isPublic ?? null,
+      version: prompt.version ?? null,
+      parentId: prompt.parentId ?? null,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.playgroundPrompts.set(id, newPrompt);
+    return newPrompt;
+  }
+
+  async getPlaygroundPrompts(userId: string): Promise<PlaygroundPrompt[]> {
+    return Array.from(this.playgroundPrompts.values())
+      .filter(prompt => prompt.userId === userId)
+      .sort((a, b) => (b.updatedAt?.getTime() || 0) - (a.updatedAt?.getTime() || 0));
+  }
+
+  async updatePlaygroundPrompt(userId: string, promptId: string, updates: Partial<InsertPlaygroundPrompt>): Promise<PlaygroundPrompt | null> {
+    const existingPrompt = this.playgroundPrompts.get(promptId);
+    if (!existingPrompt || existingPrompt.userId !== userId) {
+      return null;
+    }
+    
+    const updatedPrompt: PlaygroundPrompt = {
+      ...existingPrompt,
+      ...updates,
+      updatedAt: new Date()
+    };
+    this.playgroundPrompts.set(promptId, updatedPrompt);
+    return updatedPrompt;
+  }
+
+  async deletePlaygroundPrompt(userId: string, promptId: string): Promise<boolean> {
+    const existingPrompt = this.playgroundPrompts.get(promptId);
+    if (!existingPrompt || existingPrompt.userId !== userId) {
+      return false;
+    }
+    
+    return this.playgroundPrompts.delete(promptId);
+  }
+
+  async upsertPlaygroundUsage(userId: string): Promise<PlaygroundUsage> {
+    const existing = this.playgroundUsage.get(userId);
+    const now = new Date();
+    
+    if (existing) {
+      // Check if we need to reset monthly stats
+      const monthsDiff = (now.getFullYear() - (existing.monthlyReset?.getFullYear() || now.getFullYear())) * 12 + 
+                        (now.getMonth() - (existing.monthlyReset?.getMonth() || now.getMonth()));
+      
+      if (monthsDiff >= 1) {
+        // Reset monthly stats
+        existing.monthlyTests = 0;
+        existing.monthlyReset = now;
+      }
+      
+      existing.testsRun = (existing.testsRun || 0) + 1;
+      existing.monthlyTests = (existing.monthlyTests || 0) + 1;
+      existing.lastActive = now;
+      
+      this.playgroundUsage.set(userId, existing);
+      return existing;
+    } else {
+      // Create new usage record
+      const newUsage: PlaygroundUsage = {
+        id: randomUUID(),
+        userId,
+        testsRun: 1,
+        totalCost: "0",
+        lastActive: now,
+        monthlyTests: 1,
+        monthlyReset: now
+      };
+      
+      this.playgroundUsage.set(userId, newUsage);
+      return newUsage;
+    }
+  }
+
+  async getPlaygroundUsage(userId: string): Promise<PlaygroundUsage | null> {
+    return this.playgroundUsage.get(userId) || null;
   }
 }
 

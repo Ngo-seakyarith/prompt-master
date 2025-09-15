@@ -400,6 +400,13 @@ export function getSupportedModels(): string[] {
 }
 
 /**
+ * Get available models (alias for getSupportedModels for backward compatibility)
+ */
+export function getAvailableModels(): string[] {
+  return getSupportedModels();
+}
+
+/**
  * Validate if a model is supported
  */
 export function isModelSupported(modelName: string): boolean {

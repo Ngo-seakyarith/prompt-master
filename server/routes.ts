@@ -2,11 +2,127 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { assessPrompt, generatePromptSuggestions, assessQuizAnswers } from "./services/openai";
+import { runMultiModelTest, getAvailableModels } from "./services/openrouter";
 import { RecommendationService } from "./services/recommendations";
-import { insertPromptAttemptSchema, assessPromptSchema, insertGoalSchema, insertCertificateSchema, submitQuizSchema } from "@shared/schema";
+import { insertPromptAttemptSchema, assessPromptSchema, insertGoalSchema, insertCertificateSchema, submitQuizSchema, runPlaygroundTestSchema, savePlaygroundPromptSchema, updatePlaygroundPromptSchema } from "@shared/schema";
 import { z } from "zod";
 import { MODULE_CONTENT } from "../client/src/lib/constants";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+
+// ===== PLAYGROUND USAGE LIMITS =====
+const USAGE_LIMITS = {
+  DAILY_TEST_LIMIT: 50,
+  MONTHLY_TEST_LIMIT: 200,
+  MONTHLY_COST_CEILING: 10.00, // $10.00 USD
+  ESTIMATED_COST_PER_TEST: 0.05 // Conservative estimate for planning
+} as const;
+
+// Usage validation helper function
+async function checkUserLimits(userId: string, estimatedCost?: number): Promise<{ canProceed: boolean; error?: { status: number; message: string; details?: any } }> {
+  try {
+    const usage = await storage.getPlaygroundUsage(userId);
+    
+    // If no usage record exists, user is within limits
+    if (!usage) {
+      return { canProceed: true };
+    }
+
+    const now = new Date();
+    
+    // Check if we need to reset daily counters (if it's a new day)
+    const lastActiveDate = usage.lastActive ? new Date(usage.lastActive) : new Date();
+    const isNewDay = now.toDateString() !== lastActiveDate.toDateString();
+    
+    // Calculate daily usage (reset if new day)
+    const dailyTests = isNewDay ? 0 : (usage.testsRun || 0);
+    
+    // Check if we need to reset monthly stats
+    const monthsDiff = (now.getFullYear() - (usage.monthlyReset?.getFullYear() || now.getFullYear())) * 12 + 
+                      (now.getMonth() - (usage.monthlyReset?.getMonth() || now.getMonth()));
+    
+    const monthlyTests = monthsDiff >= 1 ? 0 : (usage.monthlyTests || 0);
+    const monthlySpent = monthsDiff >= 1 ? 0 : parseFloat(usage.totalCost || "0");
+    
+    // Check daily test limit
+    if (dailyTests >= USAGE_LIMITS.DAILY_TEST_LIMIT) {
+      return {
+        canProceed: false,
+        error: {
+          status: 429,
+          message: `Daily test limit exceeded. You've used ${dailyTests}/${USAGE_LIMITS.DAILY_TEST_LIMIT} tests today.`,
+          details: {
+            limitType: "daily_tests",
+            currentUsage: dailyTests,
+            limit: USAGE_LIMITS.DAILY_TEST_LIMIT,
+            resetTime: "midnight UTC",
+            suggestion: "Please try again tomorrow."
+          }
+        }
+      };
+    }
+
+    // Check monthly test limit
+    if (monthlyTests >= USAGE_LIMITS.MONTHLY_TEST_LIMIT) {
+      return {
+        canProceed: false,
+        error: {
+          status: 429,
+          message: `Monthly test limit exceeded. You've used ${monthlyTests}/${USAGE_LIMITS.MONTHLY_TEST_LIMIT} tests this month.`,
+          details: {
+            limitType: "monthly_tests",
+            currentUsage: monthlyTests,
+            limit: USAGE_LIMITS.MONTHLY_TEST_LIMIT,
+            resetTime: "first day of next month",
+            suggestion: "Please wait until next month or consider upgrading your plan."
+          }
+        }
+      };
+    }
+
+    // Check monthly cost ceiling
+    const projectedCost = monthlySpent + (estimatedCost || USAGE_LIMITS.ESTIMATED_COST_PER_TEST);
+    if (projectedCost > USAGE_LIMITS.MONTHLY_COST_CEILING) {
+      return {
+        canProceed: false,
+        error: {
+          status: 402,
+          message: `Monthly cost limit would be exceeded. Current spending: $${monthlySpent.toFixed(2)}, estimated test cost: $${(estimatedCost || USAGE_LIMITS.ESTIMATED_COST_PER_TEST).toFixed(2)}, limit: $${USAGE_LIMITS.MONTHLY_COST_CEILING.toFixed(2)}.`,
+          details: {
+            limitType: "monthly_cost",
+            currentSpending: parseFloat(monthlySpent.toFixed(2)),
+            estimatedCost: parseFloat((estimatedCost || USAGE_LIMITS.ESTIMATED_COST_PER_TEST).toFixed(2)),
+            projectedTotal: parseFloat(projectedCost.toFixed(2)),
+            limit: USAGE_LIMITS.MONTHLY_COST_CEILING,
+            remaining: parseFloat((USAGE_LIMITS.MONTHLY_COST_CEILING - monthlySpent).toFixed(2)),
+            suggestion: "Please wait until next month or consider upgrading your plan."
+          }
+        }
+      };
+    }
+
+    // User is within all limits
+    return { 
+      canProceed: true,
+      details: {
+        dailyTests: dailyTests + 1,
+        dailyLimit: USAGE_LIMITS.DAILY_TEST_LIMIT,
+        monthlyTests: monthlyTests + 1,
+        monthlyLimit: USAGE_LIMITS.MONTHLY_TEST_LIMIT,
+        monthlySpent: parseFloat(monthlySpent.toFixed(2)),
+        monthlyLimit: USAGE_LIMITS.MONTHLY_COST_CEILING
+      }
+    };
+  } catch (error) {
+    console.error("Error checking user limits:", error);
+    return {
+      canProceed: false,
+      error: {
+        status: 500,
+        message: "Unable to verify usage limits at this time. Please try again later."
+      }
+    };
+  }
+}
 
 // Helper function to check course completion and generate certificates
 async function checkAndGenerateCertificate(userId: string, moduleId: string) {
@@ -814,6 +930,217 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Failed to fetch quiz attempts:", error);
       res.status(500).json({ message: "Failed to fetch quiz attempts" });
+    }
+  });
+
+  // ===== AI PLAYGROUND ROUTES =====
+  
+  // Get available models and pricing
+  app.get("/api/playground/models", isAuthenticated, async (req: any, res) => {
+    try {
+      const models = await getAvailableModels();
+      res.json(models);
+    } catch (error) {
+      console.error("Error fetching models:", error);
+      res.status(500).json({ message: "Failed to fetch available models" });
+    }
+  });
+
+  // Run multi-model prompt test
+  app.post("/api/playground/tests/run", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Validate request body
+      const validationResult = runPlaygroundTestSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid request data", 
+          errors: validationResult.error.errors 
+        });
+      }
+
+      const { promptText, models, parameters, promptId } = validationResult.data;
+
+      // ===== CRITICAL SECURITY CHECK: Validate user limits BEFORE expensive API calls =====
+      const estimatedCost = models.length * USAGE_LIMITS.ESTIMATED_COST_PER_TEST;
+      const limitsCheck = await checkUserLimits(userId, estimatedCost);
+      
+      if (!limitsCheck.canProceed) {
+        console.log(`Playground test blocked for user ${userId}: ${limitsCheck.error?.message}`);
+        return res.status(limitsCheck.error?.status || 429).json({
+          message: limitsCheck.error?.message,
+          ...limitsCheck.error?.details
+        });
+      }
+
+      // User is within limits - proceed with the test
+      console.log(`Playground test authorized for user ${userId}. Estimated cost: $${estimatedCost.toFixed(4)}`);
+
+      // Run the multi-model test
+      const testResult = await runMultiModelTest({
+        promptText,
+        models,
+        parameters,
+        promptId
+      });
+
+      // Save the test result to storage
+      const savedTest = await storage.savePlaygroundTest({
+        userId,
+        promptId: promptId || null,
+        promptText,
+        models,
+        parameters,
+        results: testResult.results,
+        totalCost: testResult.totalCost
+      });
+
+      // Update user usage
+      await storage.upsertPlaygroundUsage(userId);
+
+      res.json({
+        testId: savedTest.id,
+        results: testResult.results,
+        totalCost: testResult.totalCost,
+        summary: testResult.summary
+      });
+    } catch (error) {
+      console.error("Error running playground test:", error);
+      res.status(500).json({ message: "Failed to run playground test" });
+    }
+  });
+
+  // Get user's test history
+  app.get("/api/playground/tests", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const tests = await storage.getPlaygroundTests(userId);
+      res.json(tests);
+    } catch (error) {
+      console.error("Error fetching playground tests:", error);
+      res.status(500).json({ message: "Failed to fetch test history" });
+    }
+  });
+
+  // Save a new prompt
+  app.post("/api/playground/prompts", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Validate request body
+      const validationResult = savePlaygroundPromptSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid request data", 
+          errors: validationResult.error.errors 
+        });
+      }
+
+      const promptData = validationResult.data;
+      
+      // Handle versioning if parentId is provided
+      let version = 1;
+      if (promptData.parentId) {
+        const existingPrompts = await storage.getPlaygroundPrompts(userId);
+        const parentVersions = existingPrompts.filter(p => 
+          p.parentId === promptData.parentId || p.id === promptData.parentId
+        );
+        version = Math.max(...parentVersions.map(p => p.version || 1)) + 1;
+      }
+
+      const savedPrompt = await storage.savePlaygroundPrompt({
+        ...promptData,
+        userId,
+        version
+      });
+
+      res.status(201).json(savedPrompt);
+    } catch (error) {
+      console.error("Error saving playground prompt:", error);
+      res.status(500).json({ message: "Failed to save prompt" });
+    }
+  });
+
+  // Get user's saved prompts
+  app.get("/api/playground/prompts", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const prompts = await storage.getPlaygroundPrompts(userId);
+      res.json(prompts);
+    } catch (error) {
+      console.error("Error fetching playground prompts:", error);
+      res.status(500).json({ message: "Failed to fetch prompts" });
+    }
+  });
+
+  // Update existing prompt
+  app.put("/api/playground/prompts/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const promptId = req.params.id;
+      
+      // Validate request body - use the basic save schema without parentId validation for updates
+      const validationResult = savePlaygroundPromptSchema.omit({ parentId: true }).safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid request data", 
+          errors: validationResult.error.errors 
+        });
+      }
+
+      const updates = validationResult.data;
+      const updatedPrompt = await storage.updatePlaygroundPrompt(userId, promptId, updates);
+      
+      if (!updatedPrompt) {
+        return res.status(404).json({ message: "Prompt not found or access denied" });
+      }
+
+      res.json(updatedPrompt);
+    } catch (error) {
+      console.error("Error updating playground prompt:", error);
+      res.status(500).json({ message: "Failed to update prompt" });
+    }
+  });
+
+  // Delete prompt
+  app.delete("/api/playground/prompts/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const promptId = req.params.id;
+      
+      const deleted = await storage.deletePlaygroundPrompt(userId, promptId);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Prompt not found or access denied" });
+      }
+
+      res.json({ message: "Prompt deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting playground prompt:", error);
+      res.status(500).json({ message: "Failed to delete prompt" });
+    }
+  });
+
+  // Get user's usage analytics
+  app.get("/api/playground/usage", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const usage = await storage.getPlaygroundUsage(userId);
+      
+      // Return default usage if none exists
+      const defaultUsage = {
+        testsRun: 0,
+        totalCost: "0",
+        monthlyTests: 0,
+        lastActive: null,
+        monthlyReset: new Date()
+      };
+      
+      res.json(usage || defaultUsage);
+    } catch (error) {
+      console.error("Error fetching playground usage:", error);
+      res.status(500).json({ message: "Failed to fetch usage analytics" });
     }
   });
 
