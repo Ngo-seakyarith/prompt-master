@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { TextWithAILinks } from "@/components/AIModelLink";
 import { MODULES, MODULE_CONTENT } from "@/lib/constants";
 import type { Module, UserProgress, AssessmentFeedback } from "@shared/schema";
 
@@ -188,7 +189,7 @@ export default function ModuleDetail({ moduleId }: ModuleDetailProps) {
                       <strong>{requiredModule.title}</strong>
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {requiredModule.description}
+                      <TextWithAILinks text={requiredModule.description} />
                     </p>
                   </div>
                 </div>
@@ -238,7 +239,7 @@ export default function ModuleDetail({ moduleId }: ModuleDetailProps) {
                   {moduleData.title}
                 </h1>
                 <p className="text-muted-foreground" data-testid="module-description">
-                  {moduleData.description}
+                  <TextWithAILinks text={moduleData.description} />
                 </p>
               </div>
             </div>
@@ -342,7 +343,7 @@ export default function ModuleDetail({ moduleId }: ModuleDetailProps) {
                           {currentExercise.title}
                         </h4>
                         <p className="text-sm text-muted-foreground mb-4" data-testid="exercise-description">
-                          {currentExercise.description}
+                          <TextWithAILinks text={currentExercise.description} />
                         </p>
                       </div>
                       

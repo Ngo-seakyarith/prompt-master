@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { TextWithAILinks } from "@/components/AIModelLink";
 import type { Module, UserProgress } from "@shared/schema";
 
 interface ModuleCardProps {
@@ -99,7 +100,7 @@ export default function ModuleCard({ module, progress, isLocked }: ModuleCardPro
         <p className="text-muted-foreground mb-4" data-testid={`module-description-${module.id}`}>
           {isLocked 
             ? t("common.moduleBlockedDesc")
-            : module.description
+            : <TextWithAILinks text={module.description} />
           }
         </p>
 

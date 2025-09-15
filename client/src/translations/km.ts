@@ -4,6 +4,7 @@ export default {
     dashboard: "ផ្ទាំងគ្រប់គ្រង",
     courses: "វគ្គសិក្សា",
     modules: "ម៉ូឌុល",
+    aiModels: "ម៉ូដែល AI",
     goals: "គោលដៅ",
     practice: "អនុវត្ត",
     progress: "ការរីកចម្រើន",
@@ -134,6 +135,35 @@ export default {
     loginRedirectNotice: "អ្នកនឹងត្រូវបានបញ្ជូនទៅ Replit សម្រាប់ការផ្ទៀងផ្ទាត់។"
   },
 
+  // AI Models
+  aiModels: {
+    title: "ម៉ូដែល AI និងវេទិកាសំខាន់ៗ",
+    subtitle: "ស្វែងយល់ និងប្រើប្រាស់ម៉ូដែល AI និងវេទិកាឈានមុខគេដែលបានលើកឡើងក្នុងវគ្គសិក្សារបស់យើង។ ចុចលើតំណណាមួយដើម្បីចូលទៅកាន់វេទិកាផ្លូវការ ហើយចាប់ផ្តើមប្រើប្រាស់ឧបករណ៍ AI ដ៏មានអានុភាពទាំងនេះ។",
+    allModels: "ម៉ូដែលទាំងអស់",
+    categories: {
+      "General Purpose": "គោលបំណងទូទៅ",
+      "Productivity": "ផលិតភាព",
+      "Real-time Info": "ព័ត៌មានពេលវេលាជាក់ស្តែង",
+      "Reasoning": "ការវិភាគសតិបញ្ញា",
+      "Research": "ការស្រាវជ្រាវ"
+    },
+    pricing: {
+      free: "ឥតគិតថ្លៃ",
+      premium: "បុរីមៀម",
+      perMonth: "/ខែ"
+    },
+    actions: {
+      visit: "ចូលទៅវេទិកា",
+      learnMore: "ស្វែងយល់បន្ថែម"
+    },
+    modelInfo: {
+      company: "ក្រុមហ៊ុន",
+      category: "ប្រភេទ",
+      pricing: "តម្លៃ",
+      description: "ការពិពណ៌នា"
+    }
+  },
+
   // Dashboard
   dashboard: {
     heroTitle: "ស្ទាត់ជំនាញការវិស្វកម្ម Prompt",
@@ -159,7 +189,7 @@ export default {
     },
     aiFundamentals: {
       title: "គោលការណ៍ជាមូលដ្ឋាននៃ AI",
-      description: "យល់ដឹងអំពីគោលគំនិតមូលដ្ឋាននៃបញ្ញាសិប្បនិម្ម, ការរៀនម៉ាស៊ីន, និងរបៀបដែលប្រព័ន្ធ AI ដំណើរការក្នុងពិភពទំនើប។"
+      description: "យល់ដឹងអំពីគោលគំនិតមូលដ្ឋាននៃបញ្ញាសិប្បនិម្ម, ការរៀនម៉ាស៊ីន, និងរបៀបដែលប្រព័ន្ធ AI ដូចជា ChatGPT, Claude, និង Gemini ដំណើរការក្នុងពិភពទំនើប។"
     },
     aiProductivityImprovement: {
       title: "AI សម្រាប់ការកែលម្អផលិតភាព",

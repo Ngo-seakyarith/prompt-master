@@ -4,6 +4,7 @@ export default {
     dashboard: "Dashboard",
     courses: "Courses",
     modules: "Modules",
+    aiModels: "AI Models",
     goals: "Goals",
     practice: "Practice",
     progress: "Progress",
@@ -134,6 +135,35 @@ export default {
     loginRedirectNotice: "You will be redirected to Replit for authentication."
   },
 
+  // AI Models
+  aiModels: {
+    title: "Key AI Models & Platforms",
+    subtitle: "Explore and access the leading AI models and platforms mentioned in our courses. Click any link to visit the official platform and start using these powerful AI tools.",
+    allModels: "All Models",
+    categories: {
+      "General Purpose": "General Purpose",
+      "Productivity": "Productivity",
+      "Real-time Info": "Real-time Info",
+      "Reasoning": "Reasoning",
+      "Research": "Research"
+    },
+    pricing: {
+      free: "Free",
+      premium: "Premium",
+      perMonth: "/month"
+    },
+    actions: {
+      visit: "Visit Platform",
+      learnMore: "Learn More"
+    },
+    modelInfo: {
+      company: "Company",
+      category: "Category",
+      pricing: "Pricing",
+      description: "Description"
+    }
+  },
+
   // Dashboard
   dashboard: {
     heroTitle: "Master the Art of Prompt Engineering",
@@ -159,11 +189,11 @@ export default {
     },
     aiFundamentals: {
       title: "AI Fundamentals",
-      description: "Understand the core concepts of artificial intelligence, machine learning, and how AI systems work in the modern world."
+      description: "Understand the core concepts of artificial intelligence, machine learning, and how AI systems like ChatGPT, Claude, and Gemini work in the modern world."
     },
     aiProductivityImprovement: {
       title: "AI for Productivity Improvement",
-      description: "Leverage AI tools and automation to streamline workflows, optimize processes, and boost personal and team productivity."
+      description: "Leverage AI tools like Copilot, ChatGPT, and Claude to streamline workflows, optimize processes, and boost personal and team productivity."
     },
     aiCriticalThinkingProblemSolving: {
       title: "AI for Critical Thinking & Problem Solving",

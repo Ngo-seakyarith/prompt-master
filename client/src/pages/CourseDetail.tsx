@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { TextWithAILinks } from "@/components/AIModelLink";
 import { COURSES, MODULES } from "@/lib/constants";
 import type { UserProgress } from "@shared/schema";
 
@@ -141,7 +142,7 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
               {course.titleKey ? t(course.titleKey) : course.title}
             </CardTitle>
             <CardDescription className="text-lg" data-testid="course-description">
-              {course.descriptionKey ? t(course.descriptionKey) : course.description}
+              <TextWithAILinks text={course.descriptionKey ? t(course.descriptionKey) : course.description} />
             </CardDescription>
           </CardHeader>
 

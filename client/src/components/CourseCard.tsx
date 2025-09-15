@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { TextWithAILinks } from "@/components/AIModelLink";
 
 interface Course {
   id: string;
@@ -73,7 +74,7 @@ export default function CourseCard({ course, progress, moduleCount = 5 }: Course
           {course.titleKey ? t(course.titleKey) : course.title}
         </CardTitle>
         <CardDescription className="text-sm text-muted-foreground" data-testid={`description-${course.id}`}>
-          {course.descriptionKey ? t(course.descriptionKey) : course.description}
+          <TextWithAILinks text={course.descriptionKey ? t(course.descriptionKey) : course.description} />
         </CardDescription>
       </CardHeader>
 
