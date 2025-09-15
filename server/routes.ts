@@ -18,7 +18,7 @@ const USAGE_LIMITS = {
 } as const;
 
 // Usage validation helper function
-async function checkUserLimits(userId: string, estimatedCost?: number): Promise<{ canProceed: boolean; error?: { status: number; message: string; details?: any } }> {
+async function checkUserLimits(userId: string, estimatedCost?: number): Promise<{ canProceed: boolean; error?: { status: number; message: string; details?: any }; details?: any }> {
   try {
     const usage = await storage.getPlaygroundUsage(userId);
     
@@ -107,9 +107,9 @@ async function checkUserLimits(userId: string, estimatedCost?: number): Promise<
         dailyTests: dailyTests + 1,
         dailyLimit: USAGE_LIMITS.DAILY_TEST_LIMIT,
         monthlyTests: monthlyTests + 1,
-        monthlyLimit: USAGE_LIMITS.MONTHLY_TEST_LIMIT,
+        monthlyTestLimit: USAGE_LIMITS.MONTHLY_TEST_LIMIT,
         monthlySpent: parseFloat(monthlySpent.toFixed(2)),
-        monthlyLimit: USAGE_LIMITS.MONTHLY_COST_CEILING
+        monthlyCostLimit: USAGE_LIMITS.MONTHLY_COST_CEILING
       }
     };
   } catch (error) {
