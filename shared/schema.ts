@@ -135,6 +135,50 @@ export const quizAttempts = pgTable("quiz_attempts", {
   index("IDX_quiz_attempts_user_id").on(table.userId),
 ]);
 
+export const playgroundPrompts = pgTable("playground_prompts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  category: varchar("category"),
+  tags: text("tags").array(),
+  isPublic: boolean("is_public").default(false),
+  version: integer("version").default(1),
+  parentId: varchar("parent_id"),
+  createdAt: timestamp("created_at").default(sql`now()`),
+  updatedAt: timestamp("updated_at").default(sql`now()`),
+}, (table) => [
+  index("IDX_playground_prompts_user_id").on(table.userId),
+  index("IDX_playground_prompts_parent_id").on(table.parentId),
+]);
+
+export const playgroundTests = pgTable("playground_tests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  promptId: varchar("prompt_id"),
+  promptText: text("prompt_text").notNull(),
+  models: text("models").array().notNull(),
+  parameters: json("parameters").notNull(),
+  results: json("results").notNull(),
+  totalCost: text("total_cost").notNull(),
+  createdAt: timestamp("created_at").default(sql`now()`),
+}, (table) => [
+  index("IDX_playground_tests_user_id").on(table.userId),
+  index("IDX_playground_tests_prompt_id").on(table.promptId),
+]);
+
+export const playgroundUsage = pgTable("playground_usage", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().unique(),
+  testsRun: integer("tests_run").default(0),
+  totalCost: text("total_cost").default("0"),
+  lastActive: timestamp("last_active").default(sql`now()`),
+  monthlyTests: integer("monthly_tests").default(0),
+  monthlyReset: timestamp("monthly_reset").default(sql`now()`),
+}, (table) => [
+  index("IDX_playground_usage_user_id").on(table.userId),
+]);
+
 export const insertUserSchema = createInsertSchema(users).omit({
   createdAt: true,
   updatedAt: true,
@@ -189,6 +233,23 @@ export const insertQuizAttemptSchema = createInsertSchema(quizAttempts).omit({
   createdAt: true,
 });
 
+export const insertPlaygroundPromptSchema = createInsertSchema(playgroundPrompts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertPlaygroundTestSchema = createInsertSchema(playgroundTests).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertPlaygroundUsageSchema = createInsertSchema(playgroundUsage).omit({
+  id: true,
+  lastActive: true,
+  monthlyReset: true,
+});
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type UpsertUser = z.infer<typeof upsertUserSchema>;
@@ -212,6 +273,12 @@ export type QuizQuestion = typeof quizQuestions.$inferSelect;
 export type InsertQuizQuestion = z.infer<typeof insertQuizQuestionSchema>;
 export type QuizAttempt = typeof quizAttempts.$inferSelect;
 export type InsertQuizAttempt = z.infer<typeof insertQuizAttemptSchema>;
+export type PlaygroundPrompt = typeof playgroundPrompts.$inferSelect;
+export type InsertPlaygroundPrompt = z.infer<typeof insertPlaygroundPromptSchema>;
+export type PlaygroundTest = typeof playgroundTests.$inferSelect;
+export type InsertPlaygroundTest = z.infer<typeof insertPlaygroundTestSchema>;
+export type PlaygroundUsage = typeof playgroundUsage.$inferSelect;
+export type InsertPlaygroundUsage = z.infer<typeof insertPlaygroundUsageSchema>;
 
 export interface AssessmentFeedback {
   overall_score: number;
@@ -316,3 +383,47 @@ export const createQuizQuestionSchema = z.object({
 export type AssessPromptRequest = z.infer<typeof assessPromptSchema>;
 export type SubmitQuizRequest = z.infer<typeof submitQuizSchema>;
 export type CreateQuizQuestionRequest = z.infer<typeof createQuizQuestionSchema>;
+
+// AI Playground validation schemas
+export const runPlaygroundTestSchema = z.object({
+  promptText: z.string().min(1, "Prompt text is required"),
+  models: z.array(z.string()).min(1, "At least one model is required").max(10, "Maximum of 10 models allowed"),
+  parameters: z.object({
+    temperature: z.number().min(0).max(2).optional().default(0.7),
+    maxTokens: z.number().int().min(1).max(8192).optional().default(1000),
+    topP: z.number().min(0).max(1).optional().default(1),
+  }),
+  promptId: z.string().optional(), // If saving as new version of existing prompt
+});
+
+export const savePlaygroundPromptSchema = z.object({
+  title: z.string().min(1, "Title is required").max(200, "Title must be less than 200 characters"),
+  content: z.string().min(1, "Content is required"),
+  category: z.string().max(50, "Category must be less than 50 characters").optional(),
+  tags: z.array(z.string().max(30, "Tag must be less than 30 characters")).max(20, "Maximum of 20 tags allowed").optional(),
+  isPublic: z.boolean().default(false),
+  parentId: z.string().optional(), // For versioning
+});
+
+export const updatePlaygroundPromptSchema = savePlaygroundPromptSchema.extend({
+  id: z.string().min(1, "Prompt ID is required"),
+});
+
+export interface PlaygroundTestResult {
+  modelName: string;
+  response: string;
+  tokenCount: number;
+  cost: string;
+  responseTime: number;
+  error?: string;
+}
+
+export interface PlaygroundParameters {
+  temperature: number;
+  maxTokens: number;
+  topP: number;
+}
+
+export type RunPlaygroundTestRequest = z.infer<typeof runPlaygroundTestSchema>;
+export type SavePlaygroundPromptRequest = z.infer<typeof savePlaygroundPromptSchema>;
+export type UpdatePlaygroundPromptRequest = z.infer<typeof updatePlaygroundPromptSchema>;
