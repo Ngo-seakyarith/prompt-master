@@ -11,6 +11,7 @@ import ModuleDetail from "@/pages/ModuleDetail";
 import Goals from "@/pages/Goals";
 import Certificates from "@/pages/Certificates";
 import AIModels from "@/pages/AIModels";
+import PlaygroundPage from "@/pages/PlaygroundPage";
 import QuizPage from "@/components/QuizPage";
 import NotFound from "@/pages/not-found";
 
@@ -28,6 +29,7 @@ function Router() {
       <Route path="/goals" component={Goals} />
       <Route path="/certificates" component={Certificates} />
       <Route path="/ai-models" component={AIModels} />
+      <Route path="/playground" component={PlaygroundPage} />
       <Route path="/quiz/:quizId">
         {(params) => <QuizPage quizId={params.quizId} />}
       </Route>
