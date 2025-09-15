@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { Menu, X } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import type { UserProgress } from "@shared/schema";
 
 export default function Navigation() {
   const [location] = useLocation();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { t } = useTranslation();
   
   // Fetch user progress for real progress calculation
@@ -42,6 +44,7 @@ export default function Navigation() {
                 </h1>
               </Link>
             </div>
+            {/* Desktop Navigation */}
             <div className="hidden md:block ml-10">
               <div className="flex items-baseline space-x-4">
                 {navItems.map((item) => (
@@ -62,23 +65,85 @@ export default function Navigation() {
             </div>
           </div>
           <div className="flex items-center space-x-4">
-            <div className="text-sm text-muted-foreground" data-testid="progress-indicator">
-              {t("common.progress")}: {overallProgress}%
+            {/* Desktop Progress & Controls */}
+            <div className="hidden sm:flex items-center space-x-4">
+              <div className="text-sm text-muted-foreground" data-testid="progress-indicator">
+                {t("common.progress")}: {overallProgress}%
+              </div>
+              <div className="w-24 h-2 bg-muted rounded-full">
+                <div 
+                  className="h-2 bg-secondary rounded-full transition-all duration-500" 
+                  style={{ width: `${overallProgress}%` }}
+                  data-testid="progress-bar"
+                ></div>
+              </div>
+              <LanguageSwitcher />
+              <button className="p-2 rounded-full bg-primary text-primary-foreground" data-testid="user-menu">
+                <i className="fas fa-user w-4 h-4"></i>
+              </button>
             </div>
-            <div className="w-24 h-2 bg-muted rounded-full">
-              <div 
-                className="h-2 bg-secondary rounded-full transition-all duration-500" 
-                style={{ width: `${overallProgress}%` }}
-                data-testid="progress-bar"
-              ></div>
-            </div>
-            <LanguageSwitcher />
-            <button className="p-2 rounded-full bg-primary text-primary-foreground" data-testid="user-menu">
-              <i className="fas fa-user w-4 h-4"></i>
+
+            {/* Mobile Menu Button */}
+            <button
+              className="md:hidden p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              data-testid="mobile-menu-button"
+              aria-label="Toggle mobile menu"
+            >
+              {isMobileMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
             </button>
           </div>
         </div>
       </div>
+
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden bg-card border-b border-border" data-testid="mobile-menu">
+          <div className="px-4 pt-2 pb-4 space-y-1">
+            {navItems.map((item) => (
+              <Link key={item.id} href={item.href}>
+                <span
+                  className={`block px-3 py-2 rounded-md text-base font-medium transition-colors cursor-pointer ${
+                    location === item.href || (item.href === "/" && location === "") || (item.href === "/courses" && location.startsWith("/courses")) || (item.href === "/ai-models" && location.startsWith("/ai-models")) || (item.href === "/playground" && location.startsWith("/playground")) || (item.href === "/goals" && location.startsWith("/goals")) || (item.href === "/certificates" && location.startsWith("/certificates"))
+                      ? "text-primary bg-primary/10"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  }`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  data-testid={`mobile-nav-${item.id}`}
+                >
+                  {item.label}
+                </span>
+              </Link>
+            ))}
+            
+            {/* Mobile Progress & Controls */}
+            <div className="border-t border-border pt-4 mt-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-sm text-muted-foreground" data-testid="mobile-progress-indicator">
+                  {t("common.progress")}: {overallProgress}%
+                </div>
+                <div className="w-20 h-2 bg-muted rounded-full">
+                  <div 
+                    className="h-2 bg-secondary rounded-full transition-all duration-500" 
+                    style={{ width: `${overallProgress}%` }}
+                    data-testid="mobile-progress-bar"
+                  ></div>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <LanguageSwitcher />
+                <button className="p-2 rounded-full bg-primary text-primary-foreground" data-testid="mobile-user-menu">
+                  <i className="fas fa-user w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }
