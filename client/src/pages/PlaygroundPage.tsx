@@ -31,15 +31,23 @@ import {
   Brain,
   Plus,
   Trash2,
-  Edit3
+  Edit3,
+  Star,
+  Download,
+  BarChart3,
+  Trophy,
+  Zap,
+  Target
 } from "lucide-react";
 import type { 
   PlaygroundTestResult, 
   PlaygroundPrompt, 
   PlaygroundUsage,
   PlaygroundParameters,
+  PlaygroundComparisonMetrics,
   RunPlaygroundTestRequest,
-  SavePlaygroundPromptRequest
+  SavePlaygroundPromptRequest,
+  RatePlaygroundResultRequest
 } from "@shared/schema";
 
 export default function PlaygroundPage() {
@@ -60,6 +68,8 @@ export default function PlaygroundPage() {
   const [testResults, setTestResults] = useState<PlaygroundTestResult[]>([]);
   const [totalCost, setTotalCost] = useState<string>("0.00");
   const [isRunning, setIsRunning] = useState(false);
+  const [currentTestId, setCurrentTestId] = useState<string | null>(null);
+  const [comparisonMetrics, setComparisonMetrics] = useState<PlaygroundComparisonMetrics | null>(null);
 
   // Available models query with error handling
   const { 
@@ -150,7 +160,10 @@ export default function PlaygroundPage() {
     onSuccess: (data) => {
       setTestResults(data.results || []);
       setTotalCost(data.totalCost || "0.00");
+      setCurrentTestId(data.testId || null);
       setIsRunning(false);
+      // Calculate comparison metrics from the new results
+      calculateAndSetMetrics(data.results || []);
       queryClient.invalidateQueries({ queryKey: ["/api/playground/usage"] });
       toast({
         title: t("playground.testCompleted"),
@@ -210,6 +223,43 @@ export default function PlaygroundPage() {
       toast({
         title: t("playground.failedToDeletePrompt"),
         description: error.message || t("playground.errorWhileDeleting"),
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Rate model response mutation
+  const rateResponseMutation = useMutation({
+    mutationFn: async ({ testId, modelName, rating }: RatePlaygroundResultRequest) => {
+      const response = await apiRequest("POST", `/api/playground/tests/${testId}/rate`, {
+        modelName,
+        rating
+      });
+      return response.json();
+    },
+    onSuccess: (data, variables) => {
+      // Calculate updated results with new rating
+      const updatedResults = testResults.map(result => 
+        result.modelName === variables.modelName 
+          ? { ...result, rating: variables.rating, ratedAt: new Date().toISOString() }
+          : result
+      );
+      
+      // Update local state with new rating
+      setTestResults(updatedResults);
+      
+      // Recalculate comparison metrics with updated results
+      calculateAndSetMetrics(updatedResults);
+      
+      toast({
+        title: t("playground.ratingAdded"),
+        description: t("playground.ratingAddedDesc", { rating: variables.rating }),
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: t("playground.failedToRate"),
+        description: error.message || t("playground.errorWhileRating"),
         variant: "destructive",
       });
     },
@@ -324,6 +374,143 @@ export default function PlaygroundPage() {
   const getTokenCount = (text: string) => {
     // Rough estimation: 1 token ≈ 4 characters for English text
     return Math.ceil(text.length / 4);
+  };
+
+  // Calculate comparison metrics from current test results
+  const calculateAndSetMetrics = (results: PlaygroundTestResult[]) => {
+    const validResults = results.filter(r => !r.error);
+    
+    if (validResults.length === 0) {
+      setComparisonMetrics(null);
+      return;
+    }
+
+    // Find winners by different metrics
+    const fastestModel = validResults.reduce((prev, curr) => 
+      prev.responseTime < curr.responseTime ? prev : curr
+    );
+    
+    const cheapestModel = validResults.reduce((prev, curr) => 
+      parseFloat(prev.cost) < parseFloat(curr.cost) ? prev : curr
+    );
+
+    const ratedResults = validResults.filter(r => r.rating);
+    const highestRatedModel = ratedResults.length > 0 
+      ? ratedResults.reduce((prev, curr) => (prev.rating || 0) > (curr.rating || 0) ? prev : curr)
+      : validResults[0];
+
+    // Calculate efficiency (rating per dollar spent)
+    const efficiencyResults = validResults
+      .filter(r => r.rating && parseFloat(r.cost) > 0)
+      .map(r => ({ 
+        ...r, 
+        efficiency: (r.rating || 0) / parseFloat(r.cost) 
+      }));
+    
+    const mostEfficientModel = efficiencyResults.length > 0
+      ? efficiencyResults.reduce((prev, curr) => prev.efficiency > curr.efficiency ? prev : curr)
+      : cheapestModel;
+
+    // Calculate averages and stats
+    const avgResponseTime = validResults.reduce((sum, r) => sum + r.responseTime, 0) / validResults.length;
+    const totalCostNum = validResults.reduce((sum, r) => sum + parseFloat(r.cost), 0);
+    
+    const ratings = validResults.filter(r => r.rating).map(r => r.rating!);
+    const avgRating = ratings.length > 0 ? ratings.reduce((sum, r) => sum + r, 0) / ratings.length : undefined;
+
+    // Response length statistics
+    const responseLengths = validResults.map(r => r.response.length);
+    const minLength = Math.min(...responseLengths);
+    const maxLength = Math.max(...responseLengths);
+    const avgLength = responseLengths.reduce((sum, len) => sum + len, 0) / responseLengths.length;
+
+    setComparisonMetrics({
+      winner: {
+        speed: fastestModel.modelName,
+        cost: cheapestModel.modelName,
+        quality: highestRatedModel.modelName,
+        efficiency: mostEfficientModel.modelName
+      },
+      averageResponseTime: Math.round(avgResponseTime),
+      totalCost: totalCostNum.toFixed(2),
+      averageRating: avgRating ? Math.round(avgRating * 10) / 10 : undefined,
+      responseStats: {
+        minLength,
+        maxLength,
+        avgLength: Math.round(avgLength)
+      }
+    });
+  };
+
+  // Handle rating a model response
+  const handleRateResponse = (modelName: string, rating: number) => {
+    if (!currentTestId) {
+      toast({
+        title: t("playground.noTestToRate"),
+        description: t("playground.noTestToRateDesc"),
+        variant: "destructive",
+      });
+      return;
+    }
+
+    rateResponseMutation.mutate({
+      testId: currentTestId,
+      modelName,
+      rating
+    });
+  };
+
+  // Handle export functionality
+  const handleExport = async (format: "json" | "csv" | "txt" | "clipboard") => {
+    if (!currentTestId) {
+      toast({
+        title: t("playground.noTestToExport"),
+        description: t("playground.noTestToExportDesc"),
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      if (format === "clipboard") {
+        const response = await apiRequest("GET", `/api/playground/tests/${currentTestId}/clipboard`);
+        const data = await response.json();
+        
+        await navigator.clipboard.writeText(data.content);
+        toast({
+          title: t("playground.copiedToClipboard"),
+          description: t("playground.exportCopiedToClipboard"),
+        });
+      } else {
+        const response = await apiRequest("POST", `/api/playground/tests/${currentTestId}/export`, {
+          format,
+          includeRatings: true,
+          includeMetadata: true
+        });
+
+        // For file downloads, trigger the download
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `playground-test-${currentTestId}.${format}`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        toast({
+          title: t("playground.exportSuccessful"),
+          description: t("playground.exportSuccessfulDesc", { format: format.toUpperCase() }),
+        });
+      }
+    } catch (error) {
+      toast({
+        title: t("playground.exportFailed"),
+        description: error instanceof Error ? error.message : t("playground.exportFailedGeneric"),
+        variant: "destructive",
+      });
+    }
   };
 
   // Handle authentication loading
@@ -685,62 +872,218 @@ export default function PlaygroundPage() {
                     <p className="text-muted-foreground">{t("playground.testingModels")}</p>
                   </div>
                 ) : testResults.length > 0 ? (
-                  <div className="space-y-4">
-                    {testResults.map((result: PlaygroundTestResult) => (
-                      <Card key={result.modelName} className={result.error ? "border-destructive" : "border-border"}>
+                  <div className="space-y-6">
+                    {/* Comparison Summary Panel */}
+                    {comparisonMetrics && (
+                      <Card className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border-blue-200 dark:border-blue-800">
                         <CardHeader className="pb-3">
+                          <CardTitle className="text-lg flex items-center gap-2">
+                            <Trophy className="w-5 h-5 text-yellow-600" />
+                            {t("playground.comparisonSummary")}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="text-center">
+                              <div className="flex items-center justify-center gap-2 mb-1">
+                                <Zap className="w-4 h-4 text-yellow-600" />
+                                <span className="text-sm font-medium">{t("playground.fastest")}</span>
+                              </div>
+                              <div className="text-sm text-muted-foreground">{getModelDisplayName(comparisonMetrics.winner.speed)}</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="flex items-center justify-center gap-2 mb-1">
+                                <DollarSign className="w-4 h-4 text-green-600" />
+                                <span className="text-sm font-medium">{t("playground.cheapest")}</span>
+                              </div>
+                              <div className="text-sm text-muted-foreground">{getModelDisplayName(comparisonMetrics.winner.cost)}</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="flex items-center justify-center gap-2 mb-1">
+                                <Star className="w-4 h-4 text-purple-600" />
+                                <span className="text-sm font-medium">{t("playground.topRated")}</span>
+                              </div>
+                              <div className="text-sm text-muted-foreground">{getModelDisplayName(comparisonMetrics.winner.quality)}</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="flex items-center justify-center gap-2 mb-1">
+                                <Target className="w-4 h-4 text-blue-600" />
+                                <span className="text-sm font-medium">{t("playground.mostEfficient")}</span>
+                              </div>
+                              <div className="text-sm text-muted-foreground">{getModelDisplayName(comparisonMetrics.winner.efficiency)}</div>
+                            </div>
+                          </div>
+                          
+                          <Separator />
+                          
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center text-sm">
+                            <div>
+                              <div className="text-muted-foreground">{t("playground.avgResponseTime")}</div>
+                              <div className="font-medium">{comparisonMetrics.averageResponseTime}ms</div>
+                            </div>
+                            <div>
+                              <div className="text-muted-foreground">{t("playground.totalCost")}</div>
+                              <div className="font-medium">${comparisonMetrics.totalCost}</div>
+                            </div>
+                            {comparisonMetrics.averageRating && (
+                              <div>
+                                <div className="text-muted-foreground">{t("playground.avgRating")}</div>
+                                <div className="font-medium flex items-center justify-center gap-1">
+                                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                                  {comparisonMetrics.averageRating}/5
+                                </div>
+                              </div>
+                            )}
+                            <div>
+                              <div className="text-muted-foreground">{t("playground.avgLength")}</div>
+                              <div className="font-medium">{comparisonMetrics.responseStats.avgLength} chars</div>
+                            </div>
+                          </div>
+
+                          {/* Export Buttons */}
+                          <Separator />
+                          
                           <div className="flex items-center justify-between">
-                            <CardTitle className="text-lg">
-                              {getModelDisplayName(result.modelName)}
-                            </CardTitle>
-                            <div className="flex items-center gap-2">
-                              {result.error ? (
-                                <AlertCircle className="w-4 h-4 text-destructive" />
-                              ) : (
-                                <CheckCircle className="w-4 h-4 text-green-600" />
-                              )}
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => handleCopyResponse(result.response)}
-                                disabled={!result.response}
-                                data-testid={`copy-response-${result.modelName}`}
-                              >
-                                <Copy className="w-3 h-3" />
+                            <span className="text-sm font-medium">{t("playground.exportResults")}:</span>
+                            <div className="flex gap-2">
+                              <Button size="sm" variant="outline" onClick={() => handleExport("clipboard")} data-testid="export-clipboard">
+                                <Copy className="w-3 h-3 mr-1" />
+                                {t("playground.clipboard")}
+                              </Button>
+                              <Button size="sm" variant="outline" onClick={() => handleExport("json")} data-testid="export-json">
+                                <Download className="w-3 h-3 mr-1" />
+                                JSON
+                              </Button>
+                              <Button size="sm" variant="outline" onClick={() => handleExport("csv")} data-testid="export-csv">
+                                <Download className="w-3 h-3 mr-1" />
+                                CSV
+                              </Button>
+                              <Button size="sm" variant="outline" onClick={() => handleExport("txt")} data-testid="export-txt">
+                                <Download className="w-3 h-3 mr-1" />
+                                TXT
                               </Button>
                             </div>
                           </div>
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                            <div className="flex items-center gap-1">
-                              <Hash className="w-3 h-3" />
-                              {result.tokenCount} {t("playground.tokens")}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <DollarSign className="w-3 h-3" />
-                              ${result.cost}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Clock className="w-3 h-3" />
-                              {result.responseTime}ms
-                            </div>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="pt-0">
-                          {result.error ? (
-                            <Alert>
-                              <AlertCircle className="h-4 w-4" />
-                              <AlertDescription>
-                                {result.error}
-                              </AlertDescription>
-                            </Alert>
-                          ) : (
-                            <div className="bg-muted p-3 rounded-lg">
-                              <p className="text-sm whitespace-pre-wrap">{result.response}</p>
-                            </div>
-                          )}
                         </CardContent>
                       </Card>
-                    ))}
+                    )}
+
+                    {/* Individual Result Cards */}
+                    <div className="space-y-4">
+                      {testResults.map((result: PlaygroundTestResult) => (
+                        <Card key={result.modelName} className={result.error ? "border-destructive" : "border-border"}>
+                          <CardHeader className="pb-3">
+                            <div className="flex items-center justify-between">
+                              <CardTitle className="text-lg flex items-center gap-2">
+                                {getModelDisplayName(result.modelName)}
+                                {/* Winner badges */}
+                                {comparisonMetrics && (
+                                  <div className="flex gap-1">
+                                    {comparisonMetrics.winner.speed === result.modelName && (
+                                      <Badge variant="secondary" className="text-xs"><Zap className="w-3 h-3 mr-1" />Fastest</Badge>
+                                    )}
+                                    {comparisonMetrics.winner.cost === result.modelName && (
+                                      <Badge variant="secondary" className="text-xs"><DollarSign className="w-3 h-3 mr-1" />Cheapest</Badge>
+                                    )}
+                                    {comparisonMetrics.winner.quality === result.modelName && (
+                                      <Badge variant="secondary" className="text-xs"><Star className="w-3 h-3 mr-1" />Top Rated</Badge>
+                                    )}
+                                    {comparisonMetrics.winner.efficiency === result.modelName && (
+                                      <Badge variant="secondary" className="text-xs"><Target className="w-3 h-3 mr-1" />Most Efficient</Badge>
+                                    )}
+                                  </div>
+                                )}
+                              </CardTitle>
+                              <div className="flex items-center gap-2">
+                                {result.error ? (
+                                  <AlertCircle className="w-4 h-4 text-destructive" />
+                                ) : (
+                                  <CheckCircle className="w-4 h-4 text-green-600" />
+                                )}
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handleCopyResponse(result.response)}
+                                  disabled={!result.response}
+                                  data-testid={`copy-response-${result.modelName}`}
+                                >
+                                  <Copy className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                              <div className="flex items-center gap-1">
+                                <Hash className="w-3 h-3" />
+                                {result.tokenCount} {t("playground.tokens")}
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <DollarSign className="w-3 h-3" />
+                                ${result.cost}
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                {result.responseTime}ms
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <BarChart3 className="w-3 h-3" />
+                                {result.response.length} chars
+                              </div>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="pt-0 space-y-3">
+                            {result.error ? (
+                              <Alert>
+                                <AlertCircle className="h-4 w-4" />
+                                <AlertDescription>
+                                  {result.error}
+                                </AlertDescription>
+                              </Alert>
+                            ) : (
+                              <>
+                                <div className="bg-muted p-3 rounded-lg">
+                                  <p className="text-sm whitespace-pre-wrap">{result.response}</p>
+                                </div>
+
+                                {/* Rating Component */}
+                                <div className="flex items-center justify-between pt-2 border-t">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-sm font-medium">{t("playground.rateResponse")}:</span>
+                                    <div className="flex gap-1">
+                                      {[1, 2, 3, 4, 5].map((star) => (
+                                        <button
+                                          key={star}
+                                          onClick={() => handleRateResponse(result.modelName, star)}
+                                          disabled={rateResponseMutation.isPending}
+                                          className="transition-colors hover:scale-110"
+                                          data-testid={`rate-${result.modelName}-${star}`}
+                                        >
+                                          <Star 
+                                            className={`w-4 h-4 ${
+                                              (result.rating || 0) >= star 
+                                                ? "fill-yellow-400 text-yellow-400" 
+                                                : "text-gray-300 hover:text-yellow-400"
+                                            }`}
+                                          />
+                                        </button>
+                                      ))}
+                                    </div>
+                                    {result.rating && (
+                                      <span className="text-sm text-muted-foreground">
+                                        ({result.rating}/5)
+                                      </span>
+                                    )}
+                                  </div>
+                                  
+                                  <div className="text-xs text-muted-foreground">
+                                    Cost per token: ${(parseFloat(result.cost) / Math.max(result.tokenCount, 1)).toFixed(6)}
+                                  </div>
+                                </div>
+                              </>
+                            )}
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
                   </div>
                 ) : (
                   <div className="text-center py-12">

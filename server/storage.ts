@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type UpsertUser, type Course, type InsertCourse, type Module, type UserProgress, type InsertUserProgress, type PromptAttempt, type InsertPromptAttempt, type ExerciseAttempt, type InsertExerciseAttempt, type Goal, type InsertGoal, type Certificate, type InsertCertificate, type ModuleContent, type Quiz, type InsertQuiz, type QuizQuestion, type InsertQuizQuestion, type QuizAttempt, type InsertQuizAttempt, type PlaygroundPrompt, type InsertPlaygroundPrompt, type PlaygroundTest, type InsertPlaygroundTest, type PlaygroundUsage } from "@shared/schema";
+import { type User, type InsertUser, type UpsertUser, type Course, type InsertCourse, type Module, type UserProgress, type InsertUserProgress, type PromptAttempt, type InsertPromptAttempt, type ExerciseAttempt, type InsertExerciseAttempt, type Goal, type InsertGoal, type Certificate, type InsertCertificate, type ModuleContent, type Quiz, type InsertQuiz, type QuizQuestion, type InsertQuizQuestion, type QuizAttempt, type InsertQuizAttempt, type PlaygroundPrompt, type InsertPlaygroundPrompt, type PlaygroundTest, type InsertPlaygroundTest, type PlaygroundUsage, type PlaygroundTestResult } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { MODULE_CONTENT } from "../client/src/lib/constants";
 
@@ -74,6 +74,8 @@ export interface IStorage {
   // Playground methods
   savePlaygroundTest(test: InsertPlaygroundTest): Promise<PlaygroundTest>;
   getPlaygroundTests(userId: string): Promise<PlaygroundTest[]>;
+  getPlaygroundTest(userId: string, testId: string): Promise<PlaygroundTest | null>;
+  updatePlaygroundTestRating(userId: string, testId: string, modelName: string, rating: number): Promise<boolean>;
   savePlaygroundPrompt(prompt: InsertPlaygroundPrompt): Promise<PlaygroundPrompt>;
   getPlaygroundPrompts(userId: string): Promise<PlaygroundPrompt[]>;
   updatePlaygroundPrompt(userId: string, promptId: string, updates: Partial<InsertPlaygroundPrompt>): Promise<PlaygroundPrompt | null>;
@@ -1254,6 +1256,42 @@ export class MemStorage implements IStorage {
     return Array.from(this.playgroundTests.values())
       .filter(test => test.userId === userId)
       .sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
+  }
+
+  async getPlaygroundTest(userId: string, testId: string): Promise<PlaygroundTest | null> {
+    const test = this.playgroundTests.get(testId);
+    if (!test || test.userId !== userId) {
+      return null;
+    }
+    return test;
+  }
+
+  async updatePlaygroundTestRating(userId: string, testId: string, modelName: string, rating: number): Promise<boolean> {
+    const test = this.playgroundTests.get(testId);
+    if (!test || test.userId !== userId) {
+      return false;
+    }
+
+    // Update the specific model result with rating
+    const updatedResults = (test.results as PlaygroundTestResult[]).map((result: PlaygroundTestResult) => {
+      if (result.modelName === modelName) {
+        return {
+          ...result,
+          rating,
+          ratedAt: new Date().toISOString()
+        };
+      }
+      return result;
+    });
+
+    // Update the test with new results
+    const updatedTest = {
+      ...test,
+      results: updatedResults
+    };
+
+    this.playgroundTests.set(testId, updatedTest);
+    return true;
   }
 
   async savePlaygroundPrompt(prompt: InsertPlaygroundPrompt): Promise<PlaygroundPrompt> {

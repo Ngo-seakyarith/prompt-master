@@ -409,6 +409,19 @@ export const updatePlaygroundPromptSchema = savePlaygroundPromptSchema.extend({
   id: z.string().min(1, "Prompt ID is required"),
 });
 
+export const ratePlaygroundResultSchema = z.object({
+  testId: z.string().min(1, "Test ID is required"),
+  modelName: z.string().min(1, "Model name is required"),
+  rating: z.number().int().min(1, "Rating must be at least 1").max(5, "Rating must be at most 5"),
+});
+
+export const exportPlaygroundResultsSchema = z.object({
+  testId: z.string().min(1, "Test ID is required"),
+  format: z.enum(["json", "csv", "txt"]).default("json"),
+  includeRatings: z.boolean().default(true),
+  includeMetadata: z.boolean().default(true),
+});
+
 export interface PlaygroundTestResult {
   modelName: string;
   response: string;
@@ -416,6 +429,8 @@ export interface PlaygroundTestResult {
   cost: string;
   responseTime: number;
   error?: string;
+  rating?: number; // User rating 1-5 stars
+  ratedAt?: string; // ISO timestamp when rated
 }
 
 export interface PlaygroundParameters {
@@ -427,3 +442,33 @@ export interface PlaygroundParameters {
 export type RunPlaygroundTestRequest = z.infer<typeof runPlaygroundTestSchema>;
 export type SavePlaygroundPromptRequest = z.infer<typeof savePlaygroundPromptSchema>;
 export type UpdatePlaygroundPromptRequest = z.infer<typeof updatePlaygroundPromptSchema>;
+export type RatePlaygroundResultRequest = z.infer<typeof ratePlaygroundResultSchema>;
+export type ExportPlaygroundResultsRequest = z.infer<typeof exportPlaygroundResultsSchema>;
+
+// Additional interfaces for enhanced comparison features
+export interface PlaygroundComparisonMetrics {
+  winner: {
+    speed: string; // model name
+    cost: string; // model name
+    quality: string; // model name (highest rated)
+    efficiency: string; // model name (best cost per token)
+  };
+  averageResponseTime: number;
+  totalCost: string;
+  averageRating?: number;
+  responseStats: {
+    minLength: number;
+    maxLength: number;
+    avgLength: number;
+  };
+}
+
+export interface PlaygroundExportData {
+  testId: string;
+  prompt: string;
+  parameters: PlaygroundParameters;
+  results: PlaygroundTestResult[];
+  metrics: PlaygroundComparisonMetrics;
+  timestamp: string;
+  userId: string;
+}

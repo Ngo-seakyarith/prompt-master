@@ -4,7 +4,8 @@ import { storage } from "./storage";
 import { assessPrompt, generatePromptSuggestions, assessQuizAnswers } from "./services/openai";
 import { runMultiModelTest, getAvailableModels } from "./services/openrouter";
 import { RecommendationService } from "./services/recommendations";
-import { insertPromptAttemptSchema, assessPromptSchema, insertGoalSchema, insertCertificateSchema, submitQuizSchema, runPlaygroundTestSchema, savePlaygroundPromptSchema, updatePlaygroundPromptSchema } from "@shared/schema";
+import { exportToJSON, exportToCSV, exportToText, exportToClipboard } from "./utils/exportUtils";
+import { insertPromptAttemptSchema, assessPromptSchema, insertGoalSchema, insertCertificateSchema, submitQuizSchema, runPlaygroundTestSchema, savePlaygroundPromptSchema, updatePlaygroundPromptSchema, ratePlaygroundResultSchema, exportPlaygroundResultsSchema } from "@shared/schema";
 import { z } from "zod";
 import { MODULE_CONTENT } from "../client/src/lib/constants";
 import { setupAuth, isAuthenticated } from "./replitAuth";
@@ -1141,6 +1142,150 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching playground usage:", error);
       res.status(500).json({ message: "Failed to fetch usage analytics" });
+    }
+  });
+
+  // Rate a model response
+  app.post("/api/playground/tests/:testId/rate", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const testId = req.params.testId;
+      
+      // Validate request body
+      const validationResult = ratePlaygroundResultSchema.safeParse({
+        testId,
+        ...req.body
+      });
+      
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid rating data", 
+          errors: validationResult.error.errors 
+        });
+      }
+
+      const { modelName, rating } = validationResult.data;
+
+      // Update the test rating
+      const success = await storage.updatePlaygroundTestRating(userId, testId, modelName, rating);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Test not found or access denied" });
+      }
+
+      res.json({ message: "Rating saved successfully", rating });
+    } catch (error) {
+      console.error("Error saving rating:", error);
+      res.status(500).json({ message: "Failed to save rating" });
+    }
+  });
+
+  // Get a specific test for export/viewing
+  app.get("/api/playground/tests/:testId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const testId = req.params.testId;
+      
+      const test = await storage.getPlaygroundTest(userId, testId);
+      
+      if (!test) {
+        return res.status(404).json({ message: "Test not found or access denied" });
+      }
+
+      res.json(test);
+    } catch (error) {
+      console.error("Error fetching test:", error);
+      res.status(500).json({ message: "Failed to fetch test" });
+    }
+  });
+
+  // Export test results in various formats
+  app.post("/api/playground/tests/:testId/export", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const testId = req.params.testId;
+      
+      // Validate request body
+      const validationResult = exportPlaygroundResultsSchema.safeParse({
+        testId,
+        ...req.body
+      });
+      
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid export parameters", 
+          errors: validationResult.error.errors 
+        });
+      }
+
+      const { format, includeRatings, includeMetadata } = validationResult.data;
+
+      // Get the test
+      const test = await storage.getPlaygroundTest(userId, testId);
+      
+      if (!test) {
+        return res.status(404).json({ message: "Test not found or access denied" });
+      }
+
+      let exportData: any;
+      let contentType: string;
+      let filename: string;
+
+      switch (format) {
+        case "json":
+          exportData = exportToJSON(test);
+          contentType = "application/json";
+          filename = `playground-test-${testId}.json`;
+          break;
+        
+        case "csv":
+          exportData = exportToCSV(test);
+          contentType = "text/csv";
+          filename = `playground-test-${testId}.csv`;
+          break;
+        
+        case "txt":
+          exportData = exportToText(test);
+          contentType = "text/plain";
+          filename = `playground-test-${testId}.txt`;
+          break;
+        
+        default:
+          return res.status(400).json({ message: "Unsupported export format" });
+      }
+
+      // Set appropriate headers for file download
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader('Content-Type', contentType);
+      
+      if (format === "json") {
+        res.json(exportData);
+      } else {
+        res.send(exportData);
+      }
+    } catch (error) {
+      console.error("Error exporting test:", error);
+      res.status(500).json({ message: "Failed to export test" });
+    }
+  });
+
+  // Get clipboard-friendly formatted export
+  app.get("/api/playground/tests/:testId/clipboard", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const testId = req.params.testId;
+      
+      const test = await storage.getPlaygroundTest(userId, testId);
+      
+      if (!test) {
+        return res.status(404).json({ message: "Test not found or access denied" });
+      }
+
+      const clipboardData = exportToClipboard(test);
+      res.json({ content: clipboardData });
+    } catch (error) {
+      console.error("Error generating clipboard content:", error);
+      res.status(500).json({ message: "Failed to generate clipboard content" });
     }
   });
 
