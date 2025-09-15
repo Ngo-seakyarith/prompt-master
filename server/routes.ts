@@ -709,6 +709,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         timeSpent
       });
 
+      // Check if quiz completion affects module progress
+      const moduleId = quiz.moduleId;
+      const isModuleComplete = await storage.isModuleComplete(userId, moduleId);
+      
+      // Update module progress if module is now complete
+      if (isModuleComplete) {
+        const currentProgress = await storage.getUserModuleProgress(userId, moduleId);
+        const newScore = Math.max(currentProgress?.score || 0, 100); // Set to 100 if module complete
+        
+        await storage.updateUserProgress(userId, moduleId, {
+          score: newScore,
+          isCompleted: true,
+          attempts: (currentProgress?.attempts || 0) + 1
+        });
+
+        // Check for certificate generation
+        await checkAndGenerateCertificate(userId, moduleId);
+      }
+
       res.json({
         attempt,
         feedback

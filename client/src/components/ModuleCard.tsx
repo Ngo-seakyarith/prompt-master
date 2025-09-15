@@ -1,6 +1,7 @@
 import { Link } from "wouter";
-import { Lock, CheckCircle, PlayCircle } from "lucide-react";
+import { Lock, CheckCircle, PlayCircle, Brain, BookOpen } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -16,6 +17,17 @@ interface ModuleCardProps {
 
 export default function ModuleCard({ module, progress, isLocked }: ModuleCardProps) {
   const { t } = useTranslation();
+
+  // Fetch quizzes for this module
+  const { data: quizzes = [] } = useQuery({
+    queryKey: ["/api/quizzes", module.id],
+    enabled: !isLocked,
+  });
+
+  // Calculate combined progress including exercises and quizzes
+  const exerciseCount = module.content.exercises?.length || 0;
+  const quizCount = quizzes.length;
+  const totalActivities = exerciseCount + quizCount;
   
   const getStatusBadge = () => {
     if (isLocked) {
@@ -97,12 +109,30 @@ export default function ModuleCard({ module, progress, isLocked }: ModuleCardPro
           {module.title}
         </h4>
         
-        <p className="text-muted-foreground mb-4" data-testid={`module-description-${module.id}`}>
+        <p className="text-muted-foreground mb-3" data-testid={`module-description-${module.id}`}>
           {isLocked 
             ? t("common.moduleBlockedDesc")
             : <TextWithAILinks text={module.description} />
           }
         </p>
+
+        {/* Content indicators */}
+        {!isLocked && totalActivities > 0 && (
+          <div className="flex gap-2 mb-4 text-xs">
+            {exerciseCount > 0 && (
+              <div className="flex items-center gap-1 px-2 py-1 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 rounded-md" data-testid={`module-exercises-${module.id}`}>
+                <BookOpen className="w-3 h-3" />
+                <span>{exerciseCount} {exerciseCount === 1 ? t("modules.exercise") : t("modules.exercises")}</span>
+              </div>
+            )}
+            {quizCount > 0 && (
+              <div className="flex items-center gap-1 px-2 py-1 bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-300 rounded-md" data-testid={`module-quizzes-${module.id}`}>
+                <Brain className="w-3 h-3" />
+                <span>{quizCount} {quizCount === 1 ? t("modules.quiz") : t("modules.quizzes")}</span>
+              </div>
+            )}
+          </div>
+        )}
 
         {isLocked && (
           <div className="mb-4 p-3 bg-destructive/5 border border-destructive/20 rounded-lg">

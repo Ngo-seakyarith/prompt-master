@@ -336,6 +336,12 @@ export default {
 
   // Module Content
   modules: {
+    // General module content terms
+    exercise: "លំហាត់",
+    exercises: "លំហាត់", 
+    quiz: "សំណួរ",
+    quizzes: "សំណួរ",
+    
     basicPrompting: {
       title: "Prompting មូលដ្ឋាន",
       description: "រៀនគោលការណ៍ជាមូលដ្ឋាននៃការបង្កើត prompt ជាមួយ និងគ្មានបរិបទ។ ស្វែងយល់ពីរបៀបដែលបរិបទប៉ះពាល់ដល់ការឆ្លើយតបរបស់ AI។"
@@ -768,5 +774,107 @@ Prompt របស់អ្នកគួរតែរួមបញ្ចូល៖
 
 Prompt ច្នៃប្រឌិតរបស់អ្នកជាមួយកំហិត៖`
     }
+  },
+
+  // Quiz System
+  quiz: {
+    // Quiz Card
+    available: "អាចប្រើបាន",
+    moduleRequired: "ត្រូវការម៉ូឌុល",
+    retakeQuiz: "ធ្វើសំណួរឡើងវិញ",
+    startQuiz: "ចាប់ផ្តើមសំណួរ",
+    completeModule: "បញ្ចប់ម៉ូឌុល",
+    quizLockedDesc: "បញ្ចប់ម៉ូឌុលដើម្បីដោះសោសំណួរនេះ",
+    completeModuleFirst: "បញ្ចប់ម៉ូឌុលមុន",
+    moduleCompletionRequired: "បញ្ចប់មាតិកាម៉ូឌុលទាំងអស់មុនពេលធ្វើសំណួរ",
+    bestScore: "ពិន្ទុល្អបំផុត",
+    attempts: "ការព្យាយាម",
+    lastAttempt: "ការព្យាយាមចុងក្រោយ",
+    passed: "បានជាប់",
+    canImprove: "អាចកែលម្អ",
+    notAttempted: "មិនទាន់ព្យាយាម",
+
+    // Quiz Taker
+    loadingQuiz: "កំពុងផ្ទុកសំណួរ...",
+    loadError: "កំហុសផ្ទុកសំណួរ",
+    loadErrorDesc: "មិនអាចផ្ទុកសំណួរបាន។ សូមព្យាយាមម្តងទៀត។",
+    questionOf: "សំណួរ {{current}} នៃ {{total}}",
+    progress: "ការរីកចម្រើន", 
+    previousQuestion: "មុន",
+    nextQuestion: "បន្ទាប់",
+    submitQuiz: "ដាក់ស្នើសំណួរ",
+    submitting: "កំពុងដាក់ស្នើ...",
+    allQuestionsAnswered: "បានឆ្លើយសំណួរទាំងអស់",
+    quizOverview: "ទិដ្ឋភាពសំណួរ",
+    overviewDesc: "ចុចលេខណាមួយដើម្បីទៅសំណួរនោះ",
+    incompleteQuiz: "សំណួរមិនពេញលេញ",
+    answerAllQuestions: "សូមឆ្លើយសំណួរទាំងអស់មុនពេលដាក់ស្នើ",
+    submitError: "កំហុសដាក់ស្នើ",
+    
+    // Quiz Results
+    results: {
+      excellent: "ពិសេសល្អ",
+      good: "ល្អ", 
+      fair: "មធ្យម",
+      needsImprovement: "ត្រូវការកែលម្អ",
+      correct: "ត្រឹមត្រូវ",
+      total: "សរុប",
+      timeSpent: "ពេលវេលាប្រើ",
+      notRecorded: "មិនបានកត់ត្រា",
+      minutes: "នាទី",
+      seconds: "វិនាទី",
+      performanceBreakdown: "ការវិភាគសមត្ថភាព",
+      overallScore: "ពិន្ទុសរុប",
+      accuracy: "ភាពត្រឹមត្រូវ",
+      averageTimePerQuestion: "ពេលវេលាមធ្យមក្នុងមួយសំណួរ",
+      strengths: "ចំណុចខ្លាំងរបស់អ្នក",
+      areasForImprovement: "ផ្នែកត្រូវកែលម្អ",
+      detailedFeedback: "ការពិនិត្យលម្អិតតាមសំណួរ",
+      questionNumber: "សំណួរ {{number}}",
+      incorrect: "មិនត្រឹមត្រូវ",
+      retakeQuiz: "ធ្វើសំណួរឡើងវិញ",
+      reviewQuestions: "ពិនិត្យសំណួរ",
+      continue: "បន្តការរៀន",
+      passingScoreNotMet: "មិនបានពិន្ទុជាប់",
+      passingScoreRequirement: "អ្នកត្រូវការ 80% ឬច្រើនជាងនេះដើម្បីជាប់សំណួរនេះ",
+    },
+
+    // Quiz Management
+    createQuiz: "បង្កើតសំណួរ",
+    editQuiz: "កែសំណួរ",
+    deleteQuiz: "លុបសំណួរ",
+    quizTitle: "ចំណងជើងសំណួរ",
+    quizDescription: "ការពិពណ៌នាសំណួរ",
+    addQuestion: "បន្ថែមសំណួរ",
+    questionText: "អត្ថបទសំណួរ",
+    answerOptions: "ជម្រើសចម្លើយ",
+    correctAnswer: "ចម្លើយត្រឹមត្រូវ",
+    questionType: "ប្រភេទសំណួរ",
+    multipleChoice: "ជ្រើសរើសច្រើន",
+    trueFalse: "ពិត/មិនពិត",
+    points: "ពិន្ទុ",
+    saveQuiz: "រក្សាទុកសំណួរ",
+    publishQuiz: "ផ្សាយសំណួរ",
+    unpublishQuiz: "លុបផ្សាយសំណួរ",
+    
+    // Quiz Statistics
+    stats: {
+      totalQuizzes: "សំណួរសរុប",
+      completedQuizzes: "បានបញ្ចប់",
+      averageScore: "ពិន្ទុមធ្យម",
+      timeSpent: "ពេលវេលាសរុប",
+      bestPerformance: "សមត្ថភាពល្អបំផុត",
+      recentActivity: "សកម្មភាពសំណួរថ្មីៗ",
+      passingRate: "អត្រាជាប់",
+      improvementNeeded: "ត្រូវការកែលម្អ",
+      excellentPerformance: "សមត្ថភាពពិសេសល្អ"
+    },
+
+    // Common Quiz Actions
+    takeQuiz: "ធ្វើសំណួរ",
+    viewResults: "មើលលទ្ធផល",
+    shareResults: "ចែករំលែកលទ្ធផល",
+    printCertificate: "បោះពុម្ពវិញ្ញាបនបត្រ",
+    downloadResults: "ទាញយកលទ្ធផល"
   }
 };

@@ -336,6 +336,12 @@ export default {
 
   // Module Content
   modules: {
+    // General module content terms
+    exercise: "Exercise",
+    exercises: "Exercises", 
+    quiz: "Quiz",
+    quizzes: "Quizzes",
+    
     basicPrompting: {
       title: "Basic Prompting",
       description: "Learn the fundamentals of prompting with and without context. Understand how context shapes AI responses."

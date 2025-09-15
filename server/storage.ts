@@ -42,6 +42,8 @@ export interface IStorage {
   // Progress helper methods
   getMaxCompletedModuleOrder(userId: string, courseId: string): Promise<number>;
   isCourseComplete(userId: string, courseId: string): Promise<boolean>;
+  isModuleComplete(userId: string, moduleId: string): Promise<boolean>;
+  getCompletedQuizzes(userId: string, moduleId: string): Promise<Set<string>>;
   
   // Prompt attempts
   savePromptAttempt(attempt: InsertPromptAttempt): Promise<PromptAttempt>;
@@ -660,12 +662,11 @@ export class MemStorage implements IStorage {
 
   async isCourseComplete(userId: string, courseId: string): Promise<boolean> {
     const courseModules = await this.getModulesByCourse(courseId);
-    const userProgress = await this.getUserProgress(userId);
     
-    // A course is complete if all its modules are completed
+    // A course is complete if all its modules are completed (exercises + quizzes)
     for (const module of courseModules) {
-      const progress = userProgress.find(p => p.moduleId === module.id);
-      if (!progress || !progress.isCompleted) {
+      const isComplete = await this.isModuleComplete(userId, module.id);
+      if (!isComplete) {
         return false;
       }
     }
@@ -753,6 +754,44 @@ export class MemStorage implements IStorage {
     if (attempts.length === 0) return 0;
     
     return Math.max(...attempts.map(attempt => attempt.score));
+  }
+
+  async getCompletedQuizzes(userId: string, moduleId: string): Promise<Set<string>> {
+    const quizzes = await this.getQuizzesByModule(moduleId);
+    const completed = new Set<string>();
+    
+    for (const quiz of quizzes) {
+      const attempts = await this.getUserQuizAttempts(userId, quiz.id);
+      const bestAttempt = attempts.reduce((best, current) => 
+        current.score > best.score ? current : best, 
+        { score: 0, maxScore: 100 } as QuizAttempt
+      );
+      
+      // Consider quiz completed if best score is 80% or higher
+      if (bestAttempt.score > 0 && (bestAttempt.score / bestAttempt.maxScore) * 100 >= 80) {
+        completed.add(quiz.id);
+      }
+    }
+    
+    return completed;
+  }
+
+  async isModuleComplete(userId: string, moduleId: string): Promise<boolean> {
+    const module = await this.getModule(moduleId);
+    if (!module) return false;
+
+    // Check exercises completion
+    const completedExercises = await this.getCompletedExercises(userId, moduleId);
+    const totalExercises = module.content.exercises?.length || 0;
+    const exercisesCompleted = completedExercises.size === totalExercises && totalExercises > 0;
+
+    // Check quizzes completion
+    const moduleQuizzes = await this.getQuizzesByModule(moduleId);
+    const completedQuizzes = await this.getCompletedQuizzes(userId, moduleId);
+    const quizzesCompleted = completedQuizzes.size === moduleQuizzes.length || moduleQuizzes.length === 0;
+
+    // Module is complete if both exercises and quizzes are completed
+    return exercisesCompleted && quizzesCompleted;
   }
 }
 

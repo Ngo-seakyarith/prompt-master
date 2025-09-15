@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
-import { ArrowLeft, BookOpen, PenTool, CheckCircle, Circle, Lightbulb, Lock } from "lucide-react";
+import { ArrowLeft, BookOpen, PenTool, CheckCircle, Circle, Lightbulb, Lock, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,8 +13,9 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { TextWithAILinks } from "@/components/AIModelLink";
+import QuizCard from "@/components/QuizCard";
 import { MODULES, MODULE_CONTENT } from "@/lib/constants";
-import type { Module, UserProgress, AssessmentFeedback } from "@shared/schema";
+import type { Module, UserProgress, AssessmentFeedback, Quiz, QuizAttempt } from "@shared/schema";
 
 interface ModuleDetailProps {
   moduleId: string;
@@ -42,6 +43,18 @@ export default function ModuleDetail({ moduleId }: ModuleDetailProps) {
     queryKey: ["/api/progress"]
   });
 
+  // Fetch quizzes for this module
+  const { data: quizzes = [] } = useQuery<Quiz[]>({
+    queryKey: ["/api/quizzes", moduleId],
+    enabled: !!moduleId
+  });
+
+  // Fetch user's quiz attempts
+  const { data: userQuizAttempts = [] } = useQuery<QuizAttempt[]>({
+    queryKey: ["/api/quiz-attempts", moduleId],
+    enabled: !!moduleId
+  });
+
   // Check if current module is locked
   const isModuleLocked = (module: typeof moduleData) => {
     // All modules are unlocked - no restrictions
@@ -61,6 +74,26 @@ export default function ModuleDetail({ moduleId }: ModuleDetailProps) {
 
   const currentProgress = userProgress.find(p => p.moduleId === moduleId);
   const completedExercises = new Set(completedExercisesArray);
+
+  // Calculate quiz progress
+  const quizAttemptsByQuizId = userQuizAttempts.reduce((acc, attempt) => {
+    if (!acc[attempt.quizId] || attempt.score > acc[attempt.quizId].score) {
+      acc[attempt.quizId] = attempt;
+    }
+    return acc;
+  }, {} as Record<string, QuizAttempt>);
+
+  const completedQuizzes = quizzes.filter(quiz => {
+    const attempt = quizAttemptsByQuizId[quiz.id];
+    return attempt && ((attempt.score / attempt.maxScore) * 100) >= 80;
+  }).length;
+
+  const totalQuizzes = quizzes.length;
+  const quizProgressPercentage = totalQuizzes > 0 ? (completedQuizzes / totalQuizzes) * 100 : 0;
+
+  // Check if module is completed (exercises + quizzes)
+  const isModuleCompleted = (completedCount === totalExercises && totalExercises > 0) && 
+    (completedQuizzes === totalQuizzes || totalQuizzes === 0);
 
   // Assessment mutation
   const assessMutation = useMutation({
@@ -245,11 +278,19 @@ export default function ModuleDetail({ moduleId }: ModuleDetailProps) {
             </div>
             
             <div className="text-right">
-              <div className="text-sm text-muted-foreground">Progress</div>
+              <div className="text-sm text-muted-foreground">{t("common.progress")}</div>
               <div className="text-2xl font-bold" data-testid="progress-count">
-                {completedCount}/{totalExercises}
+                {totalQuizzes > 0 
+                  ? `${completedCount + completedQuizzes}/${totalExercises + totalQuizzes}`
+                  : `${completedCount}/${totalExercises}`
+                }
               </div>
-              <Progress value={progressPercentage} className="w-24 h-2 mt-1" />
+              <div className="space-y-1">
+                <Progress value={progressPercentage} className="w-24 h-2" title={`${t("nav.practice") || "Practice"}: ${completedCount}/${totalExercises}`} />
+                {totalQuizzes > 0 && (
+                  <Progress value={quizProgressPercentage} className="w-24 h-2" title={`${t("nav.quiz") || "Quiz"}: ${completedQuizzes}/${totalQuizzes}`} />
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -257,15 +298,26 @@ export default function ModuleDetail({ moduleId }: ModuleDetailProps) {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs defaultValue="learn" className="space-y-6" data-testid="module-tabs">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className={`grid w-full ${totalQuizzes > 0 ? 'grid-cols-3' : 'grid-cols-2'}`}>
             <TabsTrigger value="learn" data-testid="tab-learn">
               <BookOpen className="h-4 w-4 mr-2" />
-              Learn
+              {t("nav.learn") || "Learn"}
             </TabsTrigger>
             <TabsTrigger value="practice" data-testid="tab-practice">
               <PenTool className="h-4 w-4 mr-2" />
-              Practice
+              {t("nav.practice") || "Practice"}
             </TabsTrigger>
+            {totalQuizzes > 0 && (
+              <TabsTrigger value="quiz" data-testid="tab-quiz">
+                <Trophy className="h-4 w-4 mr-2" />
+                {t("nav.quiz") || "Quiz"}
+                {completedQuizzes > 0 && (
+                  <Badge variant="secondary" className="ml-2 text-xs">
+                    {completedQuizzes}/{totalQuizzes}
+                  </Badge>
+                )}
+              </TabsTrigger>
+            )}
           </TabsList>
 
           {/* Learning Content Tab */}
@@ -582,6 +634,83 @@ export default function ModuleDetail({ moduleId }: ModuleDetailProps) {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Quiz Tab */}
+          {totalQuizzes > 0 && (
+            <TabsContent value="quiz" className="space-y-6" data-testid="quiz-content">
+              <div className="space-y-6">
+                {/* Quiz Progress Overview */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Trophy className="h-5 w-5 mr-2 text-primary" />
+                      {t("quiz.moduleQuizzes") || "Module Quizzes"}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                      <div className="text-center p-4 bg-accent/10 rounded-lg">
+                        <div className="text-2xl font-bold text-accent">{totalQuizzes}</div>
+                        <div className="text-sm text-muted-foreground">{t("quiz.totalQuizzes") || "Total Quizzes"}</div>
+                      </div>
+                      <div className="text-center p-4 bg-secondary/10 rounded-lg">
+                        <div className="text-2xl font-bold text-secondary">{completedQuizzes}</div>
+                        <div className="text-sm text-muted-foreground">{t("quiz.completedQuizzes") || "Completed"}</div>
+                      </div>
+                      <div className="text-center p-4 bg-primary/10 rounded-lg">
+                        <div className="text-2xl font-bold text-primary">{Math.round(quizProgressPercentage)}%</div>
+                        <div className="text-sm text-muted-foreground">{t("common.progress")}</div>
+                      </div>
+                    </div>
+                    <Progress value={quizProgressPercentage} className="h-2" />
+                  </CardContent>
+                </Card>
+
+                {/* Available Quizzes */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {quizzes.map((quiz) => {
+                    const bestAttempt = quizAttemptsByQuizId[quiz.id];
+                    return (
+                      <QuizCard
+                        key={quiz.id}
+                        quiz={quiz}
+                        bestAttempt={bestAttempt}
+                        isLocked={false}
+                        moduleCompleted={isModuleCompleted || completedCount === totalExercises}
+                      />
+                    );
+                  })}
+                </div>
+
+                {/* Quiz Instructions */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>{t("quiz.instructions") || "Quiz Instructions"}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <ul className="text-sm text-muted-foreground space-y-2">
+                      <li className="flex items-start">
+                        <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-secondary" />
+                        {t("quiz.instruction1") || "Complete all practice exercises before taking quizzes"}
+                      </li>
+                      <li className="flex items-start">
+                        <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-secondary" />
+                        {t("quiz.instruction2") || "You need 80% or higher to pass each quiz"}
+                      </li>
+                      <li className="flex items-start">
+                        <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-secondary" />
+                        {t("quiz.instruction3") || "You can retake quizzes to improve your score"}
+                      </li>
+                      <li className="flex items-start">
+                        <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-secondary" />
+                        {t("quiz.instruction4") || "Quiz completion contributes to overall module progress"}
+                      </li>
+                    </ul>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+          )}
         </Tabs>
       </div>
     </div>
