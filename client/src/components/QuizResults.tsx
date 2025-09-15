@@ -1,4 +1,5 @@
 import { useTranslation } from "@/hooks/useTranslation";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -19,6 +20,8 @@ import {
   Lightbulb
 } from "lucide-react";
 import type { QuizFeedback } from "@shared/schema";
+import { useEffect } from "react";
+import { Link } from "wouter";
 
 interface QuizResultsProps {
   feedback: QuizFeedback;
@@ -26,6 +29,11 @@ interface QuizResultsProps {
   onRetakeQuiz?: () => void;
   onContinue?: () => void;
   onViewQuestions?: () => void;
+  certificateStatus?: {
+    certificateGenerated: boolean;
+    moduleCompleted: boolean;
+    courseCompleted: boolean;
+  };
 }
 
 export default function QuizResults({ 
@@ -33,13 +41,52 @@ export default function QuizResults({
   quizTitle, 
   onRetakeQuiz, 
   onContinue, 
-  onViewQuestions 
+  onViewQuestions,
+  certificateStatus 
 }: QuizResultsProps) {
   const { t } = useTranslation();
+  const { toast } = useToast();
 
   const isPassing = feedback.percentage >= 80;
   const isExcellent = feedback.percentage >= 95;
   const isGood = feedback.percentage >= 80;
+
+  // Show toast notifications for quiz completion and certificate generation
+  useEffect(() => {
+    if (isPassing) {
+      // Always show quiz completion toast for passing scores
+      toast({
+        title: t("quiz.quizCompleted"),
+        description: t("quiz.quizCompletedDesc"),
+        duration: 5000,
+      });
+
+      // Show certificate generation toast if certificate was generated
+      if (certificateStatus?.certificateGenerated) {
+        setTimeout(() => {
+          toast({
+            title: t("quiz.certificateGenerated"),
+            description: t("quiz.certificateGeneratedDesc"),
+            duration: 7000,
+            action: (
+              <Link href="/certificates" className="text-sm font-medium hover:underline">
+                {t("quiz.viewCertificates")}
+              </Link>
+            ),
+          });
+        }, 1500); // Delay to show after quiz completion toast
+      } else if (certificateStatus?.moduleCompleted) {
+        // Show module completion toast if module was completed but no certificate yet
+        setTimeout(() => {
+          toast({
+            title: t("quiz.moduleCompleted"),
+            description: t("quiz.moduleCompletedDesc"),
+            duration: 5000,
+          });
+        }, 1500);
+      }
+    }
+  }, [isPassing, certificateStatus, t, toast]);
 
   const getPerformanceLevel = () => {
     if (isExcellent) return t("quiz.results.excellent");

@@ -13,10 +13,10 @@ interface QuizCardProps {
   quiz: Quiz;
   bestAttempt?: QuizAttempt;
   isLocked?: boolean;
-  moduleCompleted?: boolean;
+  prerequisitesMet?: boolean;
 }
 
-export default function QuizCard({ quiz, bestAttempt, isLocked = false, moduleCompleted = false }: QuizCardProps) {
+export default function QuizCard({ quiz, bestAttempt, isLocked = false, prerequisitesMet = false }: QuizCardProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
   
@@ -54,7 +54,7 @@ export default function QuizCard({ quiz, bestAttempt, isLocked = false, moduleCo
       );
     }
     
-    if (moduleCompleted) {
+    if (prerequisitesMet) {
       return (
         <Badge className="bg-primary text-primary-foreground">
           {t("quiz.available")}
@@ -72,11 +72,11 @@ export default function QuizCard({ quiz, bestAttempt, isLocked = false, moduleCo
   const getButtonText = () => {
     if (isLocked) return t("common.locked");
     if (bestAttempt) return t("quiz.retakeQuiz");
-    if (moduleCompleted) return t("quiz.startQuiz");
-    return t("quiz.completeModule");
+    if (prerequisitesMet) return t("quiz.startQuiz");
+    return t("quiz.completeExercises");
   };
 
-  const isAccessible = !isLocked && moduleCompleted;
+  const isAccessible = !isLocked && prerequisitesMet;
   const bestScore = bestAttempt ? Math.round((bestAttempt.score / bestAttempt.maxScore) * 100) : 0;
 
   return (
@@ -95,7 +95,7 @@ export default function QuizCard({ quiz, bestAttempt, isLocked = false, moduleCo
               ? "bg-muted" 
               : bestAttempt
                 ? "bg-primary/10"
-                : moduleCompleted
+                : prerequisitesMet
                   ? "bg-secondary/10"
                   : "bg-muted"
           }`}>
@@ -104,7 +104,7 @@ export default function QuizCard({ quiz, bestAttempt, isLocked = false, moduleCo
                 ? "text-muted-foreground"
                 : bestAttempt
                   ? "text-primary"
-                  : moduleCompleted
+                  : prerequisitesMet
                     ? "text-secondary"
                     : "text-muted-foreground"
             }`} />
@@ -123,14 +123,14 @@ export default function QuizCard({ quiz, bestAttempt, isLocked = false, moduleCo
           }
         </p>
 
-        {!isLocked && !moduleCompleted && (
+        {!isLocked && !prerequisitesMet && (
           <div className="mb-4 p-3 bg-accent/5 border border-accent/20 rounded-lg">
             <div className="flex items-center text-sm text-accent">
               <Clock className="w-4 h-4 mr-2" />
-              <span>{t("quiz.completeModuleFirst")}</span>
+              <span>{t("quiz.completeExercisesFirst")}</span>
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              {t("quiz.moduleCompletionRequired")}
+              {t("quiz.exerciseCompletionRequired")}
             </p>
           </div>
         )}

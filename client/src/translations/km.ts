@@ -124,7 +124,146 @@ export default {
     allStatus: "ស្ថានភាពទាំងអស់",
     completed: "បានបញ្ចប់",
     inProgress: "កំពុងដំណើរការ",
-    notStarted: "មិនទាន់ចាប់ផ្តើម"
+    notStarted: "មិនទាន់ចាប់ផ្តើម",
+
+  },
+
+  // Quiz System
+  quiz: {
+    // Quiz Card
+    available: "អាចប្រើបាន",
+    moduleRequired: "ត្រូវការម៉ូឌុល",
+    retakeQuiz: "ធ្វើតេស្តឡើងវិញ",
+    startQuiz: "ចាប់ផ្តើមតេស្ត",
+    completeModule: "បញ្ចប់ម៉ូឌុល",
+    completeExercises: "បញ្ចប់លំហាត់",
+    quizLockedDesc: "បញ្ចប់ម៉ូឌុលដើម្បីដោះសោតេស្តនេះ",
+    completeModuleFirst: "បញ្ចប់ម៉ូឌុលជាមុនសិន",
+    moduleCompletionRequired: "បញ្ចប់មាតិកាម៉ូឌុលទាំងអស់មុនពេលធ្វើតេស្ត",
+    completeExercisesFirst: "បញ្ចប់លំហាត់ជាមុនសិន",
+    exerciseCompletionRequired: "បញ្ចប់លំហាត់ទាំងអស់មុនពេលធ្វើតេស្ត",
+    bestScore: "ពិន្ទុល្អបំផុត",
+    attempts: "ចំនួនព្យាយាម",
+    lastAttempt: "ការព្យាយាមចុងក្រោយ",
+    passed: "បានជាប់",
+    canImprove: "អាចកែលម្អ",
+    notAttempted: "មិនទាន់ព្យាយាម",
+
+    // Quiz Taker
+    loadingQuiz: "កំពុងផ្ទុកតេស្ត...",
+    loadError: "កំហុសផ្ទុកតេស្ត",
+    loadErrorDesc: "បរាជ័យក្នុងការផ្ទុកសំណួរតេស្ត។ សូមព្យាយាមម្តងទៀត។",
+    questionOf: "សំណួរទី {{current}} នៃ {{total}}",
+    progress: "ការរីកចម្រើន",
+    previousQuestion: "មុន",
+    nextQuestion: "បន្ទាប់",
+    submitQuiz: "ដាក់ស្នើតេស្ត",
+    submitting: "កំពុងដាក់ស្នើ...",
+    allQuestionsAnswered: "បានឆ្លើយសំណួរទាំងអស់",
+    quizOverview: "ទិដ្ឋភាពតេស្ត",
+    overviewDesc: "ចុចលេខណាមួយដើម្បីទៅសំណួរនោះ",
+    incompleteQuiz: "តេស្តមិនបានបញ្ចប់",
+    answerAllQuestions: "សូមឆ្លើយសំណួរទាំងអស់មុនពេលដាក់ស្នើ",
+    submitError: "កំហុសដាក់ស្នើ",
+
+    // Quiz Results
+    results: {
+      excellent: "ល្អណាស់",
+      good: "ល្អ",
+      fair: "មធ្យម",
+      needsImprovement: "ត្រូវការកែលម្អ",
+      correct: "ត្រឹមត្រូវ",
+      total: "សរុប",
+      timeSpent: "ពេលវេលាចំណាយ",
+      notRecorded: "មិនបានកត់ត្រា",
+      minutes: "ន",
+      seconds: "វ",
+      performanceBreakdown: "វិភាគប្រសិទ្ធភាព",
+      overallScore: "ពិន្ទុសរុប",
+      accuracy: "ភាពត្រឹមត្រូវ",
+      averageTimePerQuestion: "ពេលវេលាមធ្យមក្នុងមួយសំណួរ",
+      strengths: "ចំណុចខ្លាំងរបស់អ្នក",
+      areasForImprovement: "ផ្នែកដែលត្រូវកែលម្អ",
+      detailedFeedback: "ការពិនិត្យតាមសំណួរ",
+      questionNumber: "សំណួរទី {{number}}",
+      incorrect: "មិនត្រឹមត្រូវ",
+      retakeQuiz: "ធ្វើតេស្តឡើងវិញ",
+      reviewQuestions: "ពិនិត្យសំណួរ",
+      continue: "បន្តការសិក្សា",
+      passingScoreNotMet: "មិនបានដល់ពិន្ទុជាប់",
+      passingScoreRequirement: "អ្នកត្រូវការ 80% ឬខ្ពស់ជាងនេះដើម្បីជាប់តេស្ត"
+    },
+
+    // Quiz Management
+    createQuiz: "បង្កើតតេស្ត",
+    editQuiz: "កែប្រែតេស្ត",
+    deleteQuiz: "លុបតេស្ត",
+    quizTitle: "ចំណងជើងតេស្ត",
+    quizDescription: "ការពិពណ៌នាតេស្ត",
+    addQuestion: "បន្ថែមសំណួរ",
+    questionText: "អត្ថបទសំណួរ",
+    answerOptions: "ជម្រើសចម្លើយ",
+    correctAnswer: "ចម្លើយត្រឹមត្រូវ",
+    questionType: "ប្រភេទសំណួរ",
+    multipleChoice: "ពហុជម្រើស",
+    trueFalse: "ត្រូវ/មិនត្រូវ",
+    points: "ពិន្ទុ",
+    saveQuiz: "រក្សាទុកតេស្ត",
+    publishQuiz: "បោះពុម្ពផ្សាយតេស្ត",
+    unpublishQuiz: "បញ្ឈប់ការផ្សាយតេស្ត",
+
+    // Quiz Statistics
+    stats: {
+      totalQuizzes: "តេស្តសរុប",
+      completedQuizzes: "បានបញ្ចប់",
+      averageScore: "ពិន្ទុមធ្យម",
+      timeSpent: "ពេលវេលាសរុប",
+      bestPerformance: "ប្រសិទ្ធភាពល្អបំផុត",
+      recentActivity: "សកម្មភាពតេស្តថ្មីៗ",
+      passingRate: "អត្រាជាប់",
+      improvementNeeded: "ត្រូវការកែលម្អ",
+      excellentPerformance: "ប្រសិទ្ធភាពល្អណាស់"
+    },
+
+    // Common Quiz Actions
+    takeQuiz: "ធ្វើតេស្ត",
+    viewResults: "មើលលទ្ធផល",
+    shareResults: "ចែករំលែកលទ្ធផល",
+    printCertificate: "បោះពុម្ពវិញ្ញាបនបត្រ",
+    downloadResults: "ទាញយកលទ្ធផល",
+    
+    // Certificate Generation Notifications  
+    quizCompleted: "បានបញ្ចប់តេស្ត!",
+    quizCompletedDesc: "អបអរសាទរ! អ្នកបានបញ្ចប់តេស្តដោយជោគជ័យ។",
+    certificateGenerated: "បានទទួលវិញ្ញាបនបត្រ!",
+    certificateGeneratedDesc: "អ្នកបានទទួលវិញ្ញាបនបត្រ! ពិនិត្យទំព័រវិញ្ញាបនបត្រដើម្បីទាញយក។",
+    moduleCompleted: "បានបញ្ចប់ម៉ូឌុល!",
+    moduleCompletedDesc: "ល្អណាស់! អ្នកបានបញ្ចប់តម្រូវការទាំងអស់សម្រាប់ម៉ូឌុលនេះ។",
+    courseCompleted: "បានបញ្ចប់វគ្គសិក្សា!",
+    courseCompletedDesc: "ពិសេសណាស់! អ្នកបានបញ្ចប់វគ្គសិក្សាទាំងមូល។",
+    viewCertificates: "មើលវិញ្ញាបនបត្រ",
+
+    // Quiz-specific translations
+    basicPrompting: {
+      title: "តេស្តគោលការណ៍ជាមូលដ្ឋាន",
+      description: "ទទួលបានចំណេះដឹងរបស់អ្នកអំពីគោលការណ៍ជាមូលដ្ឋាននៃ prompt engineering"
+    },
+    promptStructure: {
+      title: "តេស្តរចនាសម្ព័ន្ធ Prompt",
+      description: "ធ្វើតេស្តការយល់ដឹងរបស់អ្នកអំពីរចនាសម្ព័ន្ធ prompt ដ៏មានប្រសិទ្ធភាព"
+    },
+    advancedTechniques: {
+      title: "តេស្តបច្ចេកទេសកម្រិតខ្ពស់",
+      description: "ប្រកបការប្រកួតដើម្បីវាស់ស្ទង់ចំណេះដឹងអំពីបច្ចេកទេសកម្រិតខ្ពស់"
+    },
+    promptRefinement: {
+      title: "តេស្តការកែលម្អ Prompt",
+      description: "វាយតម្លៃជំនាញរបស់អ្នកក្នុងការកែលម្អ prompt និងការប្រើប្រាស់លំនាំ"
+    },
+    practicalApplications: {
+      title: "តេស្តការអនុវត្តជាក់ស្តែង",
+      description: "ពិនិត្យការយល់ដឹងរបស់អ្នកអំពីការអនុវត្តជាក់ស្តែងនៃ prompt engineering"
+    }
   },
 
   // Authentication
@@ -774,107 +913,5 @@ Prompt របស់អ្នកគួរតែរួមបញ្ចូល៖
 
 Prompt ច្នៃប្រឌិតរបស់អ្នកជាមួយកំហិត៖`
     }
-  },
-
-  // Quiz System
-  quiz: {
-    // Quiz Card
-    available: "អាចប្រើបាន",
-    moduleRequired: "ត្រូវការម៉ូឌុល",
-    retakeQuiz: "ធ្វើសំណួរឡើងវិញ",
-    startQuiz: "ចាប់ផ្តើមសំណួរ",
-    completeModule: "បញ្ចប់ម៉ូឌុល",
-    quizLockedDesc: "បញ្ចប់ម៉ូឌុលដើម្បីដោះសោសំណួរនេះ",
-    completeModuleFirst: "បញ្ចប់ម៉ូឌុលមុន",
-    moduleCompletionRequired: "បញ្ចប់មាតិកាម៉ូឌុលទាំងអស់មុនពេលធ្វើសំណួរ",
-    bestScore: "ពិន្ទុល្អបំផុត",
-    attempts: "ការព្យាយាម",
-    lastAttempt: "ការព្យាយាមចុងក្រោយ",
-    passed: "បានជាប់",
-    canImprove: "អាចកែលម្អ",
-    notAttempted: "មិនទាន់ព្យាយាម",
-
-    // Quiz Taker
-    loadingQuiz: "កំពុងផ្ទុកសំណួរ...",
-    loadError: "កំហុសផ្ទុកសំណួរ",
-    loadErrorDesc: "មិនអាចផ្ទុកសំណួរបាន។ សូមព្យាយាមម្តងទៀត។",
-    questionOf: "សំណួរ {{current}} នៃ {{total}}",
-    progress: "ការរីកចម្រើន", 
-    previousQuestion: "មុន",
-    nextQuestion: "បន្ទាប់",
-    submitQuiz: "ដាក់ស្នើសំណួរ",
-    submitting: "កំពុងដាក់ស្នើ...",
-    allQuestionsAnswered: "បានឆ្លើយសំណួរទាំងអស់",
-    quizOverview: "ទិដ្ឋភាពសំណួរ",
-    overviewDesc: "ចុចលេខណាមួយដើម្បីទៅសំណួរនោះ",
-    incompleteQuiz: "សំណួរមិនពេញលេញ",
-    answerAllQuestions: "សូមឆ្លើយសំណួរទាំងអស់មុនពេលដាក់ស្នើ",
-    submitError: "កំហុសដាក់ស្នើ",
-    
-    // Quiz Results
-    results: {
-      excellent: "ពិសេសល្អ",
-      good: "ល្អ", 
-      fair: "មធ្យម",
-      needsImprovement: "ត្រូវការកែលម្អ",
-      correct: "ត្រឹមត្រូវ",
-      total: "សរុប",
-      timeSpent: "ពេលវេលាប្រើ",
-      notRecorded: "មិនបានកត់ត្រា",
-      minutes: "នាទី",
-      seconds: "វិនាទី",
-      performanceBreakdown: "ការវិភាគសមត្ថភាព",
-      overallScore: "ពិន្ទុសរុប",
-      accuracy: "ភាពត្រឹមត្រូវ",
-      averageTimePerQuestion: "ពេលវេលាមធ្យមក្នុងមួយសំណួរ",
-      strengths: "ចំណុចខ្លាំងរបស់អ្នក",
-      areasForImprovement: "ផ្នែកត្រូវកែលម្អ",
-      detailedFeedback: "ការពិនិត្យលម្អិតតាមសំណួរ",
-      questionNumber: "សំណួរ {{number}}",
-      incorrect: "មិនត្រឹមត្រូវ",
-      retakeQuiz: "ធ្វើសំណួរឡើងវិញ",
-      reviewQuestions: "ពិនិត្យសំណួរ",
-      continue: "បន្តការរៀន",
-      passingScoreNotMet: "មិនបានពិន្ទុជាប់",
-      passingScoreRequirement: "អ្នកត្រូវការ 80% ឬច្រើនជាងនេះដើម្បីជាប់សំណួរនេះ",
-    },
-
-    // Quiz Management
-    createQuiz: "បង្កើតសំណួរ",
-    editQuiz: "កែសំណួរ",
-    deleteQuiz: "លុបសំណួរ",
-    quizTitle: "ចំណងជើងសំណួរ",
-    quizDescription: "ការពិពណ៌នាសំណួរ",
-    addQuestion: "បន្ថែមសំណួរ",
-    questionText: "អត្ថបទសំណួរ",
-    answerOptions: "ជម្រើសចម្លើយ",
-    correctAnswer: "ចម្លើយត្រឹមត្រូវ",
-    questionType: "ប្រភេទសំណួរ",
-    multipleChoice: "ជ្រើសរើសច្រើន",
-    trueFalse: "ពិត/មិនពិត",
-    points: "ពិន្ទុ",
-    saveQuiz: "រក្សាទុកសំណួរ",
-    publishQuiz: "ផ្សាយសំណួរ",
-    unpublishQuiz: "លុបផ្សាយសំណួរ",
-    
-    // Quiz Statistics
-    stats: {
-      totalQuizzes: "សំណួរសរុប",
-      completedQuizzes: "បានបញ្ចប់",
-      averageScore: "ពិន្ទុមធ្យម",
-      timeSpent: "ពេលវេលាសរុប",
-      bestPerformance: "សមត្ថភាពល្អបំផុត",
-      recentActivity: "សកម្មភាពសំណួរថ្មីៗ",
-      passingRate: "អត្រាជាប់",
-      improvementNeeded: "ត្រូវការកែលម្អ",
-      excellentPerformance: "សមត្ថភាពពិសេសល្អ"
-    },
-
-    // Common Quiz Actions
-    takeQuiz: "ធ្វើសំណួរ",
-    viewResults: "មើលលទ្ធផល",
-    shareResults: "ចែករំលែកលទ្ធផល",
-    printCertificate: "បោះពុម្ពវិញ្ញាបនបត្រ",
-    downloadResults: "ទាញយកលទ្ធផល"
   }
 };

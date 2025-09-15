@@ -784,9 +784,12 @@ Your creative prompt with constraints:`
     retakeQuiz: "Retake Quiz",
     startQuiz: "Start Quiz",
     completeModule: "Complete Module",
+    completeExercises: "Complete Exercises",
     quizLockedDesc: "Complete the module to unlock this quiz",
     completeModuleFirst: "Complete module first",
     moduleCompletionRequired: "Finish all module content before taking the quiz",
+    completeExercisesFirst: "Complete exercises first",
+    exerciseCompletionRequired: "Finish all required exercises before taking the quiz",
     bestScore: "Best Score",
     attempts: "Attempts",
     lastAttempt: "Last Attempt",
@@ -875,6 +878,17 @@ Your creative prompt with constraints:`
     viewResults: "View Results",
     shareResults: "Share Results",
     printCertificate: "Print Certificate",
-    downloadResults: "Download Results"
+    downloadResults: "Download Results",
+    
+    // Certificate Generation Notifications
+    quizCompleted: "Quiz Completed!",
+    quizCompletedDesc: "Congratulations! You've successfully completed the quiz.",
+    certificateGenerated: "Certificate Earned!",
+    certificateGeneratedDesc: "You've earned a certificate! Check your certificates page to download it.",
+    moduleCompleted: "Module Completed!",
+    moduleCompletedDesc: "Great job! You've completed all requirements for this module.",
+    courseCompleted: "Course Completed!",
+    courseCompletedDesc: "Outstanding! You've completed the entire course.",
+    viewCertificates: "View Certificates"
   }
 };

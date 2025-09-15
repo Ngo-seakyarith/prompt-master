@@ -98,6 +98,7 @@ export class MemStorage implements IStorage {
     this.quizQuestions = new Map();
     this.quizAttempts = new Map();
     this.initializeCoursesAndModules();
+    this.initializeQuizzes();
   }
 
   private initializeCoursesAndModules() {
@@ -390,6 +391,426 @@ export class MemStorage implements IStorage {
 
     modules.forEach(module => {
       this.modules.set(module.id, module);
+    });
+  }
+
+  private initializeQuizzes() {
+    // Quiz data for all modules
+    const quizData = [
+      // Basic Prompting Quiz
+      {
+        moduleId: "basic-prompting",
+        quiz: {
+          titleKey: "quiz.basicPrompting.title",
+          descriptionKey: "quiz.basicPrompting.description",
+          order: 1
+        },
+        questions: [
+          {
+            questionText: "What is the primary purpose of prompt engineering?",
+            answerOptions: [
+              { text: "To make AI responses longer" },
+              { text: "To design effective input prompts for AI models" },
+              { text: "To program AI models" },
+              { text: "To reduce computational costs" }
+            ],
+            correctAnswerIndex: 1,
+            questionType: "multiple-choice",
+            order: 1,
+            points: 1
+          },
+          {
+            questionText: "Which example demonstrates better prompt engineering?",
+            answerOptions: [
+              { text: "Write something" },
+              { text: "Write a blog post" },
+              { text: "Write a 500-word blog post about sustainable living tips for busy professionals" },
+              { text: "Write content for the website" }
+            ],
+            correctAnswerIndex: 2,
+            questionType: "multiple-choice",
+            order: 2,
+            points: 1
+          },
+          {
+            questionText: "Context in prompting helps AI to:",
+            answerOptions: [
+              { text: "Process information faster" },
+              { text: "Understand specific situations and requirements" },
+              { text: "Generate more creative responses" },
+              { text: "Use less memory" }
+            ],
+            correctAnswerIndex: 1,
+            questionType: "multiple-choice",
+            order: 3,
+            points: 1
+          },
+          {
+            questionText: "A prompt without context typically results in:",
+            answerOptions: [
+              { text: "More accurate responses" },
+              { text: "Generic responses that may not meet specific needs" },
+              { text: "Faster processing" },
+              { text: "Better understanding of requirements" }
+            ],
+            correctAnswerIndex: 1,
+            questionType: "multiple-choice",
+            order: 4,
+            points: 1
+          },
+          {
+            questionText: "The best prompts include which of the following elements?",
+            answerOptions: [
+              { text: "Only the task description" },
+              { text: "Task and context" },
+              { text: "Task, context, and specific requirements" },
+              { text: "Just keywords" }
+            ],
+            correctAnswerIndex: 2,
+            questionType: "multiple-choice",
+            order: 5,
+            points: 1
+          }
+        ]
+      },
+      // Prompt Structure Quiz
+      {
+        moduleId: "prompt-structure",
+        quiz: {
+          titleKey: "quiz.promptStructure.title",
+          descriptionKey: "quiz.promptStructure.description",
+          order: 1
+        },
+        questions: [
+          {
+            questionText: "What are the main components of an effective prompt structure?",
+            answerOptions: [
+              { text: "Subject and verb only" },
+              { text: "Role, task, context, template, and constraints" },
+              { text: "Introduction and conclusion" },
+              { text: "Keywords and examples" }
+            ],
+            correctAnswerIndex: 1,
+            questionType: "multiple-choice",
+            order: 1,
+            points: 1
+          },
+          {
+            questionText: "The 'Role' component in prompt structure refers to:",
+            answerOptions: [
+              { text: "The user's job title" },
+              { text: "The persona or expertise level you want the AI to adopt" },
+              { text: "The AI model being used" },
+              { text: "The programming language" }
+            ],
+            correctAnswerIndex: 1,
+            questionType: "multiple-choice",
+            order: 2,
+            points: 1
+          },
+          {
+            questionText: "Constraints in prompt structure help to:",
+            answerOptions: [
+              { text: "Limit the AI's capabilities" },
+              { text: "Define boundaries and specific requirements for the output" },
+              { text: "Speed up processing" },
+              { text: "Reduce token usage" }
+            ],
+            correctAnswerIndex: 1,
+            questionType: "multiple-choice",
+            order: 3,
+            points: 1
+          },
+          {
+            questionText: "A template in prompt structure provides:",
+            answerOptions: [
+              { text: "A format or structure for the AI's response" },
+              { text: "Pre-written content" },
+              { text: "Technical specifications" },
+              { text: "Error handling instructions" }
+            ],
+            correctAnswerIndex: 0,
+            questionType: "multiple-choice",
+            order: 4,
+            points: 1
+          },
+          {
+            questionText: "Which prompt structure element helps define the specific task?",
+            answerOptions: [
+              { text: "Role" },
+              { text: "Context" },
+              { text: "Task" },
+              { text: "Template" }
+            ],
+            correctAnswerIndex: 2,
+            questionType: "multiple-choice",
+            order: 5,
+            points: 1
+          }
+        ]
+      },
+      // Advanced Techniques Quiz
+      {
+        moduleId: "advanced-techniques",
+        quiz: {
+          titleKey: "quiz.advancedTechniques.title",
+          descriptionKey: "quiz.advancedTechniques.description",
+          order: 1
+        },
+        questions: [
+          {
+            questionText: "Chain-of-thought prompting is primarily used for:",
+            answerOptions: [
+              { text: "Generating creative content" },
+              { text: "Guiding AI through step-by-step reasoning" },
+              { text: "Reducing response length" },
+              { text: "Improving response speed" }
+            ],
+            correctAnswerIndex: 1,
+            questionType: "multiple-choice",
+            order: 1,
+            points: 1
+          },
+          {
+            questionText: "Few-shot learning in prompting means:",
+            answerOptions: [
+              { text: "Using very short prompts" },
+              { text: "Providing several examples to guide the AI's response pattern" },
+              { text: "Limiting the AI to few words" },
+              { text: "Using simple vocabulary" }
+            ],
+            correctAnswerIndex: 1,
+            questionType: "multiple-choice",
+            order: 2,
+            points: 1
+          },
+          {
+            questionText: "The main benefit of zero-shot prompting is:",
+            answerOptions: [
+              { text: "No examples needed, relying on AI's pre-trained knowledge" },
+              { text: "Faster processing" },
+              { text: "Lower token usage" },
+              { text: "More creative outputs" }
+            ],
+            correctAnswerIndex: 0,
+            questionType: "multiple-choice",
+            order: 3,
+            points: 1
+          },
+          {
+            questionText: "Tree of thoughts prompting helps with:",
+            answerOptions: [
+              { text: "Organizing file structures" },
+              { text: "Exploring multiple reasoning paths simultaneously" },
+              { text: "Creating hierarchical content" },
+              { text: "Memory management" }
+            ],
+            correctAnswerIndex: 1,
+            questionType: "multiple-choice",
+            order: 4,
+            points: 1
+          },
+          {
+            questionText: "Meta-prompting refers to:",
+            answerOptions: [
+              { text: "Prompts about prompting itself" },
+              { text: "Using metadata in prompts" },
+              { text: "Advanced programming techniques" },
+              { text: "Multi-language prompting" }
+            ],
+            correctAnswerIndex: 0,
+            questionType: "multiple-choice",
+            order: 5,
+            points: 1
+          }
+        ]
+      },
+      // Prompt Refinement Quiz
+      {
+        moduleId: "prompt-refinement",
+        quiz: {
+          titleKey: "quiz.promptRefinement.title",
+          descriptionKey: "quiz.promptRefinement.description",
+          order: 1
+        },
+        questions: [
+          {
+            questionText: "The persona pattern in prompt refinement involves:",
+            answerOptions: [
+              { text: "Creating fictional characters" },
+              { text: "Defining a specific role or perspective for the AI to adopt" },
+              { text: "Personal information management" },
+              { text: "User interface design" }
+            ],
+            correctAnswerIndex: 1,
+            questionType: "multiple-choice",
+            order: 1,
+            points: 1
+          },
+          {
+            questionText: "Question refinement pattern helps to:",
+            answerOptions: [
+              { text: "Reduce the number of questions" },
+              { text: "Improve the quality and specificity of questions" },
+              { text: "Speed up question processing" },
+              { text: "Simplify complex topics" }
+            ],
+            correctAnswerIndex: 1,
+            questionType: "multiple-choice",
+            order: 2,
+            points: 1
+          },
+          {
+            questionText: "The cognitive verifier pattern is used to:",
+            answerOptions: [
+              { text: "Check the AI's reasoning and accuracy" },
+              { text: "Verify user credentials" },
+              { text: "Test memory capacity" },
+              { text: "Validate input data" }
+            ],
+            correctAnswerIndex: 0,
+            questionType: "multiple-choice",
+            order: 3,
+            points: 1
+          },
+          {
+            questionText: "Audience persona pattern helps:",
+            answerOptions: [
+              { text: "Identify target users" },
+              { text: "Tailor AI responses to specific audience needs and understanding levels" },
+              { text: "Create user profiles" },
+              { text: "Manage user permissions" }
+            ],
+            correctAnswerIndex: 1,
+            questionType: "multiple-choice",
+            order: 4,
+            points: 1
+          },
+          {
+            questionText: "Which pattern is most effective for ensuring AI responses match specific expertise levels?",
+            answerOptions: [
+              { text: "Question refinement" },
+              { text: "Cognitive verifier" },
+              { text: "Audience persona" },
+              { text: "Template pattern" }
+            ],
+            correctAnswerIndex: 2,
+            questionType: "multiple-choice",
+            order: 5,
+            points: 1
+          }
+        ]
+      },
+      // Practical Applications Quiz
+      {
+        moduleId: "practical-applications",
+        quiz: {
+          titleKey: "quiz.practicalApplications.title",
+          descriptionKey: "quiz.practicalApplications.description",
+          order: 1
+        },
+        questions: [
+          {
+            questionText: "For productivity applications, prompt engineering can help with:",
+            answerOptions: [
+              { text: "Hardware optimization" },
+              { text: "Task automation, content creation, and decision support" },
+              { text: "Network configuration" },
+              { text: "Database management" }
+            ],
+            correctAnswerIndex: 1,
+            questionType: "multiple-choice",
+            order: 1,
+            points: 1
+          },
+          {
+            questionText: "In business planning, AI prompts are most effective when they:",
+            answerOptions: [
+              { text: "Are kept very general" },
+              { text: "Include specific context about the business, market, and objectives" },
+              { text: "Focus only on financial data" },
+              { text: "Avoid market analysis" }
+            ],
+            correctAnswerIndex: 1,
+            questionType: "multiple-choice",
+            order: 2,
+            points: 1
+          },
+          {
+            questionText: "Creative applications of prompt engineering include:",
+            answerOptions: [
+              { text: "Only text generation" },
+              { text: "Content creation, ideation, storytelling, and artistic inspiration" },
+              { text: "Data analysis only" },
+              { text: "Technical documentation" }
+            ],
+            correctAnswerIndex: 1,
+            questionType: "multiple-choice",
+            order: 3,
+            points: 1
+          },
+          {
+            questionText: "When using AI for automation, the most important prompt consideration is:",
+            answerOptions: [
+              { text: "Response speed" },
+              { text: "Clear specifications and error handling requirements" },
+              { text: "Creative flexibility" },
+              { text: "Casual language" }
+            ],
+            correctAnswerIndex: 1,
+            questionType: "multiple-choice",
+            order: 4,
+            points: 1
+          },
+          {
+            questionText: "Effective prompts for business applications should include:",
+            answerOptions: [
+              { text: "Technical jargon only" },
+              { text: "Business context, constraints, and success criteria" },
+              { text: "Personal opinions" },
+              { text: "Unrelated examples" }
+            ],
+            correctAnswerIndex: 1,
+            questionType: "multiple-choice",
+            order: 5,
+            points: 1
+          }
+        ]
+      }
+    ];
+
+    // Create quizzes and questions
+    quizData.forEach(({ moduleId, quiz, questions }) => {
+      // Create quiz
+      const quizId = randomUUID();
+      const newQuiz: Quiz = {
+        id: quizId,
+        moduleId,
+        titleKey: quiz.titleKey,
+        descriptionKey: quiz.descriptionKey,
+        order: quiz.order,
+        isActive: true,
+        createdAt: new Date()
+      };
+      
+      this.quizzes.set(quizId, newQuiz);
+
+      // Create questions for this quiz
+      questions.forEach(questionData => {
+        const questionId = randomUUID();
+        const question: QuizQuestion = {
+          id: questionId,
+          quizId,
+          questionText: questionData.questionText,
+          answerOptions: questionData.answerOptions,
+          correctAnswerIndex: questionData.correctAnswerIndex,
+          questionType: questionData.questionType,
+          order: questionData.order,
+          points: questionData.points
+        };
+        
+        this.quizQuestions.set(questionId, question);
+      });
     });
   }
 

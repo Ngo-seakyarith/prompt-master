@@ -75,6 +75,11 @@ export default function ModuleDetail({ moduleId }: ModuleDetailProps) {
   const currentProgress = userProgress.find(p => p.moduleId === moduleId);
   const completedExercises = new Set(completedExercisesArray);
 
+  // Calculate exercise progress
+  const completedCount = completedExercises.size;
+  const totalExercises = moduleContent?.exercises.length || 0;
+  const progressPercentage = totalExercises > 0 ? (completedCount / totalExercises) * 100 : 0;
+
   // Calculate quiz progress
   const quizAttemptsByQuizId = userQuizAttempts.reduce((acc, attempt) => {
     if (!acc[attempt.quizId] || attempt.score > acc[attempt.quizId].score) {
@@ -176,9 +181,6 @@ export default function ModuleDetail({ moduleId }: ModuleDetailProps) {
   const currentPrompt = exercisePrompts[currentExerciseIndex] || "";
   const currentFeedback = exerciseFeedback[currentExerciseIndex];
   const currentExercise = moduleContent?.exercises[currentExerciseIndex];
-  const completedCount = completedExercises.size;
-  const totalExercises = moduleContent?.exercises.length || 0;
-  const progressPercentage = totalExercises > 0 ? (completedCount / totalExercises) * 100 : 0;
 
   if (!moduleData || !moduleContent) {
     return (
@@ -676,7 +678,7 @@ export default function ModuleDetail({ moduleId }: ModuleDetailProps) {
                         quiz={quiz}
                         bestAttempt={bestAttempt}
                         isLocked={false}
-                        moduleCompleted={isModuleCompleted || completedCount === totalExercises}
+                        prerequisitesMet={completedCount === totalExercises}
                       />
                     );
                   })}

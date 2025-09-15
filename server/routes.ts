@@ -12,14 +12,14 @@ async function checkAndGenerateCertificate(userId: string, moduleId: string) {
   try {
     // Get the module to find its course
     const module = await storage.getModule(moduleId);
-    if (!module) return;
+    if (!module) return { certificateGenerated: false, moduleCompleted: false, courseCompleted: false };
 
     const courseId = module.courseId;
     
     // Check if certificate already exists for this user and course
     const existingCertificates = await storage.getUserCertificates(userId);
     if (existingCertificates.some(cert => cert.courseId === courseId)) {
-      return; // Certificate already exists
+      return { certificateGenerated: false, moduleCompleted: true, courseCompleted: true }; // Certificate already exists
     }
     
     // Check if course is complete
@@ -29,9 +29,15 @@ async function checkAndGenerateCertificate(userId: string, moduleId: string) {
       console.log(`Generating certificate for user ${userId} for course ${courseId}`);
       await storage.issueCertificate(userId, courseId);
       console.log(`Certificate generated successfully for user ${userId} for course ${courseId}`);
+      return { certificateGenerated: true, moduleCompleted: true, courseCompleted: true };
     }
+    
+    // Check if this specific module is completed (for module completion toast)
+    const isModuleComplete = await storage.isModuleComplete(userId, moduleId);
+    return { certificateGenerated: false, moduleCompleted: isModuleComplete, courseCompleted: false };
   } catch (error) {
     console.error("Error in certificate generation:", error);
+    return { certificateGenerated: false, moduleCompleted: false, courseCompleted: false };
   }
 }
 
@@ -713,6 +719,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const moduleId = quiz.moduleId;
       const isModuleComplete = await storage.isModuleComplete(userId, moduleId);
       
+      let certificateStatus = { certificateGenerated: false, moduleCompleted: false, courseCompleted: false };
+      
       // Update module progress if module is now complete
       if (isModuleComplete) {
         const currentProgress = await storage.getUserModuleProgress(userId, moduleId);
@@ -725,12 +733,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
 
         // Check for certificate generation
-        await checkAndGenerateCertificate(userId, moduleId);
+        certificateStatus = await checkAndGenerateCertificate(userId, moduleId);
       }
 
       res.json({
         attempt,
-        feedback
+        feedback,
+        certificateStatus
       });
     } catch (error) {
       console.error("Quiz submission error:", error);
