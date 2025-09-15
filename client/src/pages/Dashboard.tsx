@@ -431,7 +431,7 @@ export default function Dashboard() {
                     </Card>
                     <Card className="text-center p-6">
                       <div className="text-3xl font-bold text-green-600 mb-2" data-testid="completed-courses">
-                        {[...new Set(certificates.map(c => c.courseId))].length}
+                        {Array.from(new Set(certificates.map(c => c.courseId))).length}
                       </div>
                       <div className="text-sm text-muted-foreground">Completed Courses</div>
                     </Card>

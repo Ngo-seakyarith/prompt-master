@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { assessPrompt, generatePromptSuggestions, assessQuizAnswers } from "./services/openai";
+import { RecommendationService } from "./services/recommendations";
 import { insertPromptAttemptSchema, assessPromptSchema, insertGoalSchema, insertCertificateSchema, submitQuizSchema } from "@shared/schema";
 import { z } from "zod";
 import { MODULE_CONTENT } from "../client/src/lib/constants";
@@ -44,6 +45,9 @@ async function checkAndGenerateCertificate(userId: string, moduleId: string) {
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup Replit Auth
   await setupAuth(app);
+
+  // Initialize recommendation service
+  const recommendationService = new RecommendationService(storage);
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
@@ -420,6 +424,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ message: "Failed to delete goal" });
+    }
+  });
+
+  // Personalized recommendations
+  app.get("/api/recommendations", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      console.log(`Generating recommendations for user: ${userId}`);
+      
+      const recommendationAnalysis = await recommendationService.generateRecommendations(userId);
+      
+      console.log(`Generated ${recommendationAnalysis.recommendations.length} recommendations for user ${userId}`);
+      
+      res.json(recommendationAnalysis);
+    } catch (error) {
+      console.error("Recommendation generation error:", error);
+      res.status(500).json({ 
+        message: "Failed to generate recommendations", 
+        error: (error as Error).message 
+      });
     }
   });
 

@@ -163,7 +163,7 @@ export function getGoalStatus(goal: Goal, userProgress: UserProgress[]): 'active
  * Get all available courses that can be used for course-specific goals
  */
 export function getAvailableCourses() {
-  const courseIds = [...new Set(MODULES.map(m => m.courseId))];
+  const courseIds = Array.from(new Set(MODULES.map(m => m.courseId)));
   return courseIds.map(courseId => ({
     id: courseId,
     moduleCount: MODULES.filter(m => m.courseId === courseId).length
