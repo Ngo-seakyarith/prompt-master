@@ -188,7 +188,7 @@ export default function ModuleDetail({ moduleId }: ModuleDetailProps) {
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-2">{t("common.moduleNotFound")}</h2>
           <p className="text-muted-foreground mb-4">{t("common.moduleNotFoundDesc")}</p>
-          <Link href="/modules">
+          <Link href="/courses">
             <Button>{t("common.backToModules")}</Button>
           </Link>
         </div>
@@ -262,7 +262,7 @@ export default function ModuleDetail({ moduleId }: ModuleDetailProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <Link href="/modules">
+              <Link href="/courses">
                 <Button variant="ghost" size="sm" data-testid="button-back">
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Back to Modules
