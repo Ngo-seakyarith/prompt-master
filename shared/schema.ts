@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, json, timestamp, boolean, jsonb, index } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, json, timestamp, boolean, jsonb, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -179,6 +179,43 @@ export const playgroundUsage = pgTable("playground_usage", {
   index("IDX_playground_usage_user_id").on(table.userId),
 ]);
 
+export const userSubscriptions = pgTable("user_subscriptions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().unique(),
+  plan: varchar("plan").notNull().default("free"), // free, pro, gold
+  status: varchar("status").notNull().default("active"), // active, cancelled, expired, pending
+  stripeCustomerId: varchar("stripe_customer_id"),
+  stripeSubscriptionId: varchar("stripe_subscription_id"),
+  stripePriceId: varchar("stripe_price_id"),
+  currentPeriodStart: timestamp("current_period_start"),
+  currentPeriodEnd: timestamp("current_period_end"),
+  cancelAtPeriodEnd: boolean("cancel_at_period_end").default(false),
+  dailyPromptLimit: integer("daily_prompt_limit").notNull().default(5), // Free: 5, Pro/Gold: unlimited (-1)
+  courseAccessLevel: varchar("course_access_level").notNull().default("none"), // none, single, all
+  accessibleCourseId: varchar("accessible_course_id"), // For pro plan with single course access
+  metadata: json("metadata"), // Additional plan metadata/features
+  createdAt: timestamp("created_at").default(sql`now()`),
+  updatedAt: timestamp("updated_at").default(sql`now()`),
+}, (table) => [
+  index("IDX_user_subscriptions_user_id").on(table.userId),
+  index("IDX_user_subscriptions_stripe_customer").on(table.stripeCustomerId),
+  index("IDX_user_subscriptions_stripe_subscription").on(table.stripeSubscriptionId),
+]);
+
+export const dailyUsage = pgTable("daily_usage", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  date: varchar("date").notNull(), // YYYY-MM-DD format for easy querying
+  promptsUsed: integer("prompts_used").notNull().default(0),
+  testsRun: integer("tests_run").notNull().default(0),
+  totalCost: text("total_cost").notNull().default("0"),
+  lastActivity: timestamp("last_activity").default(sql`now()`),
+  createdAt: timestamp("created_at").default(sql`now()`),
+}, (table) => [
+  uniqueIndex("IDX_daily_usage_user_date_unique").on(table.userId, table.date),
+  index("IDX_daily_usage_date").on(table.date),
+]);
+
 export const insertUserSchema = createInsertSchema(users).omit({
   createdAt: true,
   updatedAt: true,
@@ -250,6 +287,18 @@ export const insertPlaygroundUsageSchema = createInsertSchema(playgroundUsage).o
   monthlyReset: true,
 });
 
+export const insertUserSubscriptionSchema = createInsertSchema(userSubscriptions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertDailyUsageSchema = createInsertSchema(dailyUsage).omit({
+  id: true,
+  lastActivity: true,
+  createdAt: true,
+});
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type UpsertUser = z.infer<typeof upsertUserSchema>;
@@ -279,6 +328,10 @@ export type PlaygroundTest = typeof playgroundTests.$inferSelect;
 export type InsertPlaygroundTest = z.infer<typeof insertPlaygroundTestSchema>;
 export type PlaygroundUsage = typeof playgroundUsage.$inferSelect;
 export type InsertPlaygroundUsage = z.infer<typeof insertPlaygroundUsageSchema>;
+export type UserSubscription = typeof userSubscriptions.$inferSelect;
+export type InsertUserSubscription = z.infer<typeof insertUserSubscriptionSchema>;
+export type DailyUsage = typeof dailyUsage.$inferSelect;
+export type InsertDailyUsage = z.infer<typeof insertDailyUsageSchema>;
 
 export interface AssessmentFeedback {
   overall_score: number;
