@@ -26,6 +26,7 @@ export default function Navigation() {
     { href: "/courses", label: t("nav.courses"), id: "courses" },
     { href: "/ai-models", label: t("nav.aiModels"), id: "ai-models" },
     { href: "/playground", label: "Playground", id: "playground" },
+    { href: "/subscription", label: "Subscription", id: "subscription" },
     { href: "/goals", label: t("nav.goals"), id: "goals" },
     { href: "/certificates", label: t("nav.certificates"), id: "certificates" },
     { href: "/practice", label: t("nav.practice"), id: "practice" },
@@ -51,7 +52,7 @@ export default function Navigation() {
                   <Link key={item.id} href={item.href}>
                     <span
                       className={`px-3 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer ${
-                        location === item.href || (item.href === "/" && location === "") || (item.href === "/courses" && location.startsWith("/courses")) || (item.href === "/ai-models" && location.startsWith("/ai-models")) || (item.href === "/playground" && location.startsWith("/playground")) || (item.href === "/goals" && location.startsWith("/goals")) || (item.href === "/certificates" && location.startsWith("/certificates"))
+                        location === item.href || (item.href === "/" && location === "") || (item.href === "/courses" && location.startsWith("/courses")) || (item.href === "/ai-models" && location.startsWith("/ai-models")) || (item.href === "/playground" && location.startsWith("/playground")) || (item.href === "/subscription" && location.startsWith("/subscription")) || (item.href === "/goals" && location.startsWith("/goals")) || (item.href === "/certificates" && location.startsWith("/certificates"))
                           ? "text-primary bg-primary/10"
                           : "text-muted-foreground hover:text-foreground"
                       }`}
@@ -108,7 +109,7 @@ export default function Navigation() {
               <Link key={item.id} href={item.href}>
                 <span
                   className={`block px-3 py-2 rounded-md text-base font-medium transition-colors cursor-pointer ${
-                    location === item.href || (item.href === "/" && location === "") || (item.href === "/courses" && location.startsWith("/courses")) || (item.href === "/ai-models" && location.startsWith("/ai-models")) || (item.href === "/playground" && location.startsWith("/playground")) || (item.href === "/goals" && location.startsWith("/goals")) || (item.href === "/certificates" && location.startsWith("/certificates"))
+                    location === item.href || (item.href === "/" && location === "") || (item.href === "/courses" && location.startsWith("/courses")) || (item.href === "/ai-models" && location.startsWith("/ai-models")) || (item.href === "/playground" && location.startsWith("/playground")) || (item.href === "/subscription" && location.startsWith("/subscription")) || (item.href === "/goals" && location.startsWith("/goals")) || (item.href === "/certificates" && location.startsWith("/certificates"))
                       ? "text-primary bg-primary/10"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted"
                   }`}

@@ -12,6 +12,7 @@ import Goals from "@/pages/Goals";
 import Certificates from "@/pages/Certificates";
 import AIModels from "@/pages/AIModels";
 import PlaygroundPage from "@/pages/PlaygroundPage";
+import SubscriptionPage from "@/pages/SubscriptionPage";
 import QuizPage from "@/components/QuizPage";
 import NotFound from "@/pages/not-found";
 
@@ -28,6 +29,7 @@ function Router() {
       </Route>
       <Route path="/goals" component={Goals} />
       <Route path="/certificates" component={Certificates} />
+      <Route path="/subscription" component={SubscriptionPage} />
       <Route path="/ai-models" component={AIModels} />
       <Route path="/playground" component={PlaygroundPage} />
       <Route path="/quiz/:quizId">
