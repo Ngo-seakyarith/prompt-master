@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type UpsertUser, type Course, type InsertCourse, type Module, type UserProgress, type InsertUserProgress, type PromptAttempt, type InsertPromptAttempt, type ExerciseAttempt, type InsertExerciseAttempt, type Goal, type InsertGoal, type Certificate, type InsertCertificate, type ModuleContent, type Quiz, type InsertQuiz, type QuizQuestion, type InsertQuizQuestion, type QuizAttempt, type InsertQuizAttempt, type PlaygroundPrompt, type InsertPlaygroundPrompt, type PlaygroundTest, type InsertPlaygroundTest, type PlaygroundUsage, type PlaygroundTestResult } from "@shared/schema";
+import { type User, type InsertUser, type UpsertUser, type Course, type InsertCourse, type Module, type UserProgress, type InsertUserProgress, type PromptAttempt, type InsertPromptAttempt, type ExerciseAttempt, type InsertExerciseAttempt, type Goal, type InsertGoal, type Certificate, type InsertCertificate, type ModuleContent, type Quiz, type InsertQuiz, type QuizQuestion, type InsertQuizQuestion, type QuizAttempt, type InsertQuizAttempt, type PlaygroundPrompt, type InsertPlaygroundPrompt, type PlaygroundTest, type InsertPlaygroundTest, type PlaygroundUsage, type PlaygroundTestResult, type UserSubscription, type InsertUserSubscription, type DailyUsage, type InsertDailyUsage } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { MODULE_CONTENT } from "../client/src/lib/constants";
 
@@ -82,6 +82,16 @@ export interface IStorage {
   deletePlaygroundPrompt(userId: string, promptId: string): Promise<boolean>;
   upsertPlaygroundUsage(userId: string): Promise<PlaygroundUsage>;
   getPlaygroundUsage(userId: string): Promise<PlaygroundUsage | null>;
+  
+  // Subscription management methods
+  getUserSubscription(userId: string): Promise<UserSubscription | null>;
+  createDefaultSubscription(userId: string): Promise<UserSubscription>;
+  updateUserSubscription(userId: string, updates: Partial<InsertUserSubscription>): Promise<UserSubscription | null>;
+  
+  // Daily usage tracking methods
+  getDailyUsage(userId: string, date: string): Promise<DailyUsage | null>;
+  updateDailyUsage(userId: string, incrementPrompts?: number, incrementTests?: number, addCost?: string): Promise<DailyUsage>;
+  checkDailyUsageLimit(userId: string): Promise<{ canProceed: boolean; error?: { status: number; message: string; details?: any }; details?: any }>;
 }
 
 export class MemStorage implements IStorage {
@@ -99,6 +109,8 @@ export class MemStorage implements IStorage {
   private playgroundPrompts: Map<string, PlaygroundPrompt>;
   private playgroundTests: Map<string, PlaygroundTest>;
   private playgroundUsage: Map<string, PlaygroundUsage>;
+  private userSubscriptions: Map<string, UserSubscription>;
+  private dailyUsage: Map<string, DailyUsage>;
 
   constructor() {
     this.users = new Map();
@@ -115,6 +127,8 @@ export class MemStorage implements IStorage {
     this.playgroundPrompts = new Map();
     this.playgroundTests = new Map();
     this.playgroundUsage = new Map();
+    this.userSubscriptions = new Map();
+    this.dailyUsage = new Map();
     this.initializeCoursesAndModules();
     this.initializeQuizzes();
   }
@@ -1383,6 +1397,181 @@ export class MemStorage implements IStorage {
 
   async getPlaygroundUsage(userId: string): Promise<PlaygroundUsage | null> {
     return this.playgroundUsage.get(userId) || null;
+  }
+
+  // ===== SUBSCRIPTION MANAGEMENT METHODS =====
+  
+  async getUserSubscription(userId: string): Promise<UserSubscription | null> {
+    return this.userSubscriptions.get(userId) || null;
+  }
+
+  async createDefaultSubscription(userId: string): Promise<UserSubscription> {
+    const subscription: UserSubscription = {
+      id: randomUUID(),
+      userId,
+      plan: "free",
+      status: "active",
+      stripeCustomerId: null,
+      stripeSubscriptionId: null,
+      stripePriceId: null,
+      currentPeriodStart: null,
+      currentPeriodEnd: null,
+      cancelAtPeriodEnd: false,
+      dailyPromptLimit: 5,
+      courseAccessLevel: "none",
+      accessibleCourseId: null,
+      metadata: null,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    
+    this.userSubscriptions.set(userId, subscription);
+    return subscription;
+  }
+
+  async updateUserSubscription(userId: string, updates: Partial<InsertUserSubscription>): Promise<UserSubscription | null> {
+    const existing = this.userSubscriptions.get(userId);
+    if (!existing) {
+      return null;
+    }
+    
+    const updated: UserSubscription = {
+      ...existing,
+      ...updates,
+      updatedAt: new Date()
+    };
+    
+    this.userSubscriptions.set(userId, updated);
+    return updated;
+  }
+
+  // ===== DAILY USAGE TRACKING METHODS =====
+  
+  async getDailyUsage(userId: string, date: string): Promise<DailyUsage | null> {
+    const key = `${userId}:${date}`;
+    return this.dailyUsage.get(key) || null;
+  }
+
+  async updateDailyUsage(userId: string, incrementPrompts: number = 0, incrementTests: number = 0, addCost: string = "0"): Promise<DailyUsage> {
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    const key = `${userId}:${today}`;
+    
+    let existing = this.dailyUsage.get(key);
+    
+    if (!existing) {
+      existing = {
+        id: randomUUID(),
+        userId,
+        date: today,
+        promptsUsed: 0,
+        testsRun: 0,
+        totalCost: "0",
+        lastActivity: new Date(),
+        createdAt: new Date()
+      };
+    }
+
+    // Parse existing cost and add new cost
+    const existingCost = parseFloat(existing.totalCost || "0");
+    const additionalCost = parseFloat(addCost || "0");
+    const newTotalCost = (existingCost + additionalCost).toFixed(4);
+
+    const updated: DailyUsage = {
+      ...existing,
+      promptsUsed: existing.promptsUsed + incrementPrompts,
+      testsRun: existing.testsRun + incrementTests,
+      totalCost: newTotalCost,
+      lastActivity: new Date()
+    };
+    
+    this.dailyUsage.set(key, updated);
+    return updated;
+  }
+
+  async checkDailyUsageLimit(userId: string): Promise<{ canProceed: boolean; error?: { status: number; message: string; details?: any }; details?: any }> {
+    try {
+      // Get user subscription to determine limits
+      let subscription = await this.getUserSubscription(userId);
+      
+      // If no subscription exists, create a default free subscription
+      if (!subscription) {
+        subscription = await this.createDefaultSubscription(userId);
+      }
+      
+      // Check if subscription is active
+      if (subscription.status !== "active") {
+        return {
+          canProceed: false,
+          error: {
+            status: 402,
+            message: `Your subscription is ${subscription.status}. Please reactivate your subscription to continue using the service.`,
+            details: {
+              limitType: "subscription_status",
+              currentStatus: subscription.status,
+              suggestion: "Please reactivate your subscription to continue."
+            }
+          }
+        };
+      }
+
+      // For unlimited plans (Pro and Gold), always allow
+      if (subscription.dailyPromptLimit === -1) {
+        return { 
+          canProceed: true,
+          details: {
+            plan: subscription.plan,
+            dailyLimit: "unlimited",
+            isUnlimited: true
+          }
+        };
+      }
+
+      // Check daily usage for limited plans (Free)
+      const today = new Date().toISOString().split('T')[0];
+      const dailyUsage = await this.getDailyUsage(userId, today);
+      const currentUsage = dailyUsage ? dailyUsage.promptsUsed : 0;
+
+      if (currentUsage >= subscription.dailyPromptLimit) {
+        return {
+          canProceed: false,
+          error: {
+            status: 429,
+            message: `Daily prompt limit exceeded. You've used ${currentUsage}/${subscription.dailyPromptLimit} prompts today.`,
+            details: {
+              limitType: "daily_prompts",
+              currentUsage,
+              limit: subscription.dailyPromptLimit,
+              plan: subscription.plan,
+              resetTime: "midnight UTC",
+              suggestion: subscription.plan === "free" 
+                ? "Upgrade to Pro or Gold plan for unlimited prompts."
+                : "Please try again tomorrow."
+            }
+          }
+        };
+      }
+
+      // User is within limits
+      return { 
+        canProceed: true,
+        details: {
+          plan: subscription.plan,
+          dailyUsage: currentUsage + 1,
+          dailyLimit: subscription.dailyPromptLimit,
+          remaining: subscription.dailyPromptLimit - currentUsage - 1
+        }
+      };
+      
+    } catch (error) {
+      console.error("Error checking user limits:", error);
+      return {
+        canProceed: false,
+        error: {
+          status: 500,
+          message: "Unable to verify usage limits at this time. Please try again later."
+        }
+      };
+    }
   }
 }
 

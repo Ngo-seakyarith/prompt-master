@@ -129,19 +129,64 @@ export async function setupAuth(app: Express) {
 }
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
+  // Development mode bypass for local testing
+  const isDevelopment = process.env.NODE_ENV === 'development' || 
+                       process.env.REPL_SLUG === undefined ||
+                       req.hostname.includes('localhost') ||
+                       req.hostname.includes('127.0.0.1');
+  
+  if (isDevelopment && process.env.SKIP_AUTH === 'true') {
+    console.log('🚨 DEVELOPMENT MODE: Bypassing authentication');
+    // Create a mock user for development
+    (req as any).user = {
+      claims: {
+        sub: 'dev-user-123',
+        email: 'dev@example.com',
+        first_name: 'Dev',
+        last_name: 'User'
+      },
+      expires_at: Math.floor(Date.now() / 1000) + 3600 // 1 hour from now
+    };
+    
+    // Ensure dev user exists in storage
+    try {
+      await storage.upsertUser({
+        id: 'dev-user-123',
+        email: 'dev@example.com',
+        firstName: 'Dev',
+        lastName: 'User',
+        profileImageUrl: null
+      });
+    } catch (error) {
+      console.error("Failed to create dev user:", error);
+    }
+    
+    return next();
+  }
+
   const user = req.user as any;
 
-  if (!req.isAuthenticated() || !user.expires_at) {
+  // Debug logging for authentication failures
+  if (!req.isAuthenticated()) {
+    console.log('❌ Authentication failed: User not authenticated');
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  if (!user || !user.expires_at) {
+    console.log('❌ Authentication failed: No user or expiration time');
     return res.status(401).json({ message: "Unauthorized" });
   }
 
   const now = Math.floor(Date.now() / 1000);
   if (now <= user.expires_at) {
+    console.log('✅ Authentication successful: Token valid');
     return next();
   }
 
+  console.log('🔄 Token expired, attempting refresh...');
   const refreshToken = user.refresh_token;
   if (!refreshToken) {
+    console.log('❌ Authentication failed: No refresh token available');
     res.status(401).json({ message: "Unauthorized" });
     return;
   }
@@ -154,12 +199,14 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     // Persist the updated tokens back to the session
     req.login(user, (err) => {
       if (err) {
-        console.error("Failed to persist refreshed tokens:", err);
+        console.error("❌ Failed to persist refreshed tokens:", err);
         return res.status(401).json({ message: "Unauthorized" });
       }
+      console.log('✅ Token refresh successful');
       return next();
     });
   } catch (error) {
+    console.error("❌ Token refresh failed:", error);
     res.status(401).json({ message: "Unauthorized" });
     return;
   }

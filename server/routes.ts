@@ -10,119 +10,11 @@ import { z } from "zod";
 import { MODULE_CONTENT } from "../client/src/lib/constants";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 
-// ===== PLAYGROUND USAGE LIMITS =====
-const USAGE_LIMITS = {
-  DAILY_TEST_LIMIT: 50,
-  MONTHLY_TEST_LIMIT: 200,
-  MONTHLY_COST_CEILING: 10.00, // $10.00 USD
-  ESTIMATED_COST_PER_TEST: 0.05 // Conservative estimate for planning
-} as const;
-
-// Usage validation helper function
+// ===== SUBSCRIPTION-BASED USAGE ENFORCEMENT =====
+// Now using subscription-based limits instead of hardcoded limits
 async function checkUserLimits(userId: string, estimatedCost?: number): Promise<{ canProceed: boolean; error?: { status: number; message: string; details?: any }; details?: any }> {
-  try {
-    const usage = await storage.getPlaygroundUsage(userId);
-    
-    // If no usage record exists, user is within limits
-    if (!usage) {
-      return { canProceed: true };
-    }
-
-    const now = new Date();
-    
-    // Check if we need to reset daily counters (if it's a new day)
-    const lastActiveDate = usage.lastActive ? new Date(usage.lastActive) : new Date();
-    const isNewDay = now.toDateString() !== lastActiveDate.toDateString();
-    
-    // Calculate daily usage (reset if new day)
-    const dailyTests = isNewDay ? 0 : (usage.testsRun || 0);
-    
-    // Check if we need to reset monthly stats
-    const monthsDiff = (now.getFullYear() - (usage.monthlyReset?.getFullYear() || now.getFullYear())) * 12 + 
-                      (now.getMonth() - (usage.monthlyReset?.getMonth() || now.getMonth()));
-    
-    const monthlyTests = monthsDiff >= 1 ? 0 : (usage.monthlyTests || 0);
-    const monthlySpent = monthsDiff >= 1 ? 0 : parseFloat(usage.totalCost || "0");
-    
-    // Check daily test limit
-    if (dailyTests >= USAGE_LIMITS.DAILY_TEST_LIMIT) {
-      return {
-        canProceed: false,
-        error: {
-          status: 429,
-          message: `Daily test limit exceeded. You've used ${dailyTests}/${USAGE_LIMITS.DAILY_TEST_LIMIT} tests today.`,
-          details: {
-            limitType: "daily_tests",
-            currentUsage: dailyTests,
-            limit: USAGE_LIMITS.DAILY_TEST_LIMIT,
-            resetTime: "midnight UTC",
-            suggestion: "Please try again tomorrow."
-          }
-        }
-      };
-    }
-
-    // Check monthly test limit
-    if (monthlyTests >= USAGE_LIMITS.MONTHLY_TEST_LIMIT) {
-      return {
-        canProceed: false,
-        error: {
-          status: 429,
-          message: `Monthly test limit exceeded. You've used ${monthlyTests}/${USAGE_LIMITS.MONTHLY_TEST_LIMIT} tests this month.`,
-          details: {
-            limitType: "monthly_tests",
-            currentUsage: monthlyTests,
-            limit: USAGE_LIMITS.MONTHLY_TEST_LIMIT,
-            resetTime: "first day of next month",
-            suggestion: "Please wait until next month or consider upgrading your plan."
-          }
-        }
-      };
-    }
-
-    // Check monthly cost ceiling
-    const projectedCost = monthlySpent + (estimatedCost || USAGE_LIMITS.ESTIMATED_COST_PER_TEST);
-    if (projectedCost > USAGE_LIMITS.MONTHLY_COST_CEILING) {
-      return {
-        canProceed: false,
-        error: {
-          status: 402,
-          message: `Monthly cost limit would be exceeded. Current spending: $${monthlySpent.toFixed(2)}, estimated test cost: $${(estimatedCost || USAGE_LIMITS.ESTIMATED_COST_PER_TEST).toFixed(2)}, limit: $${USAGE_LIMITS.MONTHLY_COST_CEILING.toFixed(2)}.`,
-          details: {
-            limitType: "monthly_cost",
-            currentSpending: parseFloat(monthlySpent.toFixed(2)),
-            estimatedCost: parseFloat((estimatedCost || USAGE_LIMITS.ESTIMATED_COST_PER_TEST).toFixed(2)),
-            projectedTotal: parseFloat(projectedCost.toFixed(2)),
-            limit: USAGE_LIMITS.MONTHLY_COST_CEILING,
-            remaining: parseFloat((USAGE_LIMITS.MONTHLY_COST_CEILING - monthlySpent).toFixed(2)),
-            suggestion: "Please wait until next month or consider upgrading your plan."
-          }
-        }
-      };
-    }
-
-    // User is within all limits
-    return { 
-      canProceed: true,
-      details: {
-        dailyTests: dailyTests + 1,
-        dailyLimit: USAGE_LIMITS.DAILY_TEST_LIMIT,
-        monthlyTests: monthlyTests + 1,
-        monthlyTestLimit: USAGE_LIMITS.MONTHLY_TEST_LIMIT,
-        monthlySpent: parseFloat(monthlySpent.toFixed(2)),
-        monthlyCostLimit: USAGE_LIMITS.MONTHLY_COST_CEILING
-      }
-    };
-  } catch (error) {
-    console.error("Error checking user limits:", error);
-    return {
-      canProceed: false,
-      error: {
-        status: 500,
-        message: "Unable to verify usage limits at this time. Please try again later."
-      }
-    };
-  }
+  // Use the subscription-based limit checking from storage
+  return await storage.checkDailyUsageLimit(userId);
 }
 
 // Helper function to check course completion and generate certificates
@@ -191,6 +83,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch user profile" });
     }
   });
+
+  // ===== SUBSCRIPTION MANAGEMENT API ENDPOINTS =====
+  
+  // Get user subscription info
+  app.get('/api/subscription', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      let subscription = await storage.getUserSubscription(userId);
+      
+      // If no subscription exists, create a default free subscription
+      if (!subscription) {
+        subscription = await storage.createDefaultSubscription(userId);
+      }
+      
+      res.json(subscription);
+    } catch (error) {
+      console.error("Error fetching user subscription:", error);
+      res.status(500).json({ message: "Failed to fetch subscription information" });
+    }
+  });
+
+  // Get daily usage stats
+  app.get('/api/usage/daily', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const date = req.query.date as string || new Date().toISOString().split('T')[0];
+      
+      const dailyUsage = await storage.getDailyUsage(userId, date);
+      const subscription = await storage.getUserSubscription(userId);
+      
+      res.json({
+        usage: dailyUsage || {
+          promptsUsed: 0,
+          testsRun: 0,
+          totalCost: "0"
+        },
+        subscription: subscription || { plan: "free", dailyPromptLimit: 5 },
+        date
+      });
+    } catch (error) {
+      console.error("Error fetching daily usage:", error);
+      res.status(500).json({ message: "Failed to fetch usage information" });
+    }
+  });
+
+  // SECURE: Create Stripe checkout session (requires payment verification)
+  app.post('/api/billing/create-checkout-session', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { plan } = req.body;
+      
+      // Basic validation
+      if (!plan || !["pro", "gold"].includes(plan)) {
+        return res.status(400).json({ message: "Invalid subscription plan" });
+      }
+      
+      // TODO: Implement Stripe checkout session creation
+      // This should create a Stripe checkout session and return the URL
+      // Only Stripe webhooks should update subscription status after successful payment
+      
+      res.status(501).json({ 
+        message: "Stripe integration not yet implemented",
+        redirectUrl: null,
+        sessionId: null
+      });
+    } catch (error) {
+      console.error("Error creating checkout session:", error);
+      res.status(500).json({ message: "Failed to create checkout session" });
+    }
+  });
+
+  // SECURE: Stripe webhook endpoint (for updating subscriptions after payment)
+  // This should be implemented when Stripe integration is added
+  // app.post('/api/billing/webhook', express.raw({type: 'application/json'}), async (req, res) => {
+  //   // Verify Stripe signature and update subscription status
+  // });
 
   // Public routes - Courses and modules
   app.get("/api/courses", async (req, res) => {
@@ -324,6 +292,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const { prompt, moduleId, exerciseIndex } = validationResult.data;
 
+      // ===== USAGE LIMIT CHECK: Validate user can make prompts =====
+      const userId = req.user.claims.sub;
+      const limitsCheck = await checkUserLimits(userId);
+      
+      if (!limitsCheck.canProceed) {
+        console.log(`Prompt assessment blocked for user ${userId}: ${limitsCheck.error?.message}`);
+        return res.status(limitsCheck.error?.status || 429).json({
+          message: limitsCheck.error?.message,
+          ...limitsCheck.error?.details
+        });
+      }
+
       // Validate exerciseIndex is within valid range for the module
       const moduleContent = MODULE_CONTENT[moduleId as keyof typeof MODULE_CONTENT];
       if (!moduleContent) {
@@ -337,8 +317,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Assess the prompt using OpenAI
       const feedback = await assessPrompt(prompt, moduleId);
       
-      const userId = req.user.claims.sub;
       const isExerciseCompleted = feedback.overall_score >= 80;
+
+      // Track daily usage for this prompt assessment
+      await storage.updateDailyUsage(userId, 1, 0, "0");
       
       // Save the exercise attempt
       await storage.saveExerciseAttempt({
@@ -964,8 +946,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { promptText, models, parameters, promptId } = validationResult.data;
 
       // ===== CRITICAL SECURITY CHECK: Validate user limits BEFORE expensive API calls =====
-      const estimatedCost = models.length * USAGE_LIMITS.ESTIMATED_COST_PER_TEST;
-      const limitsCheck = await checkUserLimits(userId, estimatedCost);
+      const limitsCheck = await checkUserLimits(userId);
       
       if (!limitsCheck.canProceed) {
         console.log(`Playground test blocked for user ${userId}: ${limitsCheck.error?.message}`);
@@ -976,7 +957,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // User is within limits - proceed with the test
-      console.log(`Playground test authorized for user ${userId}. Estimated cost: $${estimatedCost.toFixed(4)}`);
+      console.log(`Playground test authorized for user ${userId}. Plan: ${limitsCheck.details?.plan}`);
 
       // Run the multi-model test
       const testResult = await runMultiModelTest({
@@ -997,7 +978,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalCost: testResult.totalCost
       });
 
-      // Update user usage
+      // Update daily usage tracking (increment prompts used for this test)
+      await storage.updateDailyUsage(userId, 1, 1, testResult.totalCost);
+
+      // Also update legacy playground usage for backward compatibility
       await storage.upsertPlaygroundUsage(userId);
 
       res.json({
