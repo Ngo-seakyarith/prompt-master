@@ -413,7 +413,7 @@ export default function PlaygroundPage() {
     const displayNames: Record<string, string> = {
       "gpt-4o": "GPT-4o",
       "claude-3.5-sonnet": "Claude 3.5 Sonnet",
-      "gemini-1.5-pro": "Gemini 1.5 Pro",
+      "gemini-2.5-pro": "Gemini 2.5 Pro",
       "gpt-4o-mini": "GPT-4o Mini"
     };
     return displayNames[modelName] || modelName;

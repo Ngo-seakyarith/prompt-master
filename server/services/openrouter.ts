@@ -20,7 +20,7 @@ const PRICING_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 const SUPPORTED_MODELS = {
   "gpt-4o": "openai/gpt-4o",
   "claude-3.5-sonnet": "anthropic/claude-3.5-sonnet", 
-  "gemini-1.5-pro": "google/gemini-1.5-pro",
+  "gemini-2.5-pro": "google/gemini-2.5-pro",
   "gpt-4o-mini": "openai/gpt-4o-mini"
 } as const;
 
