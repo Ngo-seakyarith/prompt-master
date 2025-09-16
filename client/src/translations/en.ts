@@ -1055,7 +1055,28 @@ Your creative prompt with constraints:`
     promptsLoadError: "Failed to load saved prompts",
     loadingModels: "Loading models...",
     loadingPrompts: "Loading prompts...",
-    loadingUsage: "Loading usage..."
+    loadingUsage: "Loading usage...",
+    
+    // Test Results Comparison
+    comparisonSummary: "Comparison Summary",
+    fastest: "Fastest",
+    cheapest: "Cheapest", 
+    topRated: "Top Rated",
+    mostEfficient: "Most Efficient",
+    avgResponseTime: "Avg Response Time",
+    totalCost: "Total Cost",
+    avgLength: "Avg Length",
+    exportResults: "Export Results",
+    clipboard: "Copy to Clipboard",
+    rateResponse: "Rate Response",
+    
+    // Analytics Charts
+    usageTrend: "Usage Trend",
+    costBreakdown: "Cost Breakdown",
+    modelPerformance: "Model Performance", 
+    usageLimits: "Usage Limits",
+    analyticsDescription: "Analytics Overview",
+    successRate: "Success Rate"
   },
 
   // Prompt Library
