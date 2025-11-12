@@ -198,9 +198,9 @@ export default {
   // Authentication
   auth: {
     loginRequired: "Please log in to continue",
-    loginRequiredDescription: "You need to be logged in to access this feature. Click the button below to sign in with your Replit account.",
-    loginButton: "Log in with Replit",
-    loginRedirectNotice: "You will be redirected to Replit for authentication."
+    loginRequiredDescription: "You need to be logged in to access this feature. Click the button below to sign in with your account.",
+    loginButton: "Sign In",
+    loginRedirectNotice: "You will be redirected for authentication."
   },
 
   // AI Models

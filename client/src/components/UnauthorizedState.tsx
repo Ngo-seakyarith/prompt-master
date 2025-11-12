@@ -17,8 +17,8 @@ export default function UnauthorizedState({
   const { t } = useTranslation();
 
   const handleLogin = () => {
-    // Redirect to login endpoint
-    window.location.href = "/api/login";
+    // Redirect to Better Auth Google login
+    window.location.href = "/api/auth/sign-in/google";
   };
 
   const content = (

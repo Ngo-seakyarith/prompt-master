@@ -350,9 +350,9 @@ export default {
   // Authentication
   auth: {
     loginRequired: "សូមចូលប្រព័ន្ធដើម្បីបន្ត",
-    loginRequiredDescription: "អ្នកត្រូវចូលប្រព័ន្ធដើម្បីប្រើប្រាស់មុខងារនេះ។ ចុចប៊ូតុងខាងក្រោមដើម្បីចូលជាមួយគណនី Replit របស់អ្នក។",
-    loginButton: "ចូលជាមួយ Replit",
-    loginRedirectNotice: "អ្នកនឹងត្រូវបានបញ្ជូនទៅ Replit សម្រាប់ការផ្ទៀងផ្ទាត់។"
+    loginRequiredDescription: "អ្នកត្រូវចូលប្រព័ន្ធដើម្បីប្រើប្រាស់មុខងារនេះ។ ចុចប៊ូតុងខាងក្រោមដើម្បីចូល។",
+    loginButton: "ចូលប្រព័ន្ធ",
+    loginRedirectNotice: "អ្នកនឹងត្រូវបានបញ្ជូនសម្រាប់ការផ្ទៀងផ្ទាត់។"
   },
 
   // AI Models
