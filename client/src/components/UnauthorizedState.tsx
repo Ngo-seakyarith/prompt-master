@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTranslation } from "@/hooks/useTranslation";
-import { Lock, LogIn } from "lucide-react";
+import { Lock, Chrome, Github } from "lucide-react";
 
 interface UnauthorizedStateProps {
   title?: string;
@@ -16,9 +16,12 @@ export default function UnauthorizedState({
 }: UnauthorizedStateProps) {
   const { t } = useTranslation();
 
-  const handleLogin = () => {
-    // Redirect to Better Auth Google login
+  const handleGoogleLogin = () => {
     window.location.href = "/api/auth/sign-in/google";
+  };
+
+  const handleGithubLogin = () => {
+    window.location.href = "/api/auth/sign-in/github";
   };
 
   const content = (
@@ -38,14 +41,27 @@ export default function UnauthorizedState({
         </p>
       </div>
       
-      <Button 
-        onClick={handleLogin} 
-        className="gap-2"
-        data-testid="button-login"
-      >
-        <LogIn className="w-4 h-4" />
-        {t("auth.loginButton")}
-      </Button>
+      <div className="flex flex-col gap-3">
+        <Button 
+          onClick={handleGoogleLogin} 
+          className="gap-2 w-full"
+          variant="outline"
+          data-testid="button-google-login"
+        >
+          <Chrome className="w-4 h-4" />
+          Continue with Google
+        </Button>
+        
+        <Button 
+          onClick={handleGithubLogin} 
+          className="gap-2 w-full"
+          variant="outline"
+          data-testid="button-github-login"
+        >
+          <Github className="w-4 h-4" />
+          Continue with GitHub
+        </Button>
+      </div>
       
       <p className="text-sm text-muted-foreground">
         {t("auth.loginRedirectNotice")}
