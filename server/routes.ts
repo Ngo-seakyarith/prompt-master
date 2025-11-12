@@ -134,38 +134,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // SECURE: Create Stripe checkout session (requires payment verification)
-  app.post('/api/billing/create-checkout-session', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.id;
-      const { plan } = req.body;
-      
-      // Basic validation
-      if (!plan || !["pro", "gold"].includes(plan)) {
-        return res.status(400).json({ message: "Invalid subscription plan" });
-      }
-      
-      // TODO: Implement Stripe checkout session creation
-      // This should create a Stripe checkout session and return the URL
-      // Only Stripe webhooks should update subscription status after successful payment
-      
-      res.status(501).json({ 
-        message: "Stripe integration not yet implemented",
-        redirectUrl: null,
-        sessionId: null
-      });
-    } catch (error) {
-      console.error("Error creating checkout session:", error);
-      res.status(500).json({ message: "Failed to create checkout session" });
-    }
-  });
-
-  // SECURE: Stripe webhook endpoint (for updating subscriptions after payment)
-  // This should be implemented when Stripe integration is added
-  // app.post('/api/billing/webhook', express.raw({type: 'application/json'}), async (req, res) => {
-  //   // Verify Stripe signature and update subscription status
-  // });
-
   // Public routes - Courses and modules
   app.get("/api/courses", async (req, res) => {
     try {

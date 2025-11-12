@@ -4,7 +4,6 @@ import { useAuth } from "@/hooks/useAuth";
 import Navigation from "@/components/Navigation";
 import SubscriptionCard from "@/components/SubscriptionCard";
 import UsageDisplay from "@/components/UsageDisplay";
-import BillingHistory from "@/components/BillingHistory";
 import UnauthorizedState from "@/components/UnauthorizedState";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Crown, Star, Zap, CreditCard, TrendingUp, Settings } from "lucide-react";
+import { Crown, Star, Zap, TrendingUp, Settings } from "lucide-react";
 import type { UserSubscription, DailyUsage } from "@shared/schema";
 
 export default function SubscriptionPage() {
@@ -39,30 +38,26 @@ export default function SubscriptionPage() {
     retry: false
   });
 
-  // Upgrade subscription mutation
+  // Upgrade subscription mutation (disabled - no payment system)
   const upgradeMutation = useMutation({
     mutationFn: async (plan: string) => {
-      const response = await apiRequest("POST", "/api/billing/create-checkout-session", { plan });
-      return response.json();
+      // Payment system not implemented
+      throw new Error("Payment system not available");
     },
     onMutate: () => {
       setIsUpgrading(true);
     },
     onSuccess: (data) => {
-      if (data.redirectUrl) {
-        window.location.href = data.redirectUrl;
-      } else {
-        toast({
-          title: "Stripe Integration Coming Soon",
-          description: "Full payment processing will be available in the next release.",
-          variant: "default"
-        });
-      }
-    },
-    onError: (error: any) => {
       toast({
-        title: "Upgrade Failed", 
-        description: error.message || "Failed to initiate upgrade process",
+        title: "Payment System Not Available",
+        description: "This app currently offers free access only.",
+        variant: "default"
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Upgrade Not Available",
+        description: "Payment processing is not currently implemented.",
         variant: "destructive"
       });
     },
@@ -237,10 +232,6 @@ export default function SubscriptionPage() {
               <TrendingUp className="w-4 h-4 mr-2" />
               Usage
             </TabsTrigger>
-            <TabsTrigger value="billing" data-testid="tab-billing">
-              <CreditCard className="w-4 h-4 mr-2" />
-              Billing
-            </TabsTrigger>
           </TabsList>
 
           {/* Plans Tab */}
@@ -340,11 +331,6 @@ export default function SubscriptionPage() {
                 </CardContent>
               </Card>
             )}
-          </TabsContent>
-
-          {/* Billing Tab */}
-          <TabsContent value="billing" className="space-y-8" data-testid="billing-content">
-            <BillingHistory />
           </TabsContent>
         </Tabs>
 
