@@ -1,6 +1,14 @@
 import express from "express";
 import { registerRoutes } from "../server/routes";
 
+console.log("API Index - Starting serverless function");
+console.log("Environment check:");
+console.log("- DATABASE_URL:", process.env.DATABASE_URL ? "Set" : "NOT SET");
+console.log("- BETTER_AUTH_URL:", process.env.BETTER_AUTH_URL ? "Set" : "NOT SET");
+console.log("- BETTER_AUTH_SECRET:", process.env.BETTER_AUTH_SECRET ? "Set" : "NOT SET");
+console.log("- GOOGLE_CLIENT_ID:", process.env.GOOGLE_CLIENT_ID ? "Set" : "NOT SET");
+console.log("- GITHUB_CLIENT_ID:", process.env.GITHUB_CLIENT_ID ? "Set" : "NOT SET");
+
 const app = express();
 
 // Trust proxy for Vercel
@@ -41,7 +49,14 @@ app.use((req, res, next) => {
 let routesInitialized = false;
 const initializeRoutes = async () => {
   if (!routesInitialized) {
-    await registerRoutes(app);
+    console.log("Initializing routes...");
+    try {
+      await registerRoutes(app);
+      console.log("Routes initialized successfully");
+    } catch (error) {
+      console.error("Failed to initialize routes:", error);
+      throw error;
+    }
 
     // Error handling middleware
     app.use((err: any, req: any, res: any, next: any) => {
@@ -57,6 +72,31 @@ const initializeRoutes = async () => {
 
 // Export for Vercel serverless
 export default async (req: any, res: any) => {
-  await initializeRoutes();
-  return app(req, res);
+  console.log(`Request: ${req.method} ${req.url}`);
+
+  // Simple health check
+  if (req.url === '/api/health') {
+    return res.status(200).json({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      env: {
+        database: process.env.DATABASE_URL ? 'configured' : 'missing',
+        auth_url: process.env.BETTER_AUTH_URL ? 'configured' : 'missing',
+        auth_secret: process.env.BETTER_AUTH_SECRET ? 'configured' : 'missing',
+        google_client: process.env.GOOGLE_CLIENT_ID ? 'configured' : 'missing',
+        github_client: process.env.GITHUB_CLIENT_ID ? 'configured' : 'missing'
+      }
+    });
+  }
+
+  try {
+    await initializeRoutes();
+    return app(req, res);
+  } catch (error) {
+    console.error("Serverless function error:", error);
+    return res.status(500).json({
+      error: "Serverless function failed",
+      message: error instanceof Error ? error.message : "Unknown error"
+    });
+  }
 };
