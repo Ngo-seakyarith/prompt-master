@@ -9,6 +9,7 @@ import { insertPromptAttemptSchema, assessPromptSchema, insertGoalSchema, insert
 import { z } from "zod";
 import { MODULE_CONTENT } from "../client/src/lib/constants";
 import { auth } from "./auth";
+import { toNodeHandler } from "better-auth/node";
 import { isAuthenticated } from "./authMiddleware";
 
 // ===== SUBSCRIPTION-BASED USAGE ENFORCEMENT =====
@@ -53,8 +54,8 @@ async function checkAndGenerateCertificate(userId: string, moduleId: string) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Setup Better Auth
-  app.all("/api/auth/*", auth.handler);
+  // Setup Better Auth handler for Express
+  app.all("/api/auth/*", toNodeHandler(auth));
 
   // Initialize recommendation service
   const recommendationService = new RecommendationService(storage);
