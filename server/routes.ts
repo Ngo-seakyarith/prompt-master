@@ -56,7 +56,9 @@ async function checkAndGenerateCertificate(userId: string, moduleId: string) {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup Better Auth handler for Express (must come BEFORE express.json())
+  console.log("Setting up Better Auth handler");
   app.all("/api/auth/*", toNodeHandler(auth));
+  console.log("Better Auth handler registered");
 
   // Body parsing middleware (mounted AFTER Better Auth handler to avoid conflicts)
   app.use(express.json({ limit: '10mb' }));
