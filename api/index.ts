@@ -99,9 +99,17 @@ export default async (req: any, res: any) => {
     return app(req, res);
   } catch (error) {
     console.error("Serverless function error:", error);
-    return res.status(500).json({
+    const payload = {
       error: "Serverless function failed",
       message: error instanceof Error ? error.message : "Unknown error"
-    });
+    };
+
+    if (typeof res.status === "function") {
+      return res.status(500).json(payload);
+    }
+
+    res.statusCode = 500;
+    res.setHeader("Content-Type", "application/json");
+    res.end(JSON.stringify(payload));
   }
 };
