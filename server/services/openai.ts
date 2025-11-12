@@ -1,10 +1,50 @@
-import OpenAI from "openai";
 import type { AssessmentFeedback, QuizFeedback, QuizQuestion } from "@shared/schema";
 
-// the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
-const openai = new OpenAI({ 
-  apiKey: process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY_ENV_VAR || "default_key"
-});
+// Using OpenRouter for all AI calls - easier to manage usage
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+const DEFAULT_MODEL = "openai/gpt-4o"; // Still using GPT-4 for quality, but through OpenRouter
+
+function getClient(): HeadersInit {
+  if (!OPENROUTER_API_KEY) {
+    throw new Error("OPENROUTER_API_KEY environment variable is required");
+  }
+
+  return {
+    "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+    "Content-Type": "application/json",
+    "HTTP-Referer": process.env.BETTER_AUTH_URL || "http://localhost:5000",
+    "X-Title": "PromptMaster LMS"
+  };
+}
+
+async function callOpenRouter(messages: Array<{role: string, content: string}>, temperature = 0.7, jsonMode = false) {
+  const headers = getClient();
+  
+  const body: any = {
+    model: DEFAULT_MODEL,
+    messages,
+    temperature,
+  };
+
+  if (jsonMode) {
+    body.response_format = { type: "json_object" };
+  }
+
+  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(60000) // 60 second timeout
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: { message: "Unknown error" }}));
+    throw new Error(`OpenRouter API error: ${error.error?.message || response.statusText}`);
+  }
+
+  const data = await response.json();
+  return data.choices[0].message.content;
+}
 
 export async function assessPrompt(prompt: string, moduleId: string): Promise<AssessmentFeedback> {
   try {
@@ -110,19 +150,15 @@ Respond with JSON in this exact format:
 
     const systemPrompt = getModuleSystemPrompt(moduleId);
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: `Module: ${moduleId}\n\nPrompt to assess:\n${prompt}` }
-      ],
-      response_format: { type: "json_object" }
-    });
+    const responseContent = await callOpenRouter([
+      { role: "system", content: systemPrompt },
+      { role: "user", content: `Module: ${moduleId}\n\nPrompt to assess:\n${prompt}` }
+    ], 0.7, true);
 
     // ERROR HANDLING FIX: Add try/catch around JSON.parse with fallback structure
     let result;
     try {
-      result = JSON.parse(response.choices[0].message.content || "{}");
+      result = JSON.parse(responseContent || "{}");
     } catch (parseError) {
       console.error("Failed to parse AI response:", parseError);
       result = {
@@ -156,21 +192,18 @@ Respond with JSON in this exact format:
 
 export async function generatePromptSuggestions(prompt: string, feedback: AssessmentFeedback): Promise<string> {
   try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "system",
-          content: "You are a prompt engineering expert. Given a prompt and its assessment feedback, generate an improved version that addresses the identified weaknesses while maintaining the original intent."
-        },
-        {
-          role: "user",
-          content: `Original prompt:\n${prompt}\n\nFeedback:\nOverall Score: ${feedback.overall_score}/100\nImprovements needed: ${feedback.improvements.join(", ")}\nSuggestions: ${feedback.suggestions.join(", ")}\n\nPlease provide an improved version of this prompt:`
-        }
-      ]
-    });
+    const responseContent = await callOpenRouter([
+      {
+        role: "system",
+        content: "You are a prompt engineering expert. Given a prompt and its assessment feedback, generate an improved version that addresses the identified weaknesses while maintaining the original intent."
+      },
+      {
+        role: "user",
+        content: `Original prompt:\n${prompt}\n\nFeedback:\nOverall Score: ${feedback.overall_score}/100\nImprovements needed: ${feedback.improvements.join(", ")}\nSuggestions: ${feedback.suggestions.join(", ")}\n\nPlease provide an improved version of this prompt:`
+      }
+    ]);
 
-    return response.choices[0].message.content || "";
+    return responseContent || "";
   } catch (error) {
     console.error("OpenAI suggestion error:", error);
     throw new Error("Failed to generate suggestions: " + (error as Error).message);
@@ -244,19 +277,15 @@ ${timeSpent ? `Time Spent: ${Math.round(timeSpent / 60)} minutes` : ""}
 Questions and Answers:
 ${JSON.stringify(quizData, null, 2)}`;
     
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userMessage }
-      ],
-      response_format: { type: "json_object" }
-    });
+    const responseContent = await callOpenRouter([
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userMessage }
+    ], 0.7, true);
     
     // ERROR HANDLING FIX: Add try/catch around JSON.parse with fallback structure
     let aiResult;
     try {
-      aiResult = JSON.parse(response.choices[0].message.content || "{}");
+      aiResult = JSON.parse(responseContent || "{}");
     } catch (parseError) {
       console.error("Failed to parse AI quiz feedback response:", parseError);
       aiResult = {

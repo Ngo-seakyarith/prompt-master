@@ -8,7 +8,8 @@ import { exportToJSON, exportToCSV, exportToText, exportToClipboard } from "./ut
 import { insertPromptAttemptSchema, assessPromptSchema, insertGoalSchema, insertCertificateSchema, submitQuizSchema, runPlaygroundTestSchema, savePlaygroundPromptSchema, updatePlaygroundPromptSchema, ratePlaygroundResultSchema, exportPlaygroundResultsSchema } from "@shared/schema";
 import { z } from "zod";
 import { MODULE_CONTENT } from "../client/src/lib/constants";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { auth } from "./auth";
+import { isAuthenticated, devAuthBypass } from "./authMiddleware";
 
 // ===== SUBSCRIPTION-BASED USAGE ENFORCEMENT =====
 // Now using subscription-based limits instead of hardcoded limits
@@ -52,8 +53,11 @@ async function checkAndGenerateCertificate(userId: string, moduleId: string) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Setup Replit Auth
-  await setupAuth(app);
+  // Setup Better Auth
+  app.all("/api/auth/*", auth.handler);
+
+  // Development auth bypass
+  app.use(devAuthBypass);
 
   // Initialize recommendation service
   const recommendationService = new RecommendationService(storage);
@@ -61,9 +65,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
+      const user = req.user;
+      res.json({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        image: user.image,
+      });
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
@@ -73,12 +81,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User profile
   app.get('/api/me', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      res.json(user);
+      const user = req.user;
+      res.json({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        image: user.image,
+      });
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch user profile" });
     }
@@ -89,7 +98,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user subscription info
   app.get('/api/subscription', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       let subscription = await storage.getUserSubscription(userId);
       
       // If no subscription exists, create a default free subscription
@@ -107,7 +116,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get daily usage stats
   app.get('/api/usage/daily', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const date = req.query.date as string || new Date().toISOString().split('T')[0];
       
       const dailyUsage = await storage.getDailyUsage(userId, date);
@@ -131,7 +140,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // SECURE: Create Stripe checkout session (requires payment verification)
   app.post('/api/billing/create-checkout-session', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const { plan } = req.body;
       
       // Basic validation
@@ -226,7 +235,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Protected progress routes
   app.get("/api/progress", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const progress = await storage.getUserProgress(userId);
       res.json(progress);
     } catch (error) {
@@ -237,7 +246,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user progress for specific module
   app.get("/api/progress/:moduleId", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const progress = await storage.getUserModuleProgress(userId, req.params.moduleId);
       res.json(progress || null);
     } catch (error) {
@@ -248,7 +257,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update user progress
   app.post("/api/progress", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const { moduleId, score, isCompleted, attempts } = req.body;
       
       if (!moduleId) {
@@ -293,7 +302,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { prompt, moduleId, exerciseIndex } = validationResult.data;
 
       // ===== USAGE LIMIT CHECK: Validate user can make prompts =====
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const limitsCheck = await checkUserLimits(userId);
       
       if (!limitsCheck.canProceed) {
@@ -390,7 +399,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Protected user attempt routes
   app.get("/api/attempts/:moduleId?", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const attempts = await storage.getUserAttempts(userId, req.params.moduleId);
       res.json(attempts);
     } catch (error) {
@@ -401,7 +410,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get exercise attempts for a module
   app.get("/api/exercises/:moduleId/attempts", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const attempts = await storage.getUserExerciseAttempts(userId, req.params.moduleId);
       res.json(attempts);
     } catch (error) {
@@ -412,7 +421,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get best exercise scores for a module
   app.get("/api/exercises/:moduleId/scores", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const bestScores = await storage.getBestExerciseScores(userId, req.params.moduleId);
       // Convert Map to object for JSON serialization
       const scoresObject = Object.fromEntries(bestScores);
@@ -425,7 +434,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get completed exercises for a module
   app.get("/api/exercises/:moduleId/completed", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const completedExercises = await storage.getCompletedExercises(userId, req.params.moduleId);
       // Convert Set to array for JSON serialization
       const completedArray = Array.from(completedExercises);
@@ -438,7 +447,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Goal management routes
   app.get("/api/goals", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const goals = await storage.getUserGoals(userId);
       res.json(goals);
     } catch (error) {
@@ -448,7 +457,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/goals", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       
       // Validate request body
       const validationResult = insertGoalSchema.safeParse({
@@ -480,7 +489,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/goals/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const goalId = req.params.id;
       
       // Verify goal ownership
@@ -504,7 +513,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/goals/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const goalId = req.params.id;
       
       // Verify goal ownership
@@ -529,7 +538,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Personalized recommendations
   app.get("/api/recommendations", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       
       console.log(`Generating recommendations for user: ${userId}`);
       
@@ -550,7 +559,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Certificate routes
   app.get("/api/certificates", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const certificates = await storage.getUserCertificates(userId);
       res.json(certificates);
     } catch (error) {
@@ -560,7 +569,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/certificates/issue", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       
       // Validate request body using Zod schema
       const validationResult = insertCertificateSchema.extend({
@@ -609,7 +618,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/certificates/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const certificate = await storage.getCertificate(req.params.id);
       
       if (!certificate) {
@@ -657,7 +666,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           serial: certificate.serial,
           issuedAt: certificate.issuedAt,
           courseName: course?.titleKey || course?.id || "Unknown Course",
-          recipientName: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email : "Unknown User"
+          recipientName: user?.name || user?.email || "Unknown User"
         }
       });
     } catch (error) {
@@ -691,9 +700,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           courseId: certificate.courseId
         },
         user: {
-          firstName: user?.firstName || null,
-          lastName: user?.lastName || null,
-          email: user?.email || null
+          name: user?.name || null,
+          email: user?.email || null,
+          image: user?.image || null
         },
         course: {
           titleKey: course?.titleKey || null,
@@ -787,7 +796,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { quizId, answers, timeSpent } = validationResult.data;
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
 
       // Verify quiz exists
       const quiz = await storage.getQuiz(quizId);
@@ -874,7 +883,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get quiz attempts count for current user (protected route)
   app.get("/api/quiz-attempts/count/:quizId", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const quizId = req.params.quizId;
       
       // Verify quiz exists
@@ -895,7 +904,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/quiz-attempts/:userId/:quizId", isAuthenticated, async (req: any, res) => {
     try {
       const { userId: requestedUserId, quizId } = req.params;
-      const currentUserId = req.user.claims.sub;
+      const currentUserId = req.user.id;
 
       // Users can only access their own attempts unless they are an admin
       if (requestedUserId !== currentUserId) {
@@ -932,7 +941,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Run multi-model prompt test
   app.post("/api/playground/tests/run", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       
       // Validate request body
       const validationResult = runPlaygroundTestSchema.safeParse(req.body);
@@ -999,7 +1008,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user's test history
   app.get("/api/playground/tests", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const tests = await storage.getPlaygroundTests(userId);
       res.json(tests);
     } catch (error) {
@@ -1011,7 +1020,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Save a new prompt
   app.post("/api/playground/prompts", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       
       // Validate request body
       const validationResult = savePlaygroundPromptSchema.safeParse(req.body);
@@ -1050,7 +1059,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user's saved prompts
   app.get("/api/playground/prompts", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const prompts = await storage.getPlaygroundPrompts(userId);
       res.json(prompts);
     } catch (error) {
@@ -1062,7 +1071,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update existing prompt
   app.put("/api/playground/prompts/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const promptId = req.params.id;
       
       // Validate request body - use the basic save schema without parentId validation for updates
@@ -1091,7 +1100,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Delete prompt
   app.delete("/api/playground/prompts/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const promptId = req.params.id;
       
       const deleted = await storage.deletePlaygroundPrompt(userId, promptId);
@@ -1110,7 +1119,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user's usage analytics
   app.get("/api/playground/usage", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const usage = await storage.getPlaygroundUsage(userId);
       
       // Return default usage if none exists
@@ -1132,7 +1141,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Rate a model response
   app.post("/api/playground/tests/:testId/rate", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const testId = req.params.testId;
       
       // Validate request body
@@ -1167,7 +1176,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get a specific test for export/viewing
   app.get("/api/playground/tests/:testId", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const testId = req.params.testId;
       
       const test = await storage.getPlaygroundTest(userId, testId);
@@ -1186,7 +1195,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Export test results in various formats
   app.post("/api/playground/tests/:testId/export", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const testId = req.params.testId;
       
       // Validate request body
@@ -1256,7 +1265,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get clipboard-friendly formatted export
   app.get("/api/playground/tests/:testId/clipboard", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const testId = req.params.testId;
       
       const test = await storage.getPlaygroundTest(userId, testId);

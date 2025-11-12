@@ -856,10 +856,10 @@ export class MemStorage implements IStorage {
     
     const user: User = {
       id: userId,
-      email: userData.email || null,
-      firstName: userData.firstName || null,
-      lastName: userData.lastName || null,
-      profileImageUrl: userData.profileImageUrl || null,
+      email: userData.email,
+      name: userData.name,
+      emailVerified: userData.emailVerified || false,
+      image: userData.image || null,
       createdAt: existingUser?.createdAt || new Date(),
       updatedAt: new Date(),
     };
@@ -869,7 +869,7 @@ export class MemStorage implements IStorage {
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    // Legacy method - no longer applicable with Replit Auth
+    // Legacy method - no longer used
     return undefined;
   }
 
@@ -877,10 +877,10 @@ export class MemStorage implements IStorage {
     const id = insertUser.id || randomUUID();
     const user: User = { 
       id,
-      email: insertUser.email || null,
-      firstName: insertUser.firstName || null,
-      lastName: insertUser.lastName || null,
-      profileImageUrl: insertUser.profileImageUrl || null,
+      email: insertUser.email,
+      name: insertUser.name,
+      emailVerified: insertUser.emailVerified || false,
+      image: insertUser.image || null,
       createdAt: new Date(),
       updatedAt: new Date()
     };

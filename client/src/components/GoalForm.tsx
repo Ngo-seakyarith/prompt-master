@@ -68,15 +68,19 @@ export default function GoalForm({ initialData, onSubmit, onCancel, isLoading, e
   const { data: courses = [], isLoading: coursesLoading, isError: coursesError, error: coursesErrorData } = useQuery<Course[]>({
     queryKey: ["/api/courses"],
     retry: 1,
-    onError: (error: any) => {
-      console.error('Failed to fetch courses:', error);
+  });
+
+  // Handle courses error
+  useEffect(() => {
+    if (coursesError) {
+      console.error('Failed to fetch courses:', coursesErrorData);
       toast({
         title: "Error loading courses",
         description: "Failed to load available courses. Please try again.",
         variant: "destructive",
       });
     }
-  });
+  }, [coursesError, coursesErrorData, toast]);
 
   const form = useForm<GoalFormData>({
     resolver: zodResolver(goalFormSchema),
