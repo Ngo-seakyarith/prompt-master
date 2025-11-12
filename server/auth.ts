@@ -28,6 +28,7 @@ export const auth = betterAuth({
   trustedOrigins: [
     "http://localhost:5000",
     "http://localhost:5173",
+    "https://promptmastertest.vercel.app",
     process.env.BETTER_AUTH_URL,
   ].filter((origin): origin is string => Boolean(origin)),
 });
