@@ -6,11 +6,7 @@ const app = express();
 // Trust proxy for Vercel
 app.set('trust proxy', 1);
 
-// Body parsing middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: false, limit: '10mb' }));
-
-// Logging middleware
+// Logging middleware (before routes)
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;

@@ -1,4 +1,5 @@
 import type { Express } from "express";
+import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { assessPrompt, generatePromptSuggestions, assessQuizAnswers } from "./services/openai";
@@ -54,8 +55,12 @@ async function checkAndGenerateCertificate(userId: string, moduleId: string) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Setup Better Auth handler for Express
+  // Setup Better Auth handler for Express (must come BEFORE express.json())
   app.all("/api/auth/*", toNodeHandler(auth));
+
+  // Body parsing middleware (mounted AFTER Better Auth handler to avoid conflicts)
+  app.use(express.json({ limit: '10mb' }));
+  app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 
   // Initialize recommendation service
   const recommendationService = new RecommendationService(storage);
