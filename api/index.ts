@@ -74,9 +74,9 @@ const initializeRoutes = async () => {
 export default async (req: any, res: any) => {
   console.log(`Request: ${req.method} ${req.url}`);
 
-  // Simple health check
+  // Simple health check (respond directly because Express hasn't patched res yet)
   if (req.url === '/api/health') {
-    return res.status(200).json({
+    const payload = {
       status: 'ok',
       timestamp: new Date().toISOString(),
       env: {
@@ -86,7 +86,12 @@ export default async (req: any, res: any) => {
         google_client: process.env.GOOGLE_CLIENT_ID ? 'configured' : 'missing',
         github_client: process.env.GITHUB_CLIENT_ID ? 'configured' : 'missing'
       }
-    });
+    };
+
+    res.statusCode = 200;
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify(payload));
+    return;
   }
 
   try {
