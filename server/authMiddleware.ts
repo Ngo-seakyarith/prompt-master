@@ -21,24 +21,3 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     return res.status(401).json({ message: "Unauthorized" });
   }
 };
-
-// Development mode bypass (for local testing)
-export const devAuthBypass: RequestHandler = (req, res, next) => {
-  const isDevelopment = process.env.NODE_ENV === 'development' ||
-                       process.env.REPL_SLUG === undefined ||
-                       req.hostname.includes('localhost') ||
-                       req.hostname.includes('127.0.0.1');
-
-  if (isDevelopment && process.env.SKIP_AUTH === 'true') {
-    console.log('🚨 DEVELOPMENT MODE: Bypassing authentication');
-    // Create a mock user for development
-    (req as any).user = {
-      id: 'dev-user-123',
-      email: 'dev@example.com',
-      name: 'Dev User',
-    };
-    return next();
-  }
-
-  next();
-};

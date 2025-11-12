@@ -9,7 +9,7 @@ import { insertPromptAttemptSchema, assessPromptSchema, insertGoalSchema, insert
 import { z } from "zod";
 import { MODULE_CONTENT } from "../client/src/lib/constants";
 import { auth } from "./auth";
-import { isAuthenticated, devAuthBypass } from "./authMiddleware";
+import { isAuthenticated } from "./authMiddleware";
 
 // ===== SUBSCRIPTION-BASED USAGE ENFORCEMENT =====
 // Now using subscription-based limits instead of hardcoded limits
@@ -55,9 +55,6 @@ async function checkAndGenerateCertificate(userId: string, moduleId: string) {
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup Better Auth
   app.all("/api/auth/*", auth.handler);
-
-  // Development auth bypass
-  app.use(devAuthBypass);
 
   // Initialize recommendation service
   const recommendationService = new RecommendationService(storage);
