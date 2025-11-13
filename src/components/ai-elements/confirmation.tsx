@@ -39,9 +39,15 @@ type ToolUIPartApproval =
     }
   | undefined;
 
+type ConfirmationState =
+  | "approval-requested"
+  | "approval-responded"
+  | "output-available"
+  | "output-denied";
+
 type ConfirmationContextValue = {
   approval: ToolUIPartApproval;
-  state: ToolUIPart["state"];
+  state: ConfirmationState;
 };
 
 const ConfirmationContext = createContext<ConfirmationContextValue | null>(
@@ -60,7 +66,15 @@ const useConfirmation = () => {
 
 export type ConfirmationProps = ComponentProps<typeof Alert> & {
   approval?: ToolUIPartApproval;
-  state: ToolUIPart["state"];
+  // Full state union from the ai SDK including approval states.
+  state:
+    | "input-streaming"
+    | "input-available"
+    | "approval-requested"
+    | "approval-responded"
+    | "output-available"
+    | "output-error"
+    | "output-denied";
 };
 
 export const Confirmation = ({
@@ -69,12 +83,28 @@ export const Confirmation = ({
   state,
   ...props
 }: ConfirmationProps) => {
-  if (!approval || state === "input-streaming" || state === "input-available") {
+  // Only mount the confirmation UI for relevant states
+  if (
+    !approval ||
+    state === "input-streaming" ||
+    state === "input-available" ||
+    state === "output-error"
+  ) {
     return null;
   }
 
+  // Here we know state is one of the approval/output-related values
   return (
-    <ConfirmationContext.Provider value={{ approval, state }}>
+    <ConfirmationContext.Provider
+      value={{
+        approval,
+        state: state as
+          | "approval-requested"
+          | "approval-responded"
+          | "output-available"
+          | "output-denied",
+      }}
+    >
       <Alert className={cn("flex flex-col gap-2", className)} {...props} />
     </ConfirmationContext.Provider>
   );

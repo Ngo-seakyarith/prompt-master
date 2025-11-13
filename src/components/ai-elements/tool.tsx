@@ -37,7 +37,14 @@ export type ToolHeaderProps = {
 };
 
 const getStatusBadge = (status: ToolUIPart["state"]) => {
-  const labels: Record<ToolUIPart["state"], string> = {
+  // Extend the known state union locally so our labels/icons map stays type-safe.
+  type ExtendedState =
+    | ToolUIPart["state"]
+    | "approval-requested"
+    | "approval-responded"
+    | "output-denied";
+
+  const labels: Partial<Record<ExtendedState, string>> = {
     "input-streaming": "Pending",
     "input-available": "Running",
     "approval-requested": "Awaiting Approval",
@@ -47,7 +54,7 @@ const getStatusBadge = (status: ToolUIPart["state"]) => {
     "output-denied": "Denied",
   };
 
-  const icons: Record<ToolUIPart["state"], ReactNode> = {
+  const icons: Partial<Record<ExtendedState, ReactNode>> = {
     "input-streaming": <CircleIcon className="size-4" />,
     "input-available": <ClockIcon className="size-4 animate-pulse" />,
     "approval-requested": <ClockIcon className="size-4 text-yellow-600" />,
