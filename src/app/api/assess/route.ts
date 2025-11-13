@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import { assessPrompt } from "@/lib/openrouter"
-import { getTodayString } from "@/lib/utils"
 import { z } from "zod"
 
 const assessmentSchema = z.object({
@@ -23,7 +22,7 @@ export async function POST(req: NextRequest) {
     const { prompt, moduleId, exerciseIndex } = assessmentSchema.parse(body)
 
     // Check daily usage limit
-    const today = getTodayString()
+    const today = new Date().toISOString().split('T')[0]
     const subscription = await prisma.userSubscription.findUnique({
       where: { userId: session.user.id },
     })
@@ -130,7 +129,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(assessment)
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors }, { status: 400 })
+      return NextResponse.json({ error: error.issues }, { status: 400 })
     }
     console.error("Error assessing prompt:", error)
     return NextResponse.json(

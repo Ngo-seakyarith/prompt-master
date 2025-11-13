@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 // Get user's prompt attempts for a specific module (or all if no moduleId)
 export async function GET(
   _request: Request,
-  { params }: { params: Promise<{ moduleId?: string }> }
+  { params }: { params: Promise<{ moduleId?: string[] }> }
 ) {
   try {
     const session = await auth.api.getSession({
@@ -18,11 +18,12 @@ export async function GET(
     }
 
     const { moduleId } = await params;
+    const moduleIdStr = moduleId?.[0]; // Get first segment if exists
 
     const attempts = await prisma.promptAttempt.findMany({
       where: {
         userId: session.user.id,
-        ...(moduleId && { moduleId }),
+        ...(moduleIdStr && { moduleId: moduleIdStr }),
       },
       orderBy: { createdAt: "desc" },
       include: {

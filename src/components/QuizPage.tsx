@@ -17,11 +17,11 @@ interface QuestionResult {
 
 interface QuizFeedback {
   score: number;
-  percentage: number;
   totalQuestions: number;
   correctAnswers: number;
-  timeSpent?: number;
   feedback: string;
+  percentage?: number;
+  timeSpent?: number;
   questions?: QuestionResult[];
 }
 
@@ -105,9 +105,9 @@ export default function QuizPage({ quizId, onExit }: QuizPageProps) {
       </Card>
 
       {/* Quiz Content */}
-      {currentState === QuizState.TAKING && (
+      {currentState === QuizState.TAKING && quiz.questions && (
         <QuizTaker
-          quizId={quizId}
+          questions={quiz.questions as any[]}
           onComplete={handleQuizComplete}
           onExit={onExit}
         />

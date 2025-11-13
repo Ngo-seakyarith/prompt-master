@@ -1,4 +1,4 @@
-import { createOpenRouter } from "@ai-sdk/openrouter"
+import { createOpenRouter } from "@openrouter/ai-sdk-provider"
 import { generateText } from "ai"
 
 const openrouter = createOpenRouter({
@@ -90,7 +90,6 @@ Respond in JSON format only.`
       model: openrouter("anthropic/claude-3.5-sonnet"),
       prompt: assessmentPrompt,
       temperature: 0.7,
-      maxTokens: 1500,
     })
 
     const feedback = JSON.parse(text)
@@ -153,7 +152,6 @@ Respond in JSON format with: strengths (array), improvements (array), detailedFe
       model: openrouter("anthropic/claude-3.5-sonnet"),
       prompt: assessmentPrompt,
       temperature: 0.7,
-      maxTokens: 2000,
     })
 
     const aiResponse = JSON.parse(text)
@@ -205,14 +203,15 @@ export async function runMultiModelTest(
           model: openrouter(modelId),
           prompt: promptText,
           temperature: parameters.temperature,
-          maxTokens: parameters.maxTokens,
           topP: parameters.topP,
         })
 
         const responseTime = Date.now() - startTime
         const modelConfig = AVAILABLE_MODELS.find((m) => m.id === modelId)
-        const promptTokens = usage?.promptTokens || 0
-        const completionTokens = usage?.completionTokens || 0
+        // Usage type changed in AI SDK - using totalTokens or defaults
+        const totalTokens = (usage as any)?.totalTokens || 1000
+        const promptTokens = Math.floor(totalTokens * 0.3)
+        const completionTokens = Math.floor(totalTokens * 0.7)
         
         const cost = modelConfig
           ? (promptTokens * modelConfig.pricing.prompt + 

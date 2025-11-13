@@ -29,7 +29,7 @@ interface QuestionResult {
 
 interface QuizFeedback {
   score: number;
-  percentage: number;
+  percentage?: number;
   totalQuestions: number;
   correctAnswers: number;
   timeSpent?: number;
@@ -52,28 +52,29 @@ export default function QuizResults({
   onContinue,
   certificateGenerated
 }: QuizResultsProps) {
-  const isPassing = feedback.percentage >= 80;
-  const isExcellent = feedback.percentage >= 95;
-  const isGood = feedback.percentage >= 80;
+  const percentage = feedback.percentage ?? (feedback.correctAnswers / feedback.totalQuestions) * 100;
+  const isPassing = percentage >= 80;
+  const isExcellent = percentage >= 95;
+  const isGood = percentage >= 80;
 
   const getPerformanceLevel = () => {
     if (isExcellent) return "Excellent!";
     if (isGood) return "Good Job!";
-    if (feedback.percentage >= 60) return "Fair";
+    if (percentage >= 60) return "Fair";
     return "Needs Improvement";
   };
 
   const getPerformanceColor = () => {
     if (isExcellent) return "text-emerald-600 dark:text-emerald-400";
     if (isGood) return "text-green-600 dark:text-green-400";
-    if (feedback.percentage >= 60) return "text-yellow-600 dark:text-yellow-400";
+    if (percentage >= 60) return "text-yellow-600 dark:text-yellow-400";
     return "text-red-600 dark:text-red-400";
   };
 
   const getScoreGradient = () => {
     if (isExcellent) return "from-emerald-500 to-green-500";
     if (isGood) return "from-green-500 to-lime-500";
-    if (feedback.percentage >= 60) return "from-yellow-500 to-orange-500";
+    if (percentage >= 60) return "from-yellow-500 to-orange-500";
     return "from-red-500 to-pink-500";
   };
 

@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
     const dailyUsage = await prisma.dailyUsage.findFirst({
       where: {
         userId,
-        date: new Date(date),
+        date,
       },
     });
 

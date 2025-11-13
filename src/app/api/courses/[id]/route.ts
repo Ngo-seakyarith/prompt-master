@@ -4,13 +4,14 @@ import { prisma } from "@/lib/db"
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth.api.getSession({ headers: req.headers })
+    const { id } = await params
     
     const course = await prisma.course.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         modules: {
           where: { isActive: true },
