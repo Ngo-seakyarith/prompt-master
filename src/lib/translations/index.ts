@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, type ReactNode } from "react";
+import React, { createContext, useContext, useState, type ReactNode } from "react";
 import { en, type Translation } from "./en";
 import { km } from "./km";
 
@@ -26,9 +26,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <LanguageContext.Provider value={value}>
-      {children}
-    </LanguageContext.Provider>
+    React.createElement(
+      LanguageContext.Provider,
+      { value },
+      children
+    )
   )
 }
 
