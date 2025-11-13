@@ -57,16 +57,6 @@ export default function PlaygroundPage() {
     enabled: !!session,
   });
 
-  const { data: userCredits } = useQuery({
-    queryKey: ["user-credits"],
-    queryFn: async () => {
-      const res = await fetch("/api/user/credits");
-      if (!res.ok) throw new Error("Failed to fetch credits");
-      return res.json();
-    },
-    enabled: !!session,
-  });
-
   const runTestMutation = useMutation({
     mutationFn: async (data: any) => {
       const res = await fetch("/api/playground/test", {
@@ -79,8 +69,7 @@ export default function PlaygroundPage() {
     },
     onSuccess: () => {
       toast.success("Test completed successfully!");
-      // Refresh credits and tests data
-      queryClient.invalidateQueries({ queryKey: ["user-credits"] });
+      // Refresh tests data
       queryClient.invalidateQueries({ queryKey: ["playground-tests"] });
     },
     onError: () => {
@@ -95,10 +84,6 @@ export default function PlaygroundPage() {
     }
     if (selectedModels.length === 0) {
       toast.error("Please select at least one model");
-      return;
-    }
-    if (!userCredits || userCredits.credits < 1) {
-      toast.error("Insufficient credits. You need at least 1 credit to run a test.");
       return;
     }
 
@@ -117,18 +102,8 @@ export default function PlaygroundPage() {
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold mb-2">AI Playground</h1>
-              <p className="text-muted-foreground">Test and compare multiple AI models</p>
-            </div>
-            {userCredits && (
-              <div className="text-right">
-                <div className="text-sm text-muted-foreground">Credits Remaining</div>
-                <div className="text-2xl font-bold text-primary">{userCredits.credits}</div>
-              </div>
-            )}
-          </div>
+          <h1 className="text-4xl font-bold mb-2">AI Playground</h1>
+          <p className="text-muted-foreground">Test and compare multiple AI models</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -140,20 +115,6 @@ export default function PlaygroundPage() {
                 <CardDescription>Configure your test parameters</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {userCredits && userCredits.credits < 1 && (
-                  <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md">
-                    <p className="text-sm text-destructive font-medium">
-                      Insufficient credits. You need at least 1 credit to run tests.
-                    </p>
-                  </div>
-                )}
-                {userCredits && userCredits.credits > 0 && userCredits.credits <= 5 && (
-                  <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-md">
-                    <p className="text-sm text-yellow-600 dark:text-yellow-400 font-medium">
-                      Low credits remaining: {userCredits.credits}
-                    </p>
-                  </div>
-                )}
                 <div>
                   <label className="text-sm font-medium mb-2 block">Models</label>
                   <Select
@@ -240,7 +201,7 @@ export default function PlaygroundPage() {
                 <Button 
                   onClick={handleRunTest} 
                   className="mt-4 w-full"
-                  disabled={runTestMutation.isPending || !userCredits || userCredits.credits < 1}
+                  disabled={runTestMutation.isPending}
                 >
                   {runTestMutation.isPending ? (
                     <>
