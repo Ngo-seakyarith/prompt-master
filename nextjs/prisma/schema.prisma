@@ -1,0 +1,325 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Better Auth tables
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  sessions           Session[]
+  accounts           Account[]
+  userProgress       UserProgress[]
+  promptAttempts     PromptAttempt[]
+  exerciseAttempts   ExerciseAttempt[]
+  goals              Goal[]
+  certificates       Certificate[]
+  quizAttempts       QuizAttempt[]
+  playgroundPrompts  PlaygroundPrompt[]
+  playgroundTests    PlaygroundTest[]
+  playgroundUsage    PlaygroundUsage?
+  subscription       UserSubscription?
+  dailyUsage         DailyUsage[]
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session")
+}
+
+model Account {
+  id                     String    @id @default(cuid())
+  accountId              String
+  providerId             String
+  userId                 String
+  accessToken            String?
+  refreshToken           String?
+  idToken                String?
+  accessTokenExpiresAt   DateTime?
+  refreshTokenExpiresAt  DateTime?
+  scope                  String?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+  user                   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime? @default(now())
+  updatedAt  DateTime? @updatedAt
+
+  @@map("verification")
+}
+
+// Course and Module tables
+model Course {
+  id             String   @id @default(cuid())
+  titleKey       String
+  descriptionKey String
+  order          Int
+  isActive       Boolean  @default(true)
+  modules        Module[]
+  goals          Goal[]
+  certificates   Certificate[]
+
+  @@map("courses")
+}
+
+model Module {
+  id                String             @id @default(cuid())
+  courseId          String
+  title             String
+  description       String
+  icon              String
+  order             Int
+  content           Json
+  isActive          Boolean            @default(true)
+  course            Course             @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  userProgress      UserProgress[]
+  promptAttempts    PromptAttempt[]
+  exerciseAttempts  ExerciseAttempt[]
+  quizzes           Quiz[]
+
+  @@map("modules")
+}
+
+model UserProgress {
+  id          String    @id @default(cuid())
+  userId      String
+  moduleId    String
+  score       Int       @default(0)
+  isCompleted Boolean   @default(false)
+  attempts    Int       @default(0)
+  lastAttempt DateTime  @default(now())
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  module      Module    @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, moduleId])
+  @@map("user_progress")
+}
+
+model PromptAttempt {
+  id        String   @id @default(cuid())
+  userId    String
+  moduleId  String
+  prompt    String
+  score     Int
+  feedback  Json
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  module    Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@map("prompt_attempts")
+}
+
+model ExerciseAttempt {
+  id            String   @id @default(cuid())
+  userId        String
+  moduleId      String
+  exerciseIndex Int
+  prompt        String
+  score         Int
+  feedback      Json
+  isCompleted   Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  module        Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@map("exercise_attempts")
+}
+
+model Goal {
+  id                    String   @id @default(cuid())
+  userId                String
+  courseId              String?
+  targetDate            DateTime
+  targetModulesPerWeek  Int
+  notes                 String?
+  createdAt             DateTime @default(now())
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course                Course?  @relation(fields: [courseId], references: [id], onDelete: SetNull)
+
+  @@map("goals")
+}
+
+model Certificate {
+  id        String   @id @default(cuid())
+  userId    String
+  courseId  String
+  issuedAt  DateTime @default(now())
+  serial    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@map("certificates")
+}
+
+// Quiz tables
+model Quiz {
+  id             String         @id @default(cuid())
+  moduleId       String
+  titleKey       String
+  descriptionKey String
+  order          Int
+  isActive       Boolean        @default(true)
+  createdAt      DateTime       @default(now())
+  module         Module         @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  questions      QuizQuestion[]
+  attempts       QuizAttempt[]
+
+  @@index([moduleId])
+  @@map("quizzes")
+}
+
+model QuizQuestion {
+  id                 String @id @default(cuid())
+  quizId             String
+  questionText       String
+  answerOptions      Json
+  correctAnswerIndex Int
+  questionType       String
+  order              Int
+  points             Int    @default(1)
+  quiz               Quiz   @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@index([quizId])
+  @@map("quiz_questions")
+}
+
+model QuizAttempt {
+  id          String   @id @default(cuid())
+  userId      String
+  quizId      String
+  score       Int
+  maxScore    Int
+  answers     Json
+  feedback    Json
+  isCompleted Boolean  @default(true)
+  timeSpent   Int?
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quiz        Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@index([quizId])
+  @@index([userId])
+  @@map("quiz_attempts")
+}
+
+// Playground tables
+model PlaygroundPrompt {
+  id        String             @id @default(cuid())
+  userId    String
+  title     String
+  content   String
+  category  String?
+  tags      String[]
+  isPublic  Boolean            @default(false)
+  version   Int                @default(1)
+  parentId  String?
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tests     PlaygroundTest[]
+
+  @@index([userId])
+  @@index([parentId])
+  @@map("playground_prompts")
+}
+
+model PlaygroundTest {
+  id         String            @id @default(cuid())
+  userId     String
+  promptId   String?
+  promptText String
+  models     String[]
+  parameters Json
+  results    Json
+  totalCost  String
+  createdAt  DateTime          @default(now())
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  prompt     PlaygroundPrompt? @relation(fields: [promptId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([promptId])
+  @@map("playground_tests")
+}
+
+model PlaygroundUsage {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  testsRun     Int      @default(0)
+  totalCost    String   @default("0")
+  lastActive   DateTime @default(now())
+  monthlyTests Int      @default(0)
+  monthlyReset DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("playground_usage")
+}
+
+// Subscription tables
+model UserSubscription {
+  id                   String    @id @default(cuid())
+  userId               String    @unique
+  plan                 String    @default("free")
+  status               String    @default("active")
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean   @default(false)
+  dailyPromptLimit     Int       @default(5)
+  courseAccessLevel    String    @default("none")
+  accessibleCourseId   String?
+  metadata             Json?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("user_subscriptions")
+}
+
+model DailyUsage {
+  id           String   @id @default(cuid())
+  userId       String
+  date         String
+  promptsUsed  Int      @default(0)
+  testsRun     Int      @default(0)
+  totalCost    String   @default("0")
+  lastActivity DateTime @default(now())
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([date])
+  @@map("daily_usage")
+}
