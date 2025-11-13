@@ -1,4 +1,4 @@
-zexport const en = {
+export const en = {
   nav: {
     dashboard: "Dashboard",
     courses: "Courses",
