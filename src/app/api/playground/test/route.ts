@@ -26,8 +26,27 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { promptText, models, parameters, promptId } = testSchema.parse(body)
 
+    // Check user credits
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { credits: true },
+    })
+
+    if (!user || user.credits < 1) {
+      return NextResponse.json(
+        { error: "Insufficient credits. You need at least 1 credit to run a test." },
+        { status: 402 }
+      )
+    }
+
     // Run the test
     const testResults = await runMultiModelTest(promptText, models, parameters)
+
+    // Deduct 1 credit from user
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: { credits: { decrement: 1 } },
+    })
 
     // Save test
     await prisma.playgroundTest.create({

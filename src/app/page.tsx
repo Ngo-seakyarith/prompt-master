@@ -1,10 +1,9 @@
 "use client";
 
-import { useSession } from "@/lib/auth-client";
+import { useSession, signIn } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
 
 export default function Home() {
   const { data: session, isPending } = useSession();
@@ -16,6 +15,14 @@ export default function Home() {
     }
   }, [session, router]);
 
+  const handleGoogleSignIn = async () => {
+    await signIn.social({ provider: "google" });
+  };
+
+  const handleGithubSignIn = async () => {
+    await signIn.social({ provider: "github" });
+  };
+
   if (isPending) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -25,7 +32,7 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-linear-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
       <div className="max-w-4xl w-full space-y-8 text-center">
         <div className="space-y-4">
           <h1 className="text-5xl md:text-6xl font-bold text-gray-900 dark:text-white">
@@ -37,16 +44,12 @@ export default function Home() {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-8">
-          <Link href="/api/auth/signin/google">
-            <Button size="lg" className="w-full sm:w-auto">
-              Sign in with Google
-            </Button>
-          </Link>
-          <Link href="/api/auth/signin/github">
-            <Button size="lg" variant="outline" className="w-full sm:w-auto">
-              Sign in with GitHub
-            </Button>
-          </Link>
+          <Button size="lg" className="w-full sm:w-auto" onClick={handleGoogleSignIn}>
+            Sign in with Google
+          </Button>
+          <Button size="lg" variant="outline" className="w-full sm:w-auto" onClick={handleGithubSignIn}>
+            Sign in with GitHub
+          </Button>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6 pt-12">

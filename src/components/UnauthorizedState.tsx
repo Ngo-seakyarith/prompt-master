@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Lock, Chrome, Github } from "lucide-react";
+import { signIn } from "@/lib/auth-client";
 
 interface UnauthorizedStateProps {
   title?: string;
@@ -15,12 +16,12 @@ export default function UnauthorizedState({
   description, 
   showCard = true 
 }: UnauthorizedStateProps) {
-  const handleGoogleLogin = () => {
-    window.location.href = "/api/auth/sign-in/google";
+  const handleGoogleLogin = async () => {
+    await signIn.social({ provider: "google" });
   };
 
-  const handleGithubLogin = () => {
-    window.location.href = "/api/auth/sign-in/github";
+  const handleGithubLogin = async () => {
+    await signIn.social({ provider: "github" });
   };
 
   const content = (
