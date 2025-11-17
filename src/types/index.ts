@@ -46,7 +46,6 @@ export interface PlaygroundTest {
   promptId?: string;
   promptText: string;
   models: string[];
-  parameters: any;
   results: PlaygroundTestResult[];
   totalCost: string;
   createdAt: Date;
@@ -65,8 +64,6 @@ export interface TestRequest {
   promptText: string;
   models: string[];
   parameters: {
-    temperature: number;
-    maxTokens: number;
     topP: number;
   };
 }

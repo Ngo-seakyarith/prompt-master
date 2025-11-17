@@ -25,13 +25,6 @@ export const AVAILABLE_MODELS: ModelConfig[] = [
     pricing: { prompt: 0.0002, completion: 0.0005 },
   },
   {
-    id: "deepseek/deepseek-r1-0528:free",
-    name: "DeepSeek R1 (Free)",
-    provider: "DeepSeek",
-    contextLength: 163840,
-    pricing: { prompt: 0, completion: 0 },
-  },
-  {
     id: "deepseek/deepseek-v3.2-exp",
     name: "DeepSeek V3.2 Experimental",
     provider: "DeepSeek",
@@ -39,29 +32,15 @@ export const AVAILABLE_MODELS: ModelConfig[] = [
     pricing: { prompt: 0.00027, completion: 0.0004 },
   },
   {
-    id: "openai/gpt-5-chat",
-    name: "GPT-5 Chat",
+    id: "openai/gpt-5.1-chat",
+    name: "GPT-5.1 Instant",
     provider: "OpenAI",
     contextLength: 128000,
     pricing: { prompt: 0.00125, completion: 0.01 },
   },
   {
-    id: "openai/gpt-5",
-    name: "GPT-5",
-    provider: "OpenAI",
-    contextLength: 400000,
-    pricing: { prompt: 0.00125, completion: 0.01 },
-  },
-  {
-    id: "openai/gpt-5-mini",
-    name: "GPT-5 Mini",
-    provider: "OpenAI",
-    contextLength: 400000,
-    pricing: { prompt: 0.00125, completion: 0.01 },
-  },
-  {
-    id: "openai/gpt-5-nano",
-    name: "GPT-5 Nano",
+    id: "openai/gpt-5.1",
+    name: "GPT-5.1 Thinking",
     provider: "OpenAI",
     contextLength: 400000,
     pricing: { prompt: 0.00125, completion: 0.01 },
@@ -107,13 +86,6 @@ export const AVAILABLE_MODELS: ModelConfig[] = [
     provider: "Google",
     contextLength: 1048576,
     pricing: { prompt: 0.00075, completion: 0.003 },
-  },
-  {
-    id: "google/gemini-2.5-flash-lite",
-    name: "Gemini 2.5 Flash Lite",
-    provider: "Google",
-    contextLength: 1048576,
-    pricing: { prompt: 0.0005, completion: 0.0015 },
   },
   {
     id: "z-ai/glm-4.6",
@@ -258,12 +230,7 @@ Respond in JSON format with: strengths (array), improvements (array), detailedFe
 
 export async function runMultiModelTest(
   promptText: string,
-  models: string[],
-  parameters: {
-    temperature: number
-    maxTokens: number
-    topP: number
-  }
+  models: string[]
 ) {
   const results = await Promise.all(
     models.map(async (modelId) => {
@@ -272,8 +239,6 @@ export async function runMultiModelTest(
         const { text, usage } = await generateText({
           model: openrouter(modelId),
           prompt: promptText,
-          temperature: parameters.temperature,
-          topP: parameters.topP,
         })
 
         const responseTime = Date.now() - startTime

@@ -7,11 +7,6 @@ import { z } from "zod"
 const testSchema = z.object({
   promptText: z.string().min(1),
   models: z.array(z.string()).min(1).max(10),
-  parameters: z.object({
-    temperature: z.number().min(0).max(2).default(0.7),
-    maxTokens: z.number().int().min(1).max(8192).default(1000),
-    topP: z.number().min(0).max(1).default(1),
-  }),
   promptId: z.string().optional(),
 })
 
@@ -24,10 +19,10 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { promptText, models, parameters, promptId } = testSchema.parse(body)
+    const { promptText, models, promptId } = testSchema.parse(body)
 
     // Run the test
-    const testResults = await runMultiModelTest(promptText, models, parameters)
+    const testResults = await runMultiModelTest(promptText, models)
 
     // Save test
     await prisma.playgroundTest.create({
@@ -36,7 +31,6 @@ export async function POST(req: NextRequest) {
         promptId,
         promptText,
         models,
-        parameters,
         results: testResults.results,
         totalCost: testResults.totalCost,
       },

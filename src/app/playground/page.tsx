@@ -7,36 +7,36 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Play, Loader2, DollarSign, Clock, Award } from "lucide-react";
+import { Play, Loader2, DollarSign, Clock } from "lucide-react";
 import { toast } from "sonner";
+import {
+  PromptInput,
+  PromptInputBody,
+  PromptInputTextarea,
+  PromptInputFooter,
+  PromptInputHeader,
+  PromptInputTools,
+  PromptInputButton,
+} from "@/components/ai-elements/prompt-input";
+import {
+  ModelSelector,
+  ModelSelectorTrigger,
+  ModelSelectorContent,
+  ModelSelectorInput,
+  ModelSelectorList,
+  ModelSelectorEmpty,
+  ModelSelectorItem,
+  ModelSelectorName,
+} from "@/components/ai-elements/model-selector";
 
 export default function PlaygroundPage() {
   const { data: session, isPending } = useSession();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [promptText, setPromptText] = useState("");
   const [selectedModels, setSelectedModels] = useState<string[]>([]);
-  const [temperature, setTemperature] = useState([0.7]);
-  const [maxTokens, setMaxTokens] = useState([1000]);
-
-  if (isPending) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  if (!session) {
-    router.push("/");
-    return null;
-  }
 
   const { data: models } = useQuery({
     queryKey: ["playground-models"],
@@ -45,6 +45,7 @@ export default function PlaygroundPage() {
       if (!res.ok) throw new Error("Failed to fetch models");
       return res.json();
     },
+    enabled: !!session,
   });
 
   const { data: tests } = useQuery({
@@ -77,7 +78,20 @@ export default function PlaygroundPage() {
     },
   });
 
-  const handleRunTest = () => {
+  if (isPending) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!session) {
+    router.push("/");
+    return null;
+  }
+
+  const handleRunTest = (promptText: string) => {
     if (!promptText.trim()) {
       toast.error("Please enter a prompt");
       return;
@@ -90,11 +104,6 @@ export default function PlaygroundPage() {
     runTestMutation.mutate({
       promptText,
       models: selectedModels,
-      parameters: {
-        temperature: temperature[0],
-        maxTokens: maxTokens[0],
-        topP: 1,
-      },
     });
   };
 
@@ -106,115 +115,102 @@ export default function PlaygroundPage() {
           <p className="text-muted-foreground">Test and compare multiple AI models</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Panel - Configuration */}
-          <div className="lg:col-span-1 space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Configuration</CardTitle>
-                <CardDescription>Configure your test parameters</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Models</label>
-                  <Select
-                    value={selectedModels[0]}
-                    onValueChange={(value) => {
-                      if (!selectedModels.includes(value)) {
-                        setSelectedModels([...selectedModels, value]);
-                      }
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select models" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {models?.map((model: any) => (
-                        <SelectItem key={model.id} value={model.id}>
-                          {model.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {selectedModels.map((modelId) => {
-                      const model = models?.find((m: any) => m.id === modelId);
-                      return (
-                        <Badge key={modelId} variant="secondary">
-                          {model?.name}
-                          <button
-                            onClick={() => setSelectedModels(selectedModels.filter(m => m !== modelId))}
-                            className="ml-2"
-                          >
-                            ×
-                          </button>
-                        </Badge>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium mb-2 block">
-                    Temperature: {temperature[0].toFixed(2)}
-                  </label>
-                  <Slider
-                    value={temperature}
-                    onValueChange={setTemperature}
-                    min={0}
-                    max={2}
-                    step={0.1}
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium mb-2 block">
-                    Max Tokens: {maxTokens[0]}
-                  </label>
-                  <Slider
-                    value={maxTokens}
-                    onValueChange={setMaxTokens}
-                    min={100}
-                    max={4000}
-                    step={100}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Right Panel - Prompt and Results */}
-          <div className="lg:col-span-2 space-y-6">
+        <div className="space-y-6">
+          {/* Prompt and Results */}
+          <div className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Prompt</CardTitle>
                 <CardDescription>Enter your prompt to test</CardDescription>
               </CardHeader>
               <CardContent>
-                <Textarea
-                  value={promptText}
-                  onChange={(e) => setPromptText(e.target.value)}
-                  placeholder="Enter your prompt here..."
-                  className="min-h-[200px]"
-                />
-                <Button 
-                  onClick={handleRunTest} 
-                  className="mt-4 w-full"
-                  disabled={runTestMutation.isPending}
+                <PromptInput
+                  onSubmit={({ text }) => {
+                    handleRunTest(text);
+                  }}
                 >
-                  {runTestMutation.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Running Test...
-                    </>
-                  ) : (
-                    <>
-                      <Play className="mr-2 h-4 w-4" />
-                      Run Test
-                    </>
-                  )}
-                </Button>
+                  <PromptInputHeader>
+                    <div className="flex flex-col gap-1 w-full">
+                      <PromptInputTools>
+                        <span className="text-xs text-muted-foreground">Models</span>
+                        <ModelSelector>
+                          <ModelSelectorTrigger asChild>
+                            <PromptInputButton variant="outline" size="sm">
+                              {selectedModels.length > 0
+                                ? `${selectedModels.length} model${selectedModels.length > 1 ? "s" : ""} selected`
+                                : "Select models"}
+                            </PromptInputButton>
+                          </ModelSelectorTrigger>
+                          <ModelSelectorContent title="Select models">
+                            <ModelSelectorInput placeholder="Search models..." />
+                            <ModelSelectorList>
+                              <ModelSelectorEmpty>No models found.</ModelSelectorEmpty>
+                              {models?.map((model: any) => (
+                                <ModelSelectorItem
+                                  key={model.id}
+                                  onSelect={() => {
+                                    setSelectedModels((prev) =>
+                                      prev.includes(model.id)
+                                        ? prev.filter((id) => id !== model.id)
+                                        : [...prev, model.id]
+                                    );
+                                  }}
+                                >
+                                  <ModelSelectorName>{model.name}</ModelSelectorName>
+                                </ModelSelectorItem>
+                              ))}
+                            </ModelSelectorList>
+                          </ModelSelectorContent>
+                        </ModelSelector>
+                      </PromptInputTools>
+                      {selectedModels.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {selectedModels.map((modelId) => {
+                            const model = models?.find((m: any) => m.id === modelId);
+                            if (!model) return null;
+                            return (
+                              <button
+                                key={modelId}
+                                type="button"
+                                onClick={() =>
+                                  setSelectedModels((prev) =>
+                                    prev.filter((id) => id !== modelId)
+                                  )
+                                }
+                                className="inline-flex max-w-xs items-center gap-1 rounded-full border px-2 py-0.5 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                              >
+                                <span className="truncate">{model.name}</span>
+                                <span className="text-xs leading-none">&times;</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </PromptInputHeader>
+                  <PromptInputBody>
+                    <PromptInputTextarea placeholder="Enter your prompt here..." />
+                  </PromptInputBody>
+                  <PromptInputFooter>
+                    <Button
+                      type="submit"
+                      className="ml-auto"
+                      disabled={runTestMutation.isPending}
+                    >
+                      {runTestMutation.isPending ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Running Test...
+                        </>
+                      ) : (
+                        <>
+                          <Play className="mr-2 h-4 w-4" />
+                          Run Test
+                        </>
+                      )}
+                    </Button>
+                  </PromptInputFooter>
+                </PromptInput>
               </CardContent>
             </Card>
 
@@ -296,3 +292,4 @@ export default function PlaygroundPage() {
     </div>
   );
 }
+

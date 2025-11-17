@@ -261,7 +261,6 @@ model PlaygroundTest {
   promptId   String?
   promptText String
   models     String[]
-  parameters Json
   results    Json
   totalCost  String
   createdAt  DateTime          @default(now())
