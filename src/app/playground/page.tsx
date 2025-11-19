@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport } from "ai";
+import { useQuery } from "@tanstack/react-query";
 import { useSession } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -40,19 +42,10 @@ import {
   ModelSelectorName,
 } from "@/components/ai-elements/model-selector";
 
-interface Message {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  modelId?: string;
-  createdAt: string;
-}
-
 interface ChatSession {
   id: string;
   title: string;
   updatedAt: string;
-  messages: Message[];
 }
 
 export default function ChatPage() {
@@ -61,7 +54,6 @@ export default function ChatPage() {
 
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [selectedModel, setSelectedModel] = useState<string | null>(null);
-  const [isStreaming, setIsStreaming] = useState(false);
 
   // Fetch Models
   const { data: models } = useQuery({
@@ -85,90 +77,65 @@ export default function ChatPage() {
     enabled: !!session,
   });
 
-  // Get current session
-  const currentSession = sessions?.find((s: ChatSession) => s.id === selectedSessionId);
-  const messages = currentSession?.messages || [];
-
-  // Create Session Mutation
-  const createSessionMutation = useMutation({
-    mutationFn: async (title: string) => {
-      const res = await fetch("/api/chat/session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title }),
-      });
-      if (!res.ok) throw new Error("Failed to create session");
-      return res.json();
+  // Use AI SDK useChat hook with unique ID per session
+  const { messages, sendMessage, status, setMessages } = useChat({
+    id: selectedSessionId || "new-chat",
+    transport: new DefaultChatTransport({
+      api: "/api/chat",
+      fetch: async (url, options) => {
+        if (!selectedModel) {
+          throw new Error("Please select a model first");
+        }
+        const body = JSON.parse(options?.body as string || "{}");
+        return fetch(url, {
+          ...options,
+          body: JSON.stringify({
+            ...body,
+            sessionId: selectedSessionId,
+            modelId: selectedModel,
+          }),
+        });
+      },
+    }),
+    onError: (error) => {
+      console.error("Chat error:", error);
+      toast.error(error.message || "Failed to send message");
     },
-    onSuccess: (newSession) => {
+    onFinish: () => {
       refetchSessions();
-      setSelectedSessionId(newSession.id);
     },
   });
 
-  // Send Message
-  const handleSend = async (text: string) => {
+  // Load messages when session changes
+  useEffect(() => {
+    if (selectedSessionId && sessions) {
+      const session = sessions.find((s: ChatSession & { messages?: Array<{ id: string; role: string; content: string; createdAt: string }> }) => s.id === selectedSessionId);
+      if (session?.messages) {
+        // Convert old messages to UIMessage format
+        const uiMessages = session.messages.map((msg: { id: string; role: string; content: string; createdAt: string; modelId?: string }) => ({
+          id: msg.id,
+          role: msg.role,
+          parts: [{ type: "text" as const, text: msg.content }],
+          createdAt: msg.createdAt,
+          // Attach modelId so UI can render correct model label for assistant messages
+          modelId: msg.modelId ?? undefined,
+        }));
+        setMessages(uiMessages);
+      }
+    } else {
+      setMessages([]);
+    }
+  }, [selectedSessionId, sessions, setMessages]);
+
+  // Handle send
+  const handleSend = (text: string) => {
     if (!text.trim()) return;
     if (!selectedModel) {
       toast.error("Please select a model");
       return;
     }
 
-    setIsStreaming(true);
-    let sessionId = selectedSessionId;
-
-    // Create session if needed
-    if (!sessionId) {
-      try {
-        const newSession = await createSessionMutation.mutateAsync(text.slice(0, 50) + "...");
-        sessionId = newSession.id;
-      } catch (error) {
-        toast.error("Failed to create session");
-        setIsStreaming(false);
-        return;
-      }
-    }
-
-    // Save User Message
-    try {
-      await fetch("/api/chat/message", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, content: text }),
-      });
-    } catch (error) {
-      console.error("Failed to save user message", error);
-    }
-
-    // Stream Response from selected model
-    try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, modelId: selectedModel }),
-      });
-
-      if (!res.ok) throw new Error("Stream failed");
-
-      // Consume the stream
-      if (res.body) {
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          decoder.decode(value, { stream: true });
-        }
-      }
-    } catch (error) {
-      console.error("Error streaming:", error);
-      toast.error("Error streaming response");
-    } finally {
-      setIsStreaming(false);
-      // Refetch to get updated messages
-      refetchSessions();
-    }
+    sendMessage({ text });
   };
 
   // Redirect if not authenticated
@@ -198,6 +165,7 @@ export default function ChatPage() {
           <Button
             onClick={() => {
               setSelectedSessionId(null);
+              setMessages([]);
             }}
             className="w-full justify-start gap-2"
             variant="outline"
@@ -229,7 +197,7 @@ export default function ChatPage() {
         {/* Header */}
         <div className="h-14 border-b flex items-center px-6">
           <div className="font-semibold">
-            {selectedSessionId ? currentSession?.title : "New Chat"}
+            {selectedSessionId ? (sessions?.find((s: ChatSession) => s.id === selectedSessionId)?.title || "Chat") : "New Chat"}
           </div>
         </div>
 
@@ -243,15 +211,29 @@ export default function ChatPage() {
                 description="Select a model and start a conversation."
               />
             ) : (
-              messages.map((msg: Message) => (
+              messages.map((msg) => (
                 <Message key={msg.id} from={msg.role}>
                   <MessageContent>
-                    {msg.role === "assistant" && msg.modelId && (
+                    {msg.role === "assistant" && (
                       <div className="text-xs font-medium mb-1 opacity-70">
-                        {models?.find((m: any) => m.id === msg.modelId)?.name || msg.modelId}
+                        {(() => {
+                          const msgModelId = (msg as unknown as { modelId?: string }).modelId;
+                          return (
+                            models?.find((m: { id: string; name: string }) => m.id === msgModelId)?.name
+                            || models?.find((m: { id: string; name: string }) => m.id === selectedModel)?.name
+                            || selectedModel
+                          );
+                        })()}
                       </div>
                     )}
-                    <MessageResponse>{msg.content}</MessageResponse>
+                    <MessageResponse>
+                      {msg.parts.map((part) => {
+                        if (part.type === "text") {
+                          return part.text;
+                        }
+                        return null;
+                      }).join("")}
+                    </MessageResponse>
                   </MessageContent>
                 </Message>
               ))
@@ -270,7 +252,7 @@ export default function ChatPage() {
                     <ModelSelectorTrigger asChild>
                       <PromptInputButton variant="outline" size="sm">
                         {selectedModel
-                          ? models?.find((m: any) => m.id === selectedModel)?.name || "Select model"
+                          ? models?.find((m: { id: string; name: string }) => m.id === selectedModel)?.name || "Select model"
                           : "Select model"}
                       </PromptInputButton>
                     </ModelSelectorTrigger>
@@ -278,7 +260,7 @@ export default function ChatPage() {
                       <ModelSelectorInput placeholder="Search models..." />
                       <ModelSelectorList>
                         <ModelSelectorEmpty>No models found.</ModelSelectorEmpty>
-                        {models?.map((model: any) => (
+                        {models?.map((model: { id: string; name: string }) => (
                           <ModelSelectorItem
                             key={model.id}
                             onSelect={() => {
@@ -303,9 +285,9 @@ export default function ChatPage() {
                   type="submit"
                   size="sm"
                   className="ml-auto"
-                  disabled={isStreaming}
+                  disabled={status !== "ready"}
                 >
-                  {isStreaming ? (
+                  {status !== "ready" ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Generating...

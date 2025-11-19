@@ -28,8 +28,8 @@ export async function streamChat(
                     role: "assistant",
                     content: text,
                     modelId,
-                    promptTokens: (usage as any).promptTokens,
-                    completionTokens: (usage as any).completionTokens,
+                    promptTokens: (usage as { promptTokens?: number })?.promptTokens ?? 0,
+                    completionTokens: (usage as { completionTokens?: number })?.completionTokens ?? 0,
                     cost: modelConfig.creditCost, // Simplified cost for now, can be more granular later
                 },
             });
@@ -39,7 +39,7 @@ export async function streamChat(
         },
     });
 
-    return result.toTextStreamResponse();
+    return result.toUIMessageStreamResponse();
 }
 
 export async function getChatHistory(sessionId: string): Promise<CoreMessage[]> {
