@@ -265,6 +265,8 @@ export async function runMultiModelTest(
           modelName: modelId,
           response: text,
           tokenCount: totalTokens,
+          promptTokens,
+          completionTokens,
           cost: cost.toFixed(1),
           responseTime,
           error: undefined,

@@ -31,21 +31,21 @@ const colorClasses = {
     border: "border-blue-200 dark:border-blue-800"
   },
   green: {
-    progress: "bg-green-600", 
+    progress: "bg-green-600",
     text: "text-green-600 dark:text-green-400",
     bg: "bg-green-50 dark:bg-green-950/20",
     border: "border-green-200 dark:border-green-800"
   },
   amber: {
     progress: "bg-amber-600",
-    text: "text-amber-600 dark:text-amber-400", 
+    text: "text-amber-600 dark:text-amber-400",
     bg: "bg-amber-50 dark:bg-amber-950/20",
     border: "border-amber-200 dark:border-amber-800"
   },
   red: {
     progress: "bg-red-600",
     text: "text-red-600 dark:text-red-400",
-    bg: "bg-red-50 dark:bg-red-950/20", 
+    bg: "bg-red-50 dark:bg-red-950/20",
     border: "border-red-200 dark:border-red-800"
   }
 };
@@ -76,13 +76,13 @@ function UsageCard({ title, current, limit, unit, icon: Icon, color, unlimited =
               </div>
             </div>
           </div>
-          
+
           {isOverLimit && (
             <Badge variant="destructive" className="text-xs" data-testid="over-limit-badge">
               Over Limit
             </Badge>
           )}
-          
+
           {!unlimited && isNearLimit && !isOverLimit && (
             <Badge variant="outline" className="text-xs border-amber-300 text-amber-700 dark:border-amber-700 dark:text-amber-300" data-testid="near-limit-badge">
               <AlertTriangle className="w-3 h-3 mr-1" />
@@ -97,7 +97,7 @@ function UsageCard({ title, current, limit, unit, icon: Icon, color, unlimited =
               <span data-testid="usage-percentage">{percentage.toFixed(1)}% used</span>
               <span data-testid="usage-remaining">{Math.max(0, limit - current)} remaining</span>
             </div>
-            <Progress 
+            <Progress
               value={percentage}
               className="h-2"
               data-testid="usage-progress"
@@ -115,9 +115,9 @@ function UsageCard({ title, current, limit, unit, icon: Icon, color, unlimited =
   );
 }
 
-export default function UsageDisplay({ 
-  subscription, 
-  dailyUsage, 
+export default function UsageDisplay({
+  subscription,
+  dailyUsage,
   isLoading = false,
   className = ""
 }: UsageDisplayProps) {
@@ -147,7 +147,7 @@ export default function UsageDisplay({
 
   const promptsUsed = dailyUsage?.promptsUsed || 0;
   const testsRun = dailyUsage?.testsRun || 0;
-  const totalCost = parseFloat(String(dailyUsage?.totalCost || "0"));
+  const totalCredits = dailyUsage?.totalCredits || 0;
 
   const promptLimit = subscription.dailyPromptLimit === -1 ? 0 : subscription.dailyPromptLimit;
   const isUnlimitedPrompts = subscription.dailyPromptLimit === -1;
@@ -194,13 +194,13 @@ export default function UsageDisplay({
         />
 
         <UsageCard
-          title="API Costs"
-          current={totalCost}
-          limit={subscription.plan === "free" ? 1 : subscription.plan === "pro" ? 10 : 25}
-          unit="USD"
+          title="Credits Used"
+          current={totalCredits}
+          limit={subscription.plan === "free" ? 10 : subscription.plan === "pro" ? 100 : 250}
+          unit="Credits"
           icon={DollarSign}
-          color={totalCost >= (subscription.plan === "free" ? 1 : subscription.plan === "pro" ? 10 : 25) ? "red" : 
-                 totalCost >= (subscription.plan === "free" ? 0.8 : subscription.plan === "pro" ? 8 : 20) ? "amber" : "green"}
+          color={totalCredits >= (subscription.plan === "free" ? 10 : subscription.plan === "pro" ? 100 : 250) ? "red" :
+            totalCredits >= (subscription.plan === "free" ? 8 : subscription.plan === "pro" ? 80 : 200) ? "amber" : "green"}
           unlimited={false}
         />
       </div>

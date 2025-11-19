@@ -246,8 +246,8 @@ export default function PlaygroundPage() {
                               <Coins className="mr-1 h-3 w-3" />
                               {result.cost} Credits
                             </Badge>
-                            <Badge variant="outline">
-                              {result.tokenCount} tokens
+                            <Badge variant="outline" title="Input → Output Tokens">
+                              {result.promptTokens || 0} → {result.completionTokens || 0} tokens
                             </Badge>
                           </div>
                           <Separator />

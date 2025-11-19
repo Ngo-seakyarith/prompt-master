@@ -20,7 +20,7 @@ export async function GET() {
     const tests = await prisma.playgroundTest.findMany({
       where: { userId },
       select: {
-        totalCost: true,
+        totalCredits: true,
         createdAt: true,
       },
     });
@@ -30,17 +30,17 @@ export async function GET() {
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const monthlyTests = tests.filter(t => new Date(t.createdAt) >= monthStart).length;
 
-    // Calculate total cost
-    const totalCost = tests.reduce((sum, t) => sum + parseFloat(t.totalCost || "0"), 0);
+    // Calculate total credits
+    const totalCredits = tests.reduce((sum, t) => sum + (t.totalCredits || 0), 0);
 
     // Get last active date
-    const lastTest = tests.length > 0 
+    const lastTest = tests.length > 0
       ? tests.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]
       : null;
 
     return NextResponse.json({
       testsRun: tests.length,
-      totalCost: totalCost.toFixed(4),
+      totalCredits: totalCredits,
       monthlyTests,
       lastActive: lastTest?.createdAt || null,
       monthlyReset: monthStart,
