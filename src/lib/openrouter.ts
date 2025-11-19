@@ -88,6 +88,13 @@ export const AVAILABLE_MODELS: ModelConfig[] = [
     pricing: { prompt: 0.00075, completion: 0.003 },
   },
   {
+    id: "google/gemini-3-pro-preview",
+    name: "Gemini 3 Pro Preview",
+    provider: "Google",
+    contextLength: 1048576,
+    pricing: { prompt: 0.0015, completion: 0.015 },
+  },
+  {
     id: "z-ai/glm-4.6",
     name: "GLM 4.6",
     provider: "Z-AI",
@@ -247,10 +254,10 @@ export async function runMultiModelTest(
         const totalTokens = (usage as any)?.totalTokens || 1000
         const promptTokens = Math.floor(totalTokens * 0.3)
         const completionTokens = Math.floor(totalTokens * 0.7)
-        
+
         const cost = modelConfig
-          ? (promptTokens * modelConfig.pricing.prompt + 
-             completionTokens * modelConfig.pricing.completion) / 1000
+          ? (promptTokens * modelConfig.pricing.prompt +
+            completionTokens * modelConfig.pricing.completion) / 1000
           : 0
 
         return {
