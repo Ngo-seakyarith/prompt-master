@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
         promptText,
         models,
         results: testResults.results,
-        totalCost: testResults.totalCost,
+        totalCredits: testResults.totalCredits,
       },
     })
 
@@ -41,21 +41,21 @@ export async function POST(req: NextRequest) {
       where: { userId: session.user.id },
     })
 
-    const newTotalCost = existingUsage
-      ? (parseFloat(existingUsage.totalCost) + parseFloat(testResults.totalCost)).toFixed(6)
-      : testResults.totalCost
+    const newTotalCredits = existingUsage
+      ? existingUsage.totalCredits + testResults.totalCredits
+      : testResults.totalCredits
 
     await prisma.playgroundUsage.upsert({
       where: { userId: session.user.id },
       update: {
         testsRun: { increment: 1 },
-        totalCost: newTotalCost,
+        totalCredits: newTotalCredits,
         lastActive: new Date(),
       },
       create: {
         userId: session.user.id,
         testsRun: 1,
-        totalCost: testResults.totalCost,
+        totalCredits: testResults.totalCredits,
       },
     })
 

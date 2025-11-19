@@ -10,96 +10,98 @@ export interface ModelConfig {
   name: string
   provider: string
   contextLength: number
-  pricing: {
-    prompt: number
-    completion: number
-  }
+  creditCost: number
 }
 
 export const AVAILABLE_MODELS: ModelConfig[] = [
-  {
-    id: "x-ai/grok-4-fast",
-    name: "Grok 4 Fast",
-    provider: "xAI",
-    contextLength: 2000000,
-    pricing: { prompt: 0.0002, completion: 0.0005 },
-  },
-  {
-    id: "deepseek/deepseek-v3.2-exp",
-    name: "DeepSeek V3.2 Experimental",
-    provider: "DeepSeek",
-    contextLength: 163840,
-    pricing: { prompt: 0.00027, completion: 0.0004 },
-  },
+  // State of the Art (1.0 credits)
   {
     id: "openai/gpt-5.1-chat",
     name: "GPT-5.1 Instant",
     provider: "OpenAI",
     contextLength: 128000,
-    pricing: { prompt: 0.00125, completion: 0.01 },
+    creditCost: 1.0,
   },
   {
     id: "openai/gpt-5.1",
     name: "GPT-5.1 Thinking",
     provider: "OpenAI",
     contextLength: 400000,
-    pricing: { prompt: 0.00125, completion: 0.01 },
-  },
-  {
-    id: "moonshotai/kimi-k2-thinking",
-    name: "Kimi K2 Thinking",
-    provider: "MoonshotAI",
-    contextLength: 262144,
-    pricing: { prompt: 0.00055, completion: 0.00225 },
-  },
-  {
-    id: "moonshotai/kimi-k2-0905",
-    name: "Kimi K2 0905",
-    provider: "MoonshotAI",
-    contextLength: 262144,
-    pricing: { prompt: 0.00055, completion: 0.00225 },
-  },
-  {
-    id: "qwen/qwen3-max",
-    name: "Qwen3 Max",
-    provider: "Qwen",
-    contextLength: 256000,
-    pricing: { prompt: 0.0012, completion: 0.006 },
-  },
-  {
-    id: "minimax/minimax-m2",
-    name: "MiniMax M2",
-    provider: "MiniMax",
-    contextLength: 128000,
-    pricing: { prompt: 0.0002, completion: 0.0006 },
-  },
-  {
-    id: "google/gemini-2.5-pro",
-    name: "Gemini 2.5 Pro",
-    provider: "Google",
-    contextLength: 1048576,
-    pricing: { prompt: 0.00125, completion: 0.01 },
-  },
-  {
-    id: "google/gemini-2.5-flash",
-    name: "Gemini 2.5 Flash",
-    provider: "Google",
-    contextLength: 1048576,
-    pricing: { prompt: 0.00075, completion: 0.003 },
+    creditCost: 1.0,
   },
   {
     id: "google/gemini-3-pro-preview",
     name: "Gemini 3 Pro Preview",
     provider: "Google",
     contextLength: 1048576,
-    pricing: { prompt: 0.0015, completion: 0.015 },
+    creditCost: 1.0,
+  },
+  {
+    id: "google/gemini-2.5-pro",
+    name: "Gemini 2.5 Pro",
+    provider: "Google",
+    contextLength: 1048576,
+    creditCost: 1.0,
+  },
+  {
+    id: "qwen/qwen3-max",
+    name: "Qwen3 Max",
+    provider: "Qwen",
+    contextLength: 256000,
+    creditCost: 1.0,
+  },
+
+  // Normal (0.5 credits)
+  {
+    id: "deepseek/deepseek-v3.2-exp",
+    name: "DeepSeek V3.2 Experimental",
+    provider: "DeepSeek",
+    contextLength: 163840,
+    creditCost: 0.5,
+  },
+  {
+    id: "moonshotai/kimi-k2-thinking",
+    name: "Kimi K2 Thinking",
+    provider: "MoonshotAI",
+    contextLength: 262144,
+    creditCost: 0.5,
+  },
+  {
+    id: "moonshotai/kimi-k2-0905",
+    name: "Kimi K2 0905",
+    provider: "MoonshotAI",
+    contextLength: 262144,
+    creditCost: 0.5,
   },
   {
     id: "z-ai/glm-4.6",
     name: "GLM 4.6",
     provider: "Z-AI",
     contextLength: 128000,
-    pricing: { prompt: 0.0002, completion: 0.0006 },
+    creditCost: 0.5,
+  },
+
+  // Cheap (0.2 credits)
+  {
+    id: "x-ai/grok-4-fast",
+    name: "Grok 4 Fast",
+    provider: "xAI",
+    contextLength: 2000000,
+    creditCost: 0.2,
+  },
+  {
+    id: "minimax/minimax-m2",
+    name: "MiniMax M2",
+    provider: "MiniMax",
+    contextLength: 128000,
+    creditCost: 0.2,
+  },
+  {
+    id: "google/gemini-2.5-flash",
+    name: "Gemini 2.5 Flash",
+    provider: "Google",
+    contextLength: 1048576,
+    creditCost: 0.2,
   },
 ]
 
@@ -250,21 +252,20 @@ export async function runMultiModelTest(
 
         const responseTime = Date.now() - startTime
         const modelConfig = AVAILABLE_MODELS.find((m) => m.id === modelId)
-        // Usage type changed in AI SDK - using totalTokens or defaults
-        const totalTokens = (usage as any)?.totalTokens || 1000
-        const promptTokens = Math.floor(totalTokens * 0.3)
-        const completionTokens = Math.floor(totalTokens * 0.7)
 
-        const cost = modelConfig
-          ? (promptTokens * modelConfig.pricing.prompt +
-            completionTokens * modelConfig.pricing.completion) / 1000
-          : 0
+        // Usage type changed in AI SDK - using totalTokens or defaults
+        const totalTokens = (usage as any)?.totalTokens || 0
+        const promptTokens = (usage as any)?.promptTokens || 0
+        const completionTokens = (usage as any)?.completionTokens || 0
+
+        // Flat credit cost per request
+        const cost = modelConfig?.creditCost || 0
 
         return {
           modelName: modelId,
           response: text,
-          tokenCount: promptTokens + completionTokens,
-          cost: cost.toFixed(6),
+          tokenCount: totalTokens,
+          cost: cost.toFixed(1),
           responseTime,
           error: undefined,
         }
@@ -281,9 +282,8 @@ export async function runMultiModelTest(
     })
   )
 
-  const totalCost = results
+  const totalCredits = results
     .reduce((sum, r) => sum + parseFloat(r.cost), 0)
-    .toFixed(6)
 
-  return { results, totalCost }
+  return { results, totalCredits }
 }

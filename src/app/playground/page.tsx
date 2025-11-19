@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Play, Loader2, DollarSign, Clock } from "lucide-react";
+import { Play, Loader2, Coins, Clock } from "lucide-react";
 import { toast } from "sonner";
 import {
   PromptInput,
@@ -220,8 +220,8 @@ export default function PlaygroundPage() {
                   <CardTitle>Results</CardTitle>
                   <div className="flex items-center gap-4 text-sm">
                     <span className="flex items-center gap-1">
-                      <DollarSign className="h-4 w-4" />
-                      Total Cost: ${runTestMutation.data.totalCost}
+                      <Coins className="h-4 w-4" />
+                      Total Cost: {runTestMutation.data.totalCredits} Credits
                     </span>
                   </div>
                 </CardHeader>
@@ -243,8 +243,8 @@ export default function PlaygroundPage() {
                               {result.responseTime}ms
                             </Badge>
                             <Badge variant="outline">
-                              <DollarSign className="mr-1 h-3 w-3" />
-                              ${result.cost}
+                              <Coins className="mr-1 h-3 w-3" />
+                              {result.cost} Credits
                             </Badge>
                             <Badge variant="outline">
                               {result.tokenCount} tokens
@@ -281,7 +281,10 @@ export default function PlaygroundPage() {
                 <CardContent>
                   <div className="flex items-center justify-between text-sm">
                     <span>{test.models.length} models</span>
-                    <span className="font-medium">${test.totalCost}</span>
+                    <span className="font-medium flex items-center gap-1">
+                      <Coins className="h-3 w-3" />
+                      {test.totalCredits}
+                    </span>
                   </div>
                 </CardContent>
               </Card>
