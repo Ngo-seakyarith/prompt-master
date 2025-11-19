@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useSession } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -58,10 +58,9 @@ interface ChatSession {
 export default function ChatPage() {
   const { data: session, isPending: isAuthPending } = useSession();
   const router = useRouter();
-  const queryClient = useQueryClient();
 
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
-  const [selectedModels, setSelectedModels] = useState<string[]>([]);
+  const [selectedModel, setSelectedModel] = useState<string | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
 
   // Fetch Models
@@ -110,8 +109,8 @@ export default function ChatPage() {
   // Send Message
   const handleSend = async (text: string) => {
     if (!text.trim()) return;
-    if (selectedModels.length === 0) {
-      toast.error("Please select at least one model");
+    if (!selectedModel) {
+      toast.error("Please select a model");
       return;
     }
 
@@ -141,36 +140,30 @@ export default function ChatPage() {
       console.error("Failed to save user message", error);
     }
 
-    // Stream Responses from all selected models
+    // Stream Response from selected model
     try {
-      await Promise.all(
-        selectedModels.map(async (modelId) => {
-          try {
-            const res = await fetch("/api/chat", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ sessionId, modelId }),
-            });
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId, modelId: selectedModel }),
+      });
 
-            if (!res.ok) throw new Error("Stream failed");
+      if (!res.ok) throw new Error("Stream failed");
 
-            // Consume the stream
-            if (res.body) {
-              const reader = res.body.getReader();
-              const decoder = new TextDecoder();
+      // Consume the stream
+      if (res.body) {
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
 
-              while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                decoder.decode(value, { stream: true });
-              }
-            }
-          } catch (error) {
-            console.error(`Error streaming ${modelId}:`, error);
-            toast.error(`Error with ${modelId}`);
-          }
-        })
-      );
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          decoder.decode(value, { stream: true });
+        }
+      }
+    } catch (error) {
+      console.error("Error streaming:", error);
+      toast.error("Error streaming response");
     } finally {
       setIsStreaming(false);
       // Refetch to get updated messages
@@ -276,12 +269,12 @@ export default function ChatPage() {
                   <ModelSelector>
                     <ModelSelectorTrigger asChild>
                       <PromptInputButton variant="outline" size="sm">
-                        {selectedModels.length > 0
-                          ? `${selectedModels.length} model${selectedModels.length > 1 ? "s" : ""}`
-                          : "Select models"}
+                        {selectedModel
+                          ? models?.find((m: any) => m.id === selectedModel)?.name || "Select model"
+                          : "Select model"}
                       </PromptInputButton>
                     </ModelSelectorTrigger>
-                    <ModelSelectorContent title="Select models">
+                    <ModelSelectorContent title="Select model">
                       <ModelSelectorInput placeholder="Search models..." />
                       <ModelSelectorList>
                         <ModelSelectorEmpty>No models found.</ModelSelectorEmpty>
@@ -289,11 +282,7 @@ export default function ChatPage() {
                           <ModelSelectorItem
                             key={model.id}
                             onSelect={() => {
-                              setSelectedModels((prev) =>
-                                prev.includes(model.id)
-                                  ? prev.filter((id) => id !== model.id)
-                                  : [...prev, model.id]
-                              );
+                              setSelectedModel(model.id);
                             }}
                           >
                             <ModelSelectorName>{model.name}</ModelSelectorName>
@@ -302,26 +291,6 @@ export default function ChatPage() {
                       </ModelSelectorList>
                     </ModelSelectorContent>
                   </ModelSelector>
-
-                  {selectedModels.length > 0 && (
-                    <div className="flex flex-wrap gap-1 ml-2">
-                      {selectedModels.map((modelId) => {
-                        const model = models?.find((m: any) => m.id === modelId);
-                        if (!model) return null;
-                        return (
-                          <button
-                            key={modelId}
-                            type="button"
-                            onClick={() => setSelectedModels(prev => prev.filter(id => id !== modelId))}
-                            className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs text-muted-foreground bg-muted/50 hover:bg-muted"
-                          >
-                            <span className="truncate max-w-[100px]">{model.name}</span>
-                            <span className="text-xs">&times;</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
                 </PromptInputTools>
               </PromptInputHeader>
               <PromptInputBody>
