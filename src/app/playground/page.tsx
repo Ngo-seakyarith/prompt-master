@@ -1,15 +1,25 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import { Plus, MessageSquare, Trash2, Send, StopCircle, Bot, User as UserIcon, Loader2 } from "lucide-react";
+import { Plus, MessageSquare, Loader2, Bot } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import {
+  Conversation,
+  ConversationContent,
+  ConversationEmptyState,
+  ConversationScrollButton,
+} from "@/components/ai-elements/conversation";
+import {
+  Message,
+  MessageContent,
+  MessageResponse,
+} from "@/components/ai-elements/message";
 import {
   PromptInput,
   PromptInputBody,
@@ -52,10 +62,7 @@ export default function ChatPage() {
 
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [selectedModels, setSelectedModels] = useState<string[]>([]);
-  const [input, setInput] = useState("");
-  const [streamingIds, setStreamingIds] = useState<string[]>([]);
-  const abortControllers = useRef<Map<string, AbortController>>(new Map());
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isStreaming, setIsStreaming] = useState(false);
 
   // Fetch Models
   const { data: models } = useQuery({
@@ -69,7 +76,7 @@ export default function ChatPage() {
   });
 
   // Fetch Sessions
-  const { data: sessions } = useQuery({
+  const { data: sessions, refetch: refetchSessions } = useQuery({
     queryKey: ["chat-sessions"],
     queryFn: async () => {
       const res = await fetch("/api/chat/session");
@@ -79,24 +86,9 @@ export default function ChatPage() {
     enabled: !!session,
   });
 
-  // Get current session messages
+  // Get current session
   const currentSession = sessions?.find((s: ChatSession) => s.id === selectedSessionId);
-  const [localMessages, setLocalMessages] = useState<Message[]>([]);
-
-  useEffect(() => {
-    if (currentSession) {
-      setLocalMessages(currentSession.messages);
-    } else {
-      setLocalMessages([]);
-    }
-  }, [currentSession]);
-
-  // Auto-scroll
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [localMessages, streamingIds]);
+  const messages = currentSession?.messages || [];
 
   // Create Session Mutation
   const createSessionMutation = useMutation({
@@ -110,134 +102,98 @@ export default function ChatPage() {
       return res.json();
     },
     onSuccess: (newSession) => {
-      queryClient.invalidateQueries({ queryKey: ["chat-sessions"] });
+      refetchSessions();
       setSelectedSessionId(newSession.id);
     },
   });
 
-  // Send Message Logic
-  const handleSend = async () => {
-    if (!input.trim()) return;
+  // Send Message
+  const handleSend = async (text: string) => {
+    if (!text.trim()) return;
     if (selectedModels.length === 0) {
       toast.error("Please select at least one model");
       return;
     }
 
-    const userMessageContent = input;
-    setInput("");
-
+    setIsStreaming(true);
     let sessionId = selectedSessionId;
 
     // Create session if needed
     if (!sessionId) {
       try {
-        const newSession = await createSessionMutation.mutateAsync(userMessageContent.slice(0, 30) + "...");
+        const newSession = await createSessionMutation.mutateAsync(text.slice(0, 50) + "...");
         sessionId = newSession.id;
       } catch (error) {
         toast.error("Failed to create session");
+        setIsStreaming(false);
         return;
       }
     }
-
-    // Optimistic User Message
-    const tempUserMsgId = Date.now().toString();
-    const userMsg: Message = {
-      id: tempUserMsgId,
-      role: "user",
-      content: userMessageContent,
-      createdAt: new Date().toISOString(),
-    };
-    setLocalMessages((prev) => [...prev, userMsg]);
 
     // Save User Message
     try {
       await fetch("/api/chat/message", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, content: userMessageContent }),
+        body: JSON.stringify({ sessionId, content: text }),
       });
     } catch (error) {
       console.error("Failed to save user message", error);
     }
 
-    // Stream Responses
-    selectedModels.forEach(async (modelId) => {
-      const assistantMsgId = `${Date.now()}-${modelId}`;
-      setStreamingIds((prev) => [...prev, assistantMsgId]);
+    // Stream Responses from all selected models
+    try {
+      await Promise.all(
+        selectedModels.map(async (modelId) => {
+          try {
+            const res = await fetch("/api/chat", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ sessionId, modelId }),
+            });
 
-      // Optimistic Assistant Message
-      setLocalMessages((prev) => [
-        ...prev,
-        {
-          id: assistantMsgId,
-          role: "assistant",
-          content: "",
-          modelId,
-          createdAt: new Date().toISOString(),
-        },
-      ]);
+            if (!res.ok) throw new Error("Stream failed");
 
-      const controller = new AbortController();
-      abortControllers.current.set(assistantMsgId, controller);
+            // Consume the stream
+            if (res.body) {
+              const reader = res.body.getReader();
+              const decoder = new TextDecoder();
 
-      try {
-        const res = await fetch("/api/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sessionId, modelId }),
-          signal: controller.signal,
-        });
-
-        if (!res.ok) throw new Error("Stream failed");
-        if (!res.body) throw new Error("No body");
-
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          const chunk = decoder.decode(value, { stream: true });
-
-          // Parse AI SDK stream format (simple approximation)
-          // AI SDK stream sends parts like "0:text"
-          // We need to parse this. For now, let's assume raw text or simple parsing
-          // Actually, toDataStreamResponse returns a specific format.
-          // Let's try to just append the raw chunk for now and refine if needed, 
-          // or better, use a library to parse it. 
-          // Since we are doing manual fetch, we might get raw text if we didn't use toDataStreamResponse,
-          // but we did.
-
-          // Raw text stream
-          setLocalMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === assistantMsgId
-                ? { ...msg, content: msg.content + chunk }
-                : msg
-            )
-          );
-        }
-      } catch (error: any) {
-        if (error.name !== "AbortError") {
-          toast.error(`Error streaming ${modelId}`);
-        }
-      } finally {
-        setStreamingIds((prev) => prev.filter((id) => id !== assistantMsgId));
-        abortControllers.current.delete(assistantMsgId);
-        queryClient.invalidateQueries({ queryKey: ["chat-sessions"] }); // Refresh to get saved state
-      }
-    });
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                decoder.decode(value, { stream: true });
+              }
+            }
+          } catch (error) {
+            console.error(`Error streaming ${modelId}:`, error);
+            toast.error(`Error with ${modelId}`);
+          }
+        })
+      );
+    } finally {
+      setIsStreaming(false);
+      // Refetch to get updated messages
+      refetchSessions();
+    }
   };
 
-  const handleStop = () => {
-    abortControllers.current.forEach((controller) => controller.abort());
-    abortControllers.current.clear();
-    setStreamingIds([]);
-  };
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!isAuthPending && !session) {
+      router.push("/");
+    }
+  }, [isAuthPending, session, router]);
 
-  if (isAuthPending) return <div className="flex h-screen items-center justify-center"><Loader2 className="animate-spin" /></div>;
+  if (isAuthPending) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="animate-spin h-8 w-8" />
+      </div>
+    );
+  }
+
   if (!session) {
-    router.push("/");
     return null;
   }
 
@@ -249,8 +205,6 @@ export default function ChatPage() {
           <Button
             onClick={() => {
               setSelectedSessionId(null);
-              setLocalMessages([]);
-              setInput("");
             }}
             className="w-full justify-start gap-2"
             variant="outline"
@@ -269,7 +223,7 @@ export default function ChatPage() {
                   selectedSessionId === s.id ? "bg-accent text-accent-foreground" : "hover:bg-muted"
                 )}
               >
-                <MessageSquare className="h-4 w-4 opacity-50" />
+                <MessageSquare className="h-4 w-4 opacity-50 shrink-0" />
                 <span className="truncate flex-1">{s.title}</span>
               </button>
             ))}
@@ -280,82 +234,50 @@ export default function ChatPage() {
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <div className="h-14 border-b flex items-center px-6 justify-between">
+        <div className="h-14 border-b flex items-center px-6">
           <div className="font-semibold">
-            {selectedSessionId ? sessions?.find((s: any) => s.id === selectedSessionId)?.title : "New Chat"}
-          </div>
-          <div className="flex items-center gap-2">
-            {/* Model Selector in Header? Or Input? Let's keep it in Input for context */}
+            {selectedSessionId ? currentSession?.title : "New Chat"}
           </div>
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4" ref={scrollRef}>
-          <div className="max-w-3xl mx-auto space-y-6">
-            {localMessages.map((msg) => (
-              <div
-                key={msg.id}
-                className={cn(
-                  "flex gap-4",
-                  msg.role === "user" ? "justify-end" : "justify-start"
-                )}
-              >
-                {msg.role === "assistant" && (
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                    <Bot className="h-5 w-5 text-primary" />
-                  </div>
-                )}
-
-                <div className={cn(
-                  "rounded-lg p-4 max-w-[80%]",
-                  msg.role === "user"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted/50 border"
-                )}>
-                  {msg.role === "assistant" && msg.modelId && (
-                    <div className="text-xs font-medium mb-1 opacity-70">
-                      {models?.find((m: any) => m.id === msg.modelId)?.name || msg.modelId}
-                    </div>
-                  )}
-                  <div className="whitespace-pre-wrap text-sm leading-relaxed">
-                    {msg.content}
-                    {streamingIds.includes(msg.id) && (
-                      <span className="inline-block w-2 h-4 ml-1 bg-current animate-pulse" />
+        <Conversation className="flex-1">
+          <ConversationContent>
+            {messages.length === 0 ? (
+              <ConversationEmptyState
+                icon={<Bot className="h-12 w-12 opacity-20" />}
+                title="Welcome to AI Chat"
+                description="Select a model and start a conversation."
+              />
+            ) : (
+              messages.map((msg: Message) => (
+                <Message key={msg.id} from={msg.role}>
+                  <MessageContent>
+                    {msg.role === "assistant" && msg.modelId && (
+                      <div className="text-xs font-medium mb-1 opacity-70">
+                        {models?.find((m: any) => m.id === msg.modelId)?.name || msg.modelId}
+                      </div>
                     )}
-                  </div>
-                </div>
-
-                {msg.role === "user" && (
-                  <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0">
-                    <UserIcon className="h-5 w-5 text-primary-foreground" />
-                  </div>
-                )}
-              </div>
-            ))}
-
-            {localMessages.length === 0 && (
-              <div className="text-center text-muted-foreground mt-20">
-                <Bot className="h-12 w-12 mx-auto mb-4 opacity-20" />
-                <h3 className="text-lg font-medium mb-2">Welcome to AI Chat</h3>
-                <p>Select a model and start a conversation.</p>
-              </div>
+                    <MessageResponse>{msg.content}</MessageResponse>
+                  </MessageContent>
+                </Message>
+              ))
             )}
-          </div>
-        </div>
+          </ConversationContent>
+          <ConversationScrollButton />
+        </Conversation>
 
         {/* Input Area */}
         <div className="p-4 border-t bg-background">
           <div className="max-w-3xl mx-auto">
-            <PromptInput
-              onSubmit={handleSend}
-            >
+            <PromptInput onSubmit={({ text }) => handleSend(text)}>
               <PromptInputHeader>
                 <PromptInputTools>
                   <ModelSelector>
                     <ModelSelectorTrigger asChild>
                       <PromptInputButton variant="outline" size="sm">
                         {selectedModels.length > 0
-                          ? `${selectedModels.length} model${selectedModels.length > 1 ? "s" : ""} selected`
+                          ? `${selectedModels.length} model${selectedModels.length > 1 ? "s" : ""}`
                           : "Select models"}
                       </PromptInputButton>
                     </ModelSelectorTrigger>
@@ -387,18 +309,15 @@ export default function ChatPage() {
                         const model = models?.find((m: any) => m.id === modelId);
                         if (!model) return null;
                         return (
-                          <div
+                          <button
                             key={modelId}
-                            className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs text-muted-foreground bg-muted/50"
+                            type="button"
+                            onClick={() => setSelectedModels(prev => prev.filter(id => id !== modelId))}
+                            className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs text-muted-foreground bg-muted/50 hover:bg-muted"
                           >
                             <span className="truncate max-w-[100px]">{model.name}</span>
-                            <button
-                              onClick={() => setSelectedModels(prev => prev.filter(id => id !== modelId))}
-                              className="hover:text-foreground"
-                            >
-                              &times;
-                            </button>
-                          </div>
+                            <span className="text-xs">&times;</span>
+                          </button>
                         );
                       })}
                     </div>
@@ -408,39 +327,24 @@ export default function ChatPage() {
               <PromptInputBody>
                 <PromptInputTextarea
                   placeholder="Type your message..."
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSend();
-                    }
-                  }}
                 />
               </PromptInputBody>
               <PromptInputFooter>
-                {streamingIds.length > 0 ? (
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="sm"
-                    onClick={handleStop}
-                    className="ml-auto"
-                  >
-                    <StopCircle className="mr-2 h-4 w-4" />
-                    Stop Generating
-                  </Button>
-                ) : (
-                  <Button
-                    type="submit"
-                    size="sm"
-                    className="ml-auto"
-                    disabled={!input.trim() || selectedModels.length === 0}
-                  >
-                    <Send className="mr-2 h-4 w-4" />
-                    Send
-                  </Button>
-                )}
+                <Button
+                  type="submit"
+                  size="sm"
+                  className="ml-auto"
+                  disabled={isStreaming}
+                >
+                  {isStreaming ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    "Send"
+                  )}
+                </Button>
               </PromptInputFooter>
             </PromptInput>
           </div>
