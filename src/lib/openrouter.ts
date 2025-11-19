@@ -8,8 +8,9 @@ const openrouter = createOpenRouter({
 export interface ModelConfig {
   id: string
   name: string
-  provider: string
-  contextLength: number
+  chef: string
+  chefSlug: string
+  providers: string[]
   creditCost: number
 }
 
@@ -18,36 +19,41 @@ export const AVAILABLE_MODELS: ModelConfig[] = [
   {
     id: "openai/gpt-5.1-chat",
     name: "GPT-5.1 Instant",
-    provider: "OpenAI",
-    contextLength: 128000,
+    chef: "OpenAI",
+    chefSlug: "openai",
+    providers: ["openai"],
     creditCost: 1.0,
   },
   {
     id: "openai/gpt-5.1",
     name: "GPT-5.1 Thinking",
-    provider: "OpenAI",
-    contextLength: 400000,
+    chef: "OpenAI",
+    chefSlug: "openai",
+    providers: ["openai"],
     creditCost: 1.0,
   },
   {
     id: "google/gemini-3-pro-preview",
     name: "Gemini 3 Pro Preview",
-    provider: "Google",
-    contextLength: 1048576,
+    chef: "Google",
+    chefSlug: "google",
+    providers: ["google"],
     creditCost: 1.0,
   },
   {
     id: "google/gemini-2.5-pro",
     name: "Gemini 2.5 Pro",
-    provider: "Google",
-    contextLength: 1048576,
+    chef: "Google",
+    chefSlug: "google",
+    providers: ["google"],
     creditCost: 1.0,
   },
   {
     id: "qwen/qwen3-max",
     name: "Qwen3 Max",
-    provider: "Qwen",
-    contextLength: 256000,
+    chef: "Qwen",
+    chefSlug: "alibaba",
+    providers: ["alibaba"],
     creditCost: 1.0,
   },
 
@@ -55,29 +61,33 @@ export const AVAILABLE_MODELS: ModelConfig[] = [
   {
     id: "deepseek/deepseek-v3.2-exp",
     name: "DeepSeek V3.2 Experimental",
-    provider: "DeepSeek",
-    contextLength: 163840,
+    chef: "DeepSeek",
+    chefSlug: "deepseek",
+    providers: ["deepseek"],
     creditCost: 0.5,
   },
   {
     id: "moonshotai/kimi-k2-thinking",
     name: "Kimi K2 Thinking",
-    provider: "MoonshotAI",
-    contextLength: 262144,
+    chef: "MoonshotAI",
+    chefSlug: "moonshotai",
+    providers: ["moonshotai"],
     creditCost: 0.5,
   },
   {
     id: "moonshotai/kimi-k2-0905",
     name: "Kimi K2 0905",
-    provider: "MoonshotAI",
-    contextLength: 262144,
+    chef: "MoonshotAI",
+    chefSlug: "moonshotai",
+    providers: ["moonshotai"],
     creditCost: 0.5,
   },
   {
     id: "z-ai/glm-4.6",
     name: "GLM 4.6",
-    provider: "Z-AI",
-    contextLength: 128000,
+    chef: "Z-AI",
+    chefSlug: "zai",
+    providers: ["zai"],
     creditCost: 0.5,
   },
 
@@ -85,22 +95,25 @@ export const AVAILABLE_MODELS: ModelConfig[] = [
   {
     id: "x-ai/grok-4-fast",
     name: "Grok 4 Fast",
-    provider: "xAI",
-    contextLength: 2000000,
+    chef: "xAI",
+    chefSlug: "xai",
+    providers: ["xai"],
     creditCost: 0.2,
   },
   {
     id: "minimax/minimax-m2",
     name: "MiniMax M2",
-    provider: "MiniMax",
-    contextLength: 128000,
+    chef: "MiniMax",
+    chefSlug: "minimax",
+    providers: ["minimax"],
     creditCost: 0.2,
   },
   {
     id: "google/gemini-2.5-flash",
     name: "Gemini 2.5 Flash",
-    provider: "Google",
-    contextLength: 1048576,
+    chef: "Google",
+    chefSlug: "google",
+    providers: ["google"],
     creditCost: 0.2,
   },
 ]

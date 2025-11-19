@@ -24,12 +24,21 @@ import {
 } from "@/components/ai-elements/message";
 import {
   PromptInput,
+  PromptInputActionAddAttachments,
+  PromptInputActionMenu,
+  PromptInputActionMenuContent,
+  PromptInputActionMenuTrigger,
+  PromptInputAttachment,
+  PromptInputAttachments,
   PromptInputBody,
-  PromptInputTextarea,
-  PromptInputFooter,
-  PromptInputHeader,
-  PromptInputTools,
   PromptInputButton,
+  PromptInputFooter,
+  type PromptInputMessage,
+  PromptInputProvider,
+  PromptInputSpeechButton,
+  PromptInputSubmit,
+  PromptInputTextarea,
+  PromptInputTools,
 } from "@/components/ai-elements/prompt-input";
 import {
   ModelSelector,
@@ -40,7 +49,12 @@ import {
   ModelSelectorEmpty,
   ModelSelectorItem,
   ModelSelectorName,
+  ModelSelectorGroup,
+  ModelSelectorLogo,
+  ModelSelectorLogoGroup,
 } from "@/components/ai-elements/model-selector";
+import { GlobeIcon, CheckIcon } from "lucide-react";
+import type { ModelConfig } from "@/lib/openrouter";
 
 interface ChatSession {
   id: string;
@@ -54,6 +68,7 @@ export default function ChatPage() {
 
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [selectedModel, setSelectedModel] = useState<string | null>(null);
+  const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
 
   // Fetch Models
   const { data: models } = useQuery({
@@ -65,6 +80,12 @@ export default function ChatPage() {
     },
     enabled: !!session,
   });
+
+  // Set default model on initial load
+  const defaultModel = models && models.length > 0 ? models[0].id : null;
+  if (!selectedModel && defaultModel) {
+    setSelectedModel(defaultModel);
+  }
 
   // Fetch Sessions
   const { data: sessions, refetch: refetchSessions } = useQuery({
@@ -82,20 +103,6 @@ export default function ChatPage() {
     id: selectedSessionId || "new-chat",
     transport: new DefaultChatTransport({
       api: "/api/chat",
-      fetch: async (url, options) => {
-        if (!selectedModel) {
-          throw new Error("Please select a model first");
-        }
-        const body = JSON.parse(options?.body as string || "{}");
-        return fetch(url, {
-          ...options,
-          body: JSON.stringify({
-            ...body,
-            sessionId: selectedSessionId,
-            modelId: selectedModel,
-          }),
-        });
-      },
     }),
     onError: (error) => {
       console.error("Chat error:", error);
@@ -127,15 +134,86 @@ export default function ChatPage() {
     }
   }, [selectedSessionId, sessions, setMessages]);
 
-  // Handle send
-  const handleSend = (text: string) => {
-    if (!text.trim()) return;
+  // Handle send with attachments
+  const handleSend = async (message: PromptInputMessage) => {
+    const { text, files } = message;
+    const hasText = Boolean(text?.trim());
+    const hasAttachments = Boolean(files && files.length > 0);
+
+    if (!(hasText || hasAttachments)) return;
+    
     if (!selectedModel) {
       toast.error("Please select a model");
       return;
     }
 
-    sendMessage({ text });
+    // Convert FileList or FileUIPart[] to file parts
+    let fileParts: Array<{
+      type: "file";
+      filename: string;
+      mediaType: string;
+      url: string;
+    }> = [];
+
+    if (files && files.length > 0) {
+      // Check if files is FileList or FileUIPart[]
+      if (files instanceof FileList) {
+        fileParts = await convertFilesToParts(files);
+      } else {
+        // Already FileUIPart[], map to our format
+        fileParts = files.map(f => ({
+          type: "file" as const,
+          filename: f.filename || "file",
+          mediaType: f.mediaType || "application/octet-stream",
+          url: f.url,
+        }));
+      }
+    }
+
+    // Build message parts array
+    const parts = [
+      ...(text ? [{ type: "text" as const, text }] : []),
+      ...fileParts,
+    ];
+
+    sendMessage(
+      {
+        role: "user",
+        parts,
+      },
+      {
+        body: {
+          sessionId: selectedSessionId,
+          modelId: selectedModel,
+        },
+      }
+    );
+  };
+
+  // Helper function to convert FileList to parts
+  const convertFilesToParts = async (files: FileList) => {
+    const parts = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const dataUrl = await fileToDataURL(file);
+      parts.push({
+        type: "file" as const,
+        filename: file.name,
+        mediaType: file.type,
+        url: dataUrl,
+      });
+    }
+    return parts;
+  };
+
+  // Helper function to convert file to data URL
+  const fileToDataURL = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
   };
 
   // Redirect if not authenticated
@@ -245,59 +323,96 @@ export default function ChatPage() {
         {/* Input Area */}
         <div className="p-4 border-t bg-background">
           <div className="max-w-3xl mx-auto">
-            <PromptInput onSubmit={({ text }) => handleSend(text)}>
-              <PromptInputHeader>
-                <PromptInputTools>
-                  <ModelSelector>
-                    <ModelSelectorTrigger asChild>
-                      <PromptInputButton variant="outline" size="sm">
-                        {selectedModel
-                          ? models?.find((m: { id: string; name: string }) => m.id === selectedModel)?.name || "Select model"
-                          : "Select model"}
-                      </PromptInputButton>
-                    </ModelSelectorTrigger>
-                    <ModelSelectorContent title="Select model">
-                      <ModelSelectorInput placeholder="Search models..." />
-                      <ModelSelectorList>
-                        <ModelSelectorEmpty>No models found.</ModelSelectorEmpty>
-                        {models?.map((model: { id: string; name: string }) => (
-                          <ModelSelectorItem
-                            key={model.id}
-                            onSelect={() => {
-                              setSelectedModel(model.id);
-                            }}
-                          >
-                            <ModelSelectorName>{model.name}</ModelSelectorName>
-                          </ModelSelectorItem>
-                        ))}
-                      </ModelSelectorList>
-                    </ModelSelectorContent>
-                  </ModelSelector>
-                </PromptInputTools>
-              </PromptInputHeader>
-              <PromptInputBody>
-                <PromptInputTextarea
-                  placeholder="Type your message..."
-                />
-              </PromptInputBody>
-              <PromptInputFooter>
-                <Button
-                  type="submit"
-                  size="sm"
-                  className="ml-auto"
-                  disabled={status !== "ready"}
-                >
-                  {status !== "ready" ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Generating...
-                    </>
-                  ) : (
-                    "Send"
-                  )}
-                </Button>
-              </PromptInputFooter>
-            </PromptInput>
+            <PromptInputProvider>
+              <PromptInput
+                globalDrop
+                multiple
+                onSubmit={handleSend}
+                className="bg-background"
+              >
+                <PromptInputAttachments>
+                  {(attachment) => <PromptInputAttachment data={attachment} />}
+                </PromptInputAttachments>
+                <PromptInputBody>
+                  <PromptInputTextarea
+                    placeholder="What would you like to know?"
+                  />
+                </PromptInputBody>
+                <PromptInputFooter>
+                  <PromptInputTools>
+                    <PromptInputActionMenu>
+                      <PromptInputActionMenuTrigger />
+                      <PromptInputActionMenuContent>
+                        <PromptInputActionAddAttachments />
+                      </PromptInputActionMenuContent>
+                    </PromptInputActionMenu>
+                    <PromptInputSpeechButton />
+                    <PromptInputButton>
+                      <GlobeIcon size={16} />
+                      <span>Search</span>
+                    </PromptInputButton>
+                    <ModelSelector
+                      open={modelSelectorOpen}
+                      onOpenChange={setModelSelectorOpen}
+                    >
+                      <ModelSelectorTrigger asChild>
+                        <PromptInputButton size="sm">
+                          {selectedModel && models && (() => {
+                            const model = models.find((m: ModelConfig) => m.id === selectedModel);
+                            if (!model) return null;
+                            return (
+                              <>
+                                <ModelSelectorLogo provider={model.chefSlug} />
+                                <ModelSelectorName>{model.name}</ModelSelectorName>
+                              </>
+                            );
+                          })()}
+                        </PromptInputButton>
+                      </ModelSelectorTrigger>
+                      <ModelSelectorContent title="Select model">
+                        <ModelSelectorInput placeholder="Search models..." />
+                        <ModelSelectorList>
+                          <ModelSelectorEmpty>No models found.</ModelSelectorEmpty>
+                          {models && Array.from(new Set(models.map((m: ModelConfig) => m.chef))).map((chef) => (
+                            <ModelSelectorGroup heading={chef as string} key={chef as string}>
+                              {models
+                                .filter((m: ModelConfig) => m.chef === chef)
+                                .map((model: ModelConfig) => (
+                                  <ModelSelectorItem
+                                    key={model.id}
+                                    value={model.id}
+                                    onSelect={() => {
+                                      setSelectedModel(model.id);
+                                      setModelSelectorOpen(false);
+                                    }}
+                                  >
+                                    <ModelSelectorLogo provider={model.chefSlug} />
+                                    <ModelSelectorName>{model.name}</ModelSelectorName>
+                                    <ModelSelectorLogoGroup>
+                                      {model.providers.map((provider: string) => (
+                                        <ModelSelectorLogo
+                                          key={provider}
+                                          provider={provider}
+                                        />
+                                      ))}
+                                    </ModelSelectorLogoGroup>
+                                    {selectedModel === model.id ? (
+                                      <CheckIcon className="ml-auto size-4" />
+                                    ) : (
+                                      <div className="ml-auto size-4" />
+                                    )}
+                                  </ModelSelectorItem>
+                                ))}
+                            </ModelSelectorGroup>
+                          ))}
+                        </ModelSelectorList>
+                      </ModelSelectorContent>
+                    </ModelSelector>
+                  </PromptInputTools>
+                  <PromptInputSubmit status={status} />
+                </PromptInputFooter>
+              </PromptInput>
+            </PromptInputProvider>
           </div>
         </div>
       </div>
