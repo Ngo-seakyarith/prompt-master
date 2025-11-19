@@ -17,7 +17,12 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const { messages, sessionId, modelId }: { messages: UIMessage[], sessionId?: string, modelId: string } = await req.json();
+        const { messages, sessionId, modelId, enableWebSearch }: { 
+            messages: UIMessage[], 
+            sessionId?: string, 
+            modelId: string,
+            enableWebSearch?: boolean 
+        } = await req.json();
 
         if (!modelId) {
             return NextResponse.json(
@@ -56,8 +61,8 @@ export async function POST(req: Request) {
         // Convert UI messages to model messages
         const modelMessages = convertToModelMessages(messages);
 
-        // Stream response
-        return streamChat(chatSessionId, modelId, modelMessages);
+        // Stream response with optional web search
+        return streamChat(chatSessionId, modelId, modelMessages, enableWebSearch);
     } catch (error) {
         console.error("Error in chat route:", error);
         return NextResponse.json(

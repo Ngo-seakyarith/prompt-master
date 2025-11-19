@@ -69,6 +69,7 @@ export default function ChatPage() {
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [selectedModel, setSelectedModel] = useState<string | null>(null);
   const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
+  const [webSearchEnabled, setWebSearchEnabled] = useState(false);
 
   // Fetch Models
   const { data: models } = useQuery({
@@ -185,6 +186,7 @@ export default function ChatPage() {
         body: {
           sessionId: selectedSessionId,
           modelId: selectedModel,
+          enableWebSearch: webSearchEnabled,
         },
       }
     );
@@ -347,9 +349,12 @@ export default function ChatPage() {
                       </PromptInputActionMenuContent>
                     </PromptInputActionMenu>
                     <PromptInputSpeechButton />
-                    <PromptInputButton>
+                    <PromptInputButton
+                      onClick={() => setWebSearchEnabled(!webSearchEnabled)}
+                      variant={webSearchEnabled ? "default" : "outline"}
+                    >
                       <GlobeIcon size={16} />
-                      <span>Search</span>
+                      <span>Web Search {webSearchEnabled && "✓"}</span>
                     </PromptInputButton>
                     <ModelSelector
                       open={modelSelectorOpen}

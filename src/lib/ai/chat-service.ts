@@ -10,7 +10,8 @@ const openrouter = createOpenRouter({
 export async function streamChat(
     sessionId: string,
     modelId: string,
-    messages: CoreMessage[]
+    messages: CoreMessage[],
+    enableWebSearch: boolean = false
 ) {
     const modelConfig = AVAILABLE_MODELS.find((m) => m.id === modelId);
     if (!modelConfig) {
@@ -18,8 +19,21 @@ export async function streamChat(
     }
 
     const result = streamText({
-        model: openrouter(modelId),
+        model: openrouter(enableWebSearch ? `${modelId}:online` : modelId),
         messages,
+        // Optional: Use explicit plugin configuration for more control
+        ...(enableWebSearch && {
+            experimental_providerMetadata: {
+                openrouter: {
+                    plugins: [
+                        {
+                            type: "web_search",
+                            max_results: 8,
+                        }
+                    ]
+                }
+            }
+        }),
         onFinish: async ({ text, usage }) => {
             // Save assistant message to DB
             await prisma.chatMessage.create({
